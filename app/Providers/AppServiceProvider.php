@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Barryvdh\Debugbar\Facades\Debugbar;
+use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,6 +14,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         //
+        $loader = AliasLoader::getInstance(); //\Illuminate\Foundation\AliasLoader::getInstance();
+        $loader->alias('Debugbar', Debugbar::class);
     }
 
     /**
