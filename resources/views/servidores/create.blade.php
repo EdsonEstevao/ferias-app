@@ -47,8 +47,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Telefone</label>
-                    <input type="text" name="telefone" value="{{ old('telefone') }}" placeholder="(99) 99999-9999"
-                        class="block w-full mt-1 border-gray-300 rounded">
+                    <input type="text" name="telefone" value="{{ old('telefone') }}" placeholder="99 9 9999-9999"
+                        maxlength="16" class="block w-full mt-1 border-gray-300 rounded">
                 </div>
             </div>
 
@@ -139,6 +139,21 @@
                 value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 
                 cpfInput.value = value;
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const telInput = document.querySelector('input[name="telefone"]');
+
+            telInput.addEventListener('input', function() {
+                let value = telInput.value.replace(/\D/g, '');
+
+                if (value.length > 11) value = value.slice(0, 11);
+
+                // Aplica máscara: (99) 9 9999-9999
+                value = value.replace(/^(\d{2})(\d)/, '$1 $2');
+                value = value.replace(/(\d{1})(\d{4})(\d{4})$/, '$1 $2-$3');
+
+                telInput.value = value;
             });
         });
     </script>
