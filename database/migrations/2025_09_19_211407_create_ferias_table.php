@@ -17,8 +17,6 @@ return new class extends Migration
             $table->year('ano_exercicio');
             $table->enum('situacao', ['Planejado', 'Remarcado', 'Interrompido'])->default('Planejado');
             $table->string('tipo', 15); //10_10_10, completo, 10_10_10_abono, 20_10_abono, 10_10_10_abono, 10_10_10_abono
-
-
             $table->timestamps();
 
              // Adicionar índice para melhor performance

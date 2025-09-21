@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Servidor;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ServidorSeeder extends Seeder
 {
@@ -13,7 +15,7 @@ class ServidorSeeder extends Seeder
     public function run(): void
     {
         // // Limpar tabela
-        // DB::table('employees')->delete();
+        DB::table('servidores')->delete();
 
         $employees = [
             [
@@ -46,7 +48,7 @@ class ServidorSeeder extends Seeder
         ];
 
         foreach ($employees as $employee) {
-            // Employee::create($employee);
+            Servidor::create($employee);
         }
 
         $this->command->info('Servidores criados com sucesso!');

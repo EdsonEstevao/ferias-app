@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('ferias_periodos', function (Blueprint $table) {
              $table->id();
             $table->foreignId('ferias_id')->constrained()->onDelete('cascade');
+            $table->foreignId('periodo_origem_id')->nullable()->constrained('ferias_periodos')->onDelete('set null');
             $table->tinyInteger('ordem')->nullable();
             $table->enum('tipo', ['Férias', 'Abono']);
             $table->integer('dias');
             $table->date('inicio');
             $table->date('fim');
             $table->enum('situacao', ['Planejado', 'Remarcado', 'Interrompido'])->default('Planejado');
+            $table->boolean('ativo')->default(true); // indica se o período está vigente ou foi substituído
             $table->text('justificativa')->nullable();
             $table->timestamps();
 

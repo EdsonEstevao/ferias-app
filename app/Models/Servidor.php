@@ -23,5 +23,10 @@ class Servidor extends Model
         'numero_memorando',
     ];
 
+    public function ferias()
+    {
+        return $this->hasMany(Ferias::class);
+    }
+
 
 }

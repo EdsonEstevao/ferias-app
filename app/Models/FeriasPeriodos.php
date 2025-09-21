@@ -10,6 +10,7 @@ class FeriasPeriodos extends Model
 
     protected $fillable = [
         'ferias_id',
+        'periodo_origem_id',
         'ordem',
         'tipo',
         'dias',
@@ -18,4 +19,29 @@ class FeriasPeriodos extends Model
         'situacao',
         'justificativa',
     ];
+
+    public function ferias()
+    {
+        return $this->belongsTo(Ferias::class);
+    }
+
+    public function eventos()
+    {
+        return $this->hasMany(FeriasEvento::class, 'ferias_periodo_id');
+    }
+    public function origem()
+    {
+        return $this->belongsTo(FeriasPeriodos::class, 'periodo_origem_id');
+    }
+
+    public function filhos()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'periodo_origem_id');
+    }
+    public function todosFilhosRecursivos()
+    {
+        return $this->filhos()->with('todosFilhosRecursivos');
+    }
+
+
 }

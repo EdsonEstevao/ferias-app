@@ -16,4 +16,14 @@ class Ferias extends Model
         'tipo',
     ];
 
+    public function servidor()
+    {
+        return $this->belongsTo(Servidor::class);
+    }
+
+    public function periodos()
+    {
+        return $this->hasMany(FeriasPeriodos::class);
+    }
+
 }
