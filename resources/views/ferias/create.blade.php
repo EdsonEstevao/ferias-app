@@ -14,7 +14,9 @@
             novoTipo: 'Férias',
             periodos: [],
             adicionarPeriodo() {
+        
                 if (!this.novoInicio || !this.novoFim) return;
+                this.formPreventDefault();
                 const dias = (new Date(this.novoFim) - new Date(this.novoInicio)) / (1000 * 60 * 60 * 24) + 1;
                 this.periodos.push({
                     inicio: this.novoInicio,
@@ -28,7 +30,14 @@
             },
             removerPeriodo(index) {
                 this.periodos.splice(index, 1);
+            },
+            formPreventDefault() {
+                document.getElementById('form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                });
             }
+        
+        
         }">
             <h2 class="mb-6 text-2xl font-bold">📅 Lançar Férias</h2>
 
@@ -123,6 +132,7 @@
                         alert(data.message);
                         periodos = [];
                         document.querySelector('#form').reset();
+                        location.reload();
                     } else {
                         alert('Erro ao lançar férias');
                     }

@@ -1,6 +1,6 @@
 @props(['periodo'])
 
-<div class="pl-4 mt-2 ml-4 border-l-2">
+<div class="pl-4 mt-2 ml-4 border-l-2 ">
     {{-- <p class="font-semibold text-gray-800">
         {{ $periodo->situacao }} — {{ \Carbon\Carbon::parse($periodo->inicio)->format('d/m/Y') }} a
         {{ \Carbon\Carbon::parse($periodo->fim)->format('d/m/Y') }}
@@ -9,8 +9,9 @@
 
 
     @foreach ($periodo->todosFilhosRecursivos as $filho)
-        <div class="text-xl text-yellow-500">⏸️</div>
-        <div>
+        <div
+            class="flex flex-col px-2 py-2 rounded-lg {{ $filho->situacao === 'Interrompido' ? 'bg-red-100 ' : '' }} {{ $filho->situacao === 'Remarcado' ? 'bg-yellow-100' : '' }} {{ $filho->ativo ? ' shadow-lg' : '' }}">
+            <div class="text-xl text-yellow-500">⏸️</div>
 
             <div>
                 <p class="font-semibold text-gray-700">{{ $filho->situacao }}</p>

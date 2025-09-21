@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -13,9 +14,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+
 
 Route::middleware(['permission:visualizar ferias'])->group(function () {
     Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
@@ -40,12 +42,12 @@ Route::middleware(['role:admin'])->group(function () {
     Route::get('/admin/roles', [RoleController::class, 'index'])->name('admin.roles.index');
     Route::post('/admin/roles', [RoleController::class, 'store'])->name('admin.roles.store');
     Route::post('/admin/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('admin.roles.syncPermissions');
-});
-Route::middleware(['role:admin'])->group(function () {
+
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
     Route::put('/admin/users/{user}/roles', [UserController::class, 'updateRoles'])->name('admin.users.updateRoles');
 });
+
 
 // Gestor
 Route::middleware(['role:gestor|admin'])->group(function () {

@@ -5,6 +5,15 @@
         </h2>
     </x-slot> --}}
 
+    <!-- Botao de adicionar servidor -->
+    <div class="flex justify-end">
+        <a href="{{ route('servidores.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
+            <i class="fas fa-plus"></i>
+            👨‍🦰
+            Adicionar Servidor
+        </a>
+    </div>
+
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
@@ -51,6 +60,7 @@
                                             class="text-blue-600 hover:underline">
                                             📅 Marcar Férias
                                         </a>
+
                                         <!--interromper ferias -->
                                         <a href="{{ route('ferias.interromper.periodo', ['servidorId' => $servidor->id]) }}"
                                             class="text-blue-600 hover:underline">

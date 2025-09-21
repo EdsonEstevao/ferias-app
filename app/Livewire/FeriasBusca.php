@@ -21,6 +21,6 @@ class FeriasBusca extends Component
             ->with('ferias.periodos')
             ->get();
 
-        return view('livewire.ferias-busca', compact('servidores'))->layout('layouts.app');
+        return view('livewire.ferias-busca', compact('servidores')); //->layout('layouts.app');
     }
 }

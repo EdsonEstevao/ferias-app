@@ -4,41 +4,58 @@
             Férias
         </h2>
     </x-slot>
-
-    {{-- @livewire('ferias-form', ['servidorId' => 2]) --}}
-
     <div class="p-6 mx-auto max-w-7xl" x-data="{ filtroAberto: false, detalhesAberto: null, modalAberto: false, periodoSelecionado: null, novaInicio: '', novaFim: '', justificativa: '', motivo: '', dataInterrupcao: '', periodoId: null }">
 
         <h2 class="mb-6 text-2xl font-bold">📅 Férias dos Servidores</h2>
 
-        {{-- Filtro por ano --}}
-        <div class="mb-4">
-            <button @click="filtroAberto = !filtroAberto"
-                class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                🔍 Filtros
-            </button>
+        <button @click="filtroAberto = !filtroAberto"
+            class="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700">
+            🔍 Filtros
+        </button>
 
-            <div x-show="filtroAberto" class="p-4 mt-4 bg-white rounded shadow">
-                <form method="GET" action="{{ route('ferias.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div>
-                        <label class="block text-sm font-medium">Ano</label>
-                        <select name="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
-                            @foreach (range(date('Y') + 1, date('Y') - 4) as $ano)
-                                <option value="{{ $ano }}"
-                                    {{ request('ano_exercicio') == $ano ? 'selected' : '' }}>
-                                    {{ $ano }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex items-end md:col-span-2">
-                        <button type="submit"
-                            class="w-full px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                            Aplicar Filtro
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div x-show="filtroAberto" class="p-4 mt-4 bg-white rounded shadow">
+            <form method="GET" action="{{ route('ferias.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                {{-- Ano --}}
+                <div>
+                    <label class="block text-sm font-medium">Ano</label>
+                    <select name="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
+                        <option value="">Todos</option>
+                        @foreach (range(date('Y') + 1, date('Y') - 4) as $ano)
+                            <option value="{{ $ano }}"
+                                {{ request('ano_exercicio') == $ano ? 'selected' : '' }}>
+                                {{ $ano }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Mês --}}
+                <div>
+                    <label class="block text-sm font-medium">Mês de Início</label>
+                    <select name="mes" class="block w-full mt-1 border-gray-300 rounded">
+                        <option value="">Todos</option>
+                        @foreach (range(1, 12) as $m)
+                            <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Busca por nome, CPF ou matrícula --}}
+                <div>
+                    <label class="block text-sm font-medium">Servidor</label>
+                    <input type="text" name="busca" value="{{ request('busca') }}"
+                        placeholder="Nome, CPF ou matrícula" class="block w-full mt-1 border-gray-300 rounded">
+                </div>
+
+                {{-- Botão --}}
+                <div class="flex items-end">
+                    <button type="submit" class="w-full px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </form>
         </div>
 
         {{-- Listagem de ferias --}}
@@ -48,14 +65,15 @@
 
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold">{{ $registro->servidor->nome }}</h3>
+                        <h3 class="text-lg font-semibold">{{ $registro->servidor->nome }} - Matrícula:
+                            {{ $registro->servidor->matricula }}</h3>
                         <p class="text-sm text-gray-600">Ano: {{ $registro->ano_exercicio }}</p>
                         <p class="text-sm text-gray-600">Situação: {{ $registro->situacao }}</p>
                     </div>
                 </div>
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
-                    <div class="space-y-4" x-data="{ 'aberto': false }">
+                    <div class="space-y-4" x-data="{ aberto: false }">
                         {{-- Período original --}}
                         <div
                             class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
@@ -79,64 +97,6 @@
                         {{-- Filhos: interrupções e remarcações --}}
                         <div x-show="aberto" class="pl-4 ml-6 space-y-4 border-l-2 border-gray-300">
                             <x-periodo :periodo="$periodo" />
-
-                            <!-- @foreach ($periodo->filhos as $filho)
-<div class="flex items-start gap-3">
-                                    <div class="text-xl text-yellow-500">⏸️</div>
-                                    <div>
-
-                                        <div>
-                                            <p class="font-semibold text-gray-700">Interrompido</p>
-                                            <p class="text-sm text-gray-600">
-                                                {{ date('d/m/Y', strtotime($filho->inicio)) }} a
-                                                {{ date('d/m/Y', strtotime($filho->fim)) }} —
-                                                {{ $filho->dias }} dias
-                                            </p>
-                                            <p class="text-xs text-gray-500">Situação: {{ $filho->situacao }}</p>
-                                        </div>
-                                        <div>
-                                            @if ($filho->ativo)
-<button
-                                                    @click="modalAberto = true; periodoSelecionado = {{ $filho->id }}"
-                                                    class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
-                                                    🔁 Remarcar
-                                                </button>
-@endif
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Netos: remarcações --}}
-                                @foreach ($filho->filhos as $neto)
-<div class="flex items-start gap-3 pl-4 ml-6 border-l-2 border-green-300">
-                                        <div class="text-xl text-green-600">🔁</div>
-                                        <div>
-
-                                            <div>
-                                                <p class="font-semibold text-gray-700">Remarcado</p>
-                                                <p class="text-sm text-gray-600">
-                                                    {{ date('d/m/Y', strtotime($neto->inicio)) }} a
-                                                    {{ date('d/m/Y', strtotime($neto->fim)) }} —
-
-                                                    {{ $neto->dias }} dias
-                                                </p>
-                                                <p class="text-xs text-gray-500">Situação: {{ $neto->situacao }}</p>
-                                            </div>
-                                            <div>
-                                                @if ($neto->ativo)
-<button
-                                                        @click="modalAberto = true; periodoSelecionado = {{ $neto->id }}"
-                                                        class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
-                                                        🔁 Remarcar
-                                                    </button>
-@endif
-                                            </div>
-                                        </div>
-                                    </div>
-@endforeach
-@endforeach -->
-
-
                         </div>
                     </div>
                 @endforeach
@@ -208,6 +168,7 @@
             </div>
         </div>
     </div>
+
 
 
 

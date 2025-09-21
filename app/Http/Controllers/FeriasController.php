@@ -16,25 +16,42 @@ class FeriasController extends Controller
     {
 
         $ano = $request->input('ano_exercicio');
+        $query = $request->input('busca');
 
-        $ferias = Ferias::with([
-                'servidor',
-                'periodos.eventos', // carrega períodos e eventos juntos
-                'periodos.todosFilhosRecursivos'
-            ])
-            ->when($ano, function ($query) use ($ano) {
-                $query->where('ano_exercicio', $ano);
-            })
-            ->orderBy('ano_exercicio', 'desc')
-            ->paginate(10)->withQueryString();
+        $query = Ferias::query()->with('servidor', 'periodos.todosFilhosRecursivos');
 
-        // dd($ferias);
+        if ($request->filled('ano_exercicio')) {
+            $query->where('ano_exercicio', $request->ano_exercicio);
+        }
 
-        // $periodos = FeriasPeriodo::whereNull('periodo_origem_id')
-        //             ->with('todosFilhosRecursivos')
-        //             ->get();
+        if ($request->filled('busca')) {
+            $query->whereHas('servidor', function ($q) use ($request) {
+                $q->where('nome', 'like', "%{$request->busca}%")
+                ->orWhere('cpf', 'like', "%{$request->busca}%")
+                ->orWhere('matricula', 'like', "%{$request->busca}%");
+            });
+        }
+
+        if ($request->filled('mes')) {
+            $query->whereHas('periodos', function ($q) use ($request) {
+                $q->whereMonth('inicio', $request->mes);
+                $q->where('ativo', 1);
+            });
+        }
+
+        $ferias = $query->paginate(10);
 
         return view('ferias.index', compact('ferias'));
+
+        // $data = [
+
+        //     'ferias' => $ferias,
+        // ];
+
+        // // dd($ferias);
+
+        // return view('ferias.index', $data);
+
     }
 
     public function create(Request $request)
