@@ -6,6 +6,7 @@ use App\Models\Ferias;
 use App\Models\FeriasEvento;
 use App\Models\FeriasPeriodos;
 use App\Models\Servidor;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -306,6 +307,73 @@ class FeriasController extends Controller
         return response()->json(['success' => true, 'message' => 'Férias lançadas com sucesso!']);
         // return response()->json(['success' => true]);
         // lógica para salvar os períodos
+    }
+
+    public function fracionar(Request $request)
+    {
+        $request->validate([
+            'periodo_id' => 'required|exists:ferias_periodos,id',
+            'periodos' => 'required|array|min:2|max:3',
+            'periodos.*.inicio' => 'required|date',
+            'periodos.*.fim' => 'required|date|after_or_equal:periodos.*.inicio',
+        ]);
+
+        $original = FeriasPeriodos::find($request->periodo_id);
+        $ferias = $original->ferias;
+
+        $original->justificativa = 'Fracionamento de férias';
+        $original->ativo = 0;
+        $original->save();
+
+
+        foreach ($request->periodos as $index => $p) {
+            $inicio = Carbon::parse($p['inicio']);
+            $fim = Carbon::parse($p['fim']);
+            $dias = $inicio->diffInDays($fim) + 1;
+
+            if ($dias < 5) {
+                return response()->json(['message' => 'Cada período deve ter no mínimo 5 dias.'], 422);
+            }
+
+            FeriasPeriodos::create([
+                'ferias_id' => $ferias->id,
+                'inicio' => $inicio,
+                'fim' => $fim,
+                'dias' => $dias,
+                'ordem' => $index + 1,
+                'tipo' => 'Férias',
+                'periodo_origem_id' => $original->id,
+                'situacao' => 'Remarcado',
+                'justificativa' => 'Fracionamento de férias',
+            ]);
+
+            $original->eventos()->create([
+                'acao' => 'Remarcação',
+                'data_acao' => now(),
+                'descricao' => 'Férias fracionadas',
+                'user_id' => Auth::id(),
+            ]);
+        }
+        flash()->success('Férias fracionadas com sucesso!');
+        return response()->json(['message' => 'Férias fracionadas com sucesso!']);
+    }
+
+    public function gerarPdf(Servidor $servidor)
+    {
+
+        // ferias do servidor com periodos ativos e ordem crescente
+        $servidor = Servidor::findOrFail($servidor->id);
+        $ferias = $servidor->ferias()->with(['periodos' => function ($q) {
+            $q->where('ativo', 1)->orderBy('ordem');
+        }])->get();
+
+        $ferias->each(function ($registro) {
+            $registro->periodosAgrupados = $registro->periodos->groupBy('periodo_origem_id');
+        });
+
+        $pdf = Pdf::loadView('ferias.pdf', compact('servidor', 'ferias'));
+
+        return $pdf->download("ferias_{$servidor->matricula}.pdf");
     }
 
 

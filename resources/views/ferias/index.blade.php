@@ -12,6 +12,39 @@
             class="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700">
             🔍 Filtros
         </button>
+        <!-- botão para imprimir relatorio -->
+        {{-- <a href="{{ route('relatorios.ferias.ativas.pdf') }}" target="_blank"
+            class="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700">
+            <i class="fas fa-print"></i>
+            Imprimir
+        </a> --}}
+        <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
+            class="flex gap-2 items-center flex-wrap">
+            <select name="ano_exercicio" class="border rounded px-2 py-1">
+                <option value="">Todos os exercícios</option>
+                @for ($y = 2020; $y <= now()->year + 1; $y++)
+                    <option value="{{ $y }}">{{ $y }}</option>
+                @endfor
+            </select>
+
+            <select name="ano" class="border rounded px-2 py-1">
+                <option value="">Todos os anos de início</option>
+                @for ($y = 2020; $y <= now()->year + 1; $y++)
+                    <option value="{{ $y }}">{{ $y }}</option>
+                @endfor
+            </select>
+
+            <select name="mes" class="border rounded px-2 py-1">
+                <option value="">Todos os meses</option>
+                @for ($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}">{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}</option>
+                @endfor
+            </select>
+
+            <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">
+                🖨️ Gerar PDF
+            </button>
+        </form>
 
         <div x-show="filtroAberto" class="p-4 mt-4 bg-white rounded shadow">
             <form method="GET" action="{{ route('ferias.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -58,6 +91,8 @@
             </form>
         </div>
 
+
+
         {{-- Listagem de ferias --}}
         @foreach ($ferias as $registro)
             <div class="p-6 mb-8 bg-white rounded shadow">
@@ -70,6 +105,10 @@
                         <p class="text-sm text-gray-600">Ano: {{ $registro->ano_exercicio }}</p>
                         <p class="text-sm text-gray-600">Situação: {{ $registro->situacao }}</p>
                     </div>
+                    <a href="{{ route('ferias.pdf', $registro->servidor->id) }}" target="_blank"
+                        class="text-indigo-600 hover:underline">
+                        🖨️ Gerar PDF
+                    </a>
                 </div>
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)

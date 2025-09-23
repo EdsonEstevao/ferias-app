@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServidorController;
 use App\Http\Controllers\UserController;
@@ -30,12 +31,15 @@ Route::middleware(['role:admin|gestor'])->group(function () {
         Route::post('/lancar', [FeriasController::class, 'salvarTodos'])->name('ferias.lancar');
         Route::get('/interromper-ferias', [FeriasController::class, 'interromperFerias'])->name('ferias.interromper.periodo');
         Route::post('/interromper', [FeriasController::class, 'interromper'])->name('ferias.interromper');
-        Route::post('/ferias/remarcar', [FeriasController::class, 'remarcar'])->name('ferias.remarcar');
-
-
+        Route::post('/remarcar', [FeriasController::class, 'remarcar'])->name('ferias.remarcar');
+        Route::post('/fracionar', [FeriasController::class, 'fracionar'])->name('ferias.fracionar');
+        Route::get('/{servidor}/pdf', [FeriasController::class, 'gerarPdf'])->name('ferias.pdf');
     });
 
 });
+
+// Relatorios de ferias do sevidores ativos
+Route::get('/relatorios/ferias-ativas', [RelatorioController::class, 'feriasAtivasPdf'])->name('relatorio.ferias.ativas.pdf');
 
 
 Route::middleware(['role:admin'])->group(function () {

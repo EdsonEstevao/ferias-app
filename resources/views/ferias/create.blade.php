@@ -7,7 +7,7 @@
 
     <form id="form" action="">
         <div class="max-w-5xl p-6 mx-auto bg-white rounded shadow" x-data="{
-            servidorId: null,
+            servidorId: {{ $servidorId }},
             ano_exercicio: '{{ date('Y') }}',
             novoInicio: '',
             novoFim: '',
@@ -44,10 +44,11 @@
             {{-- Seleção de servidor --}}
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Servidor</label>
+                <input type="hidden" x-model="servidorId" name="servidor_id">
                 <select x-model="servidorId" class="block w-full mt-1 border-gray-300 rounded">
-                    <option value="">Selecione...</option>
                     @foreach ($servidores as $servidor)
-                        <option value="{{ $servidor->id }}">{{ $servidor->nome }} ({{ $servidor->matricula }})</option>
+                        <option value="{{ $servidor->id }}" disabled>{{ $servidor->nome }} ({{ $servidor->matricula }})
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -105,6 +106,11 @@
                 class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                 ✅ Lançar Férias
             </button>
+
+            {{-- Botão de voltar --}}
+            <a href="{{ route('ferias.index') }}" class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                Ir para Férias
+            </a>
         </div>
     </form>
 
