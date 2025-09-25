@@ -23,6 +23,8 @@
                 <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
                     Servidores</a>
                 <a href="{{ route('ferias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Férias</a>
+                <a href="{{ route('ferias.import') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Importar
+                    Ferias (.Csv)</a>
                 <a href="{{ route('logout') }}" class="block px-4 py-2 text-red-600 rounded hover:bg-red-100">🚪
                     Sair</a>
             </nav>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
+use App\Http\Controllers\FeriasImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RoleController;
@@ -34,12 +35,18 @@ Route::middleware(['role:admin|gestor'])->group(function () {
         Route::post('/remarcar', [FeriasController::class, 'remarcar'])->name('ferias.remarcar');
         Route::post('/fracionar', [FeriasController::class, 'fracionar'])->name('ferias.fracionar');
         Route::get('/{servidor}/pdf', [FeriasController::class, 'gerarPdf'])->name('ferias.pdf');
+        Route::get('/api/ferias', [FeriasController::class, 'filtrar']);
+
+        // Importar Arquivo Csv
+        Route::get('/import', [FeriasImportController::class, 'index'])->name('ferias.import');
+        Route::post('/import', [FeriasImportController::class, 'importCsv'])->name('ferias.import.csv');
     });
 
 });
 
 // Relatorios de ferias do sevidores ativos
 Route::get('/relatorios/ferias-ativas', [RelatorioController::class, 'feriasAtivasPdf'])->name('relatorio.ferias.ativas.pdf');
+Route::get('/verificar-ferias', [RelatorioController::class, 'verificarFerias']);
 
 
 Route::middleware(['role:admin'])->group(function () {

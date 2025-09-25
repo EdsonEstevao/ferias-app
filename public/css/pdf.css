@@ -1,0 +1,94 @@
+/* body {
+    font-family: Courier;
+    font-size: 12px;
+    margin: 40px;
+    color: #333;
+} */
+ @font-face {
+    font-family: 'Roboto';
+    src: url('{{ storage_path('fonts/Roboto-Regular.ttf') }}') format('truetype');
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a237e;
+}
+
+.servidor {
+    font-family: Courier;
+    font-weight: bold;
+    font-size: 13px;
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-left: 4px solid #1a237e;
+}
+
+/* .header h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a237e;
+} */
+
+.header h2 {
+    font-size: 14px;
+    color: #444;
+}
+
+.header h3 {
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.sub {
+    font-size: 11px;
+    color: #666;
+}
+
+/* .servidor {
+    margin-top: 30px;
+    font-weight: bold;
+    font-size: 13px;
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-left: 4px solid #1a237e;
+} */
+
+/* th {
+    background-color: #e8eaf6;
+    font-weight: 600;
+} */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: left;
+}
+
+th {
+    background-color: #e0e7ff;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.footer {
+    margin-top: 50px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+}
+
+.logo {
+    width: 80px;
+}

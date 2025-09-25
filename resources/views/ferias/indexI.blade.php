@@ -4,7 +4,7 @@
             Férias
         </h2>
     </x-slot>
-    <div class="p-6 mx-auto max-w-7xl" x-data="{ filtroAberto: true, detalhesAberto: null, modalAberto: false, periodoSelecionado: null, novaInicio: '', novaFim: '', justificativa: '', motivo: '', dataInterrupcao: '', periodoId: null }">
+    <div class="p-6 mx-auto max-w-7xl" x-data="{ filtroAberto: false, detalhesAberto: null, modalAberto: false, periodoSelecionado: null, novaInicio: '', novaFim: '', justificativa: '', motivo: '', dataInterrupcao: '', periodoId: null }">
 
         <h2 class="mb-6 text-2xl font-bold">📅 Férias dos Servidores</h2>
 
@@ -30,11 +30,9 @@
 
             <select name="mes" class="border rounded px-2 py-1" id="mes">
                 <option value="">Todos os meses</option>
-                @foreach ($meses as $m => $mes)
-                    <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
-                        {{ $mes }}
-                    </option>
-                @endforeach
+                @for ($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}">{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}</option>
+                @endfor
             </select>
 
             <button type="button" onclick="verificarRelatorio()"
@@ -51,109 +49,79 @@
         </div>
 
 
-        <div x-show="filtroAberto" class="p-4 mt-4 bg-white rounded shadow">
-            <form method="GET" action="{{ route('ferias.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                {{-- Ano --}}
+        <div x-data="buscaFerias()" x-init="buscar()" class="p-4 mt-4 bg-white rounded shadow">
+            <template x-if="mensagem">
+                <div class="mb-4 text-red-600 font-semibold" x-text="mensagem" x-show="mensagem" x-transition></div>
+            </template>
+
+            <form @submit.prevent="buscar()" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <!-- Ano -->
                 <div>
                     <label class="block text-sm font-medium">Ano</label>
-                    <select name="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
+                    <select x-model="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
                         <option value="">Todos</option>
                         @foreach (range(date('Y') + 1, date('Y') - 4) as $ano)
-                            <option value="{{ $ano }}"
-                                {{ request('ano_exercicio') == $ano ? 'selected' : '' }}>
-                                {{ $ano }}
-                            </option>
+                            <option value="{{ $ano }}">{{ $ano }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- Mês --}}
+                <!-- Mês -->
                 <div>
                     <label class="block text-sm font-medium">Mês de Início</label>
-                    <select name="mes" class="block w-full mt-1 border-gray-300 rounded">
+                    <select x-model="mes" class="block w-full mt-1 border-gray-300 rounded">
                         <option value="">Todos</option>
-                        @foreach ($meses as $m => $mes)
-                            <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
-                                {{ $mes }}
-                            </option>
+                        @foreach (range(1, 12) as $m)
+                            <option value="{{ $m }}">
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
                         @endforeach
-                        {{-- @foreach (range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                            </option>
-                        @endforeach --}}
                     </select>
                 </div>
 
-                {{-- Busca por nome, CPF ou matrícula --}}
+                <!-- Busca -->
                 <div>
                     <label class="block text-sm font-medium">Servidor</label>
-                    <input type="text" name="busca" value="{{ request('busca') }}"
-                        placeholder="Nome, CPF ou matrícula" class="block w-full mt-1 border-gray-300 rounded">
+                    <input type="text" x-model="busca" placeholder="Nome, CPF ou matrícula"
+                        class="block w-full mt-1 border-gray-300 rounded">
                 </div>
 
-                {{-- Botão --}}
+                <!-- Botão -->
                 <div class="flex items-end">
-                    <button type="submit" @click="filtroAberto = true"
-                        class="w-full px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                    <button type="submit" class="w-full px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                         Aplicar Filtros
                     </button>
                 </div>
             </form>
-        </div>
 
-
-
-        {{-- Listagem de ferias --}}
-        @foreach ($ferias as $registro)
-            <div class="p-6 mb-8 bg-white rounded shadow">
-                <h3 class="mb-4 text-xl font-bold text-gray-800">🗓️ Ano: {{ $registro->ano_exercicio }}</h3>
-
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-semibold">{{ $registro->servidor->nome }} - Matrícula:
-                            {{ $registro->servidor->matricula }}</h3>
-                        <p class="text-sm text-gray-600">Ano: {{ $registro->ano_exercicio }}</p>
-                        <p class="text-sm text-gray-600">Situação: {{ $registro->situacao }}</p>
-                    </div>
-                    <a href="{{ route('ferias.pdf', $registro->servidor->id) }}" target="_blank"
-                        class="text-indigo-600 hover:underline">
-                        🖨️ Gerar PDF
-                    </a>
-                </div>
-
-                @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
-                    <div class="space-y-4" x-data="{ aberto: false }">
-                        {{-- Período original --}}
-                        <div
-                            class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
-                            <div class="text-xl text-blue-600">📌</div>
-                            <div>
-                                <p class="font-semibold text-gray-700">Período Original ({{ $periodo->ordem }}º Período
-                                    {{ $periodo->tipo == 'Abono' ? 'de Abono' : 'de Férias' }})
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
-                                    {{ date('d/m/Y', strtotime($periodo->fim)) }} —
-                                    {{ $periodo->dias }} dias
-                                </p>
-                                <p class="text-xs text-gray-500">Situação: {{ $periodo->situacao }}</p>
-                                <button @click="aberto = !aberto" class="mt-2 text-xs text-blue-500 hover:underline">
-                                    {{ 'aberto' ? 'Ocultar sequência' : 'Ver sequência completa' }}
-                                </button>
+            <!-- Listagem dinâmica -->
+            <template x-if="ferias.length">
+                <div class="mt-6 space-y-6">
+                    <template x-for="registro in ferias" :key="registro.id">
+                        <div class="p-6 bg-white rounded shadow">
+                            <h3 class="mb-4 text-xl font-bold text-gray-800">🗓️ Ano: <span
+                                    x-text="registro.ano_exercicio"></span></h3>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold"
+                                        x-text="registro.servidor.nome + ' - Matrícula: ' + registro.servidor.matricula">
+                                    </h3>
+                                    <p class="text-sm text-gray-600">Situação: <span x-text="registro.situacao"></span>
+                                    </p>
+                                </div>
+                                <a :href="`/ferias/pdf/${registro.servidor.id}`" target="_blank"
+                                    class="text-indigo-600 hover:underline">🖨️ Gerar PDF</a>
                             </div>
                         </div>
+                    </template>
+                </div>
+            </template>
 
-                        {{-- Filhos: interrupções e remarcações --}}
-                        <div x-show="aberto" class="pl-4 ml-6 space-y-4 border-l-2 border-gray-300">
-                            <x-periodo :periodo="$periodo" />
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @endforeach
+            <template x-if="!ferias.length && !carregando">
+                <p class="mt-6 text-gray-500">Nenhum registro encontrado.</p>
+            </template>
+        </div>
 
-        {{ $ferias->links() }}
+        {{-- {{ $ferias->links() }} --}}
         {{-- Modal --}}
         <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
@@ -253,7 +221,37 @@
                     document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
                 });
         }
-    </script>
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('buscaFerias', () => ({
+                ano_exercicio: '',
+                mes: '',
+                busca: '',
+                ferias: [],
+                mensagem: '',
+                carregando: false,
+
+                buscar() {
+                    this.carregando = true;
+                    this.mensagem = '';
+
+                    fetch(
+                            `/api/ferias?ano_exercicio=${this.ano_exercicio}&mes=${this.mes}&busca=${this.busca}`
+                            )
+                        .then(res => res.json())
+                        .then(data => {
+                            this.ferias = data;
+                            this.carregando = false;
+                        })
+                        .catch(() => {
+                            this.mensagem = 'Erro ao buscar dados.';
+                            this.carregando = false;
+                            setTimeout(() => this.mensagem = '', 5000);
+                        });
+                }
+            }));
+        });
 
 
-</x-app-layout>
+        <
+        /x-app-layout>

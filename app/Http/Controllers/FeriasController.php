@@ -16,8 +16,8 @@ class FeriasController extends Controller
     public function index(Request $request)
     {
 
-        $ano = $request->input('ano_exercicio');
-        $query = $request->input('busca');
+        $ano = $request->input('ano_exercicio') ?? date('Y');
+        $query = $request->input('busca') ?? '';
 
         $query = Ferias::query()->with('servidor', 'periodos.todosFilhosRecursivos');
 
@@ -41,8 +41,28 @@ class FeriasController extends Controller
         }
 
         $ferias = $query->paginate(10);
+        $meses = [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Marco',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro',
+        ];
+        $data = [
+            'ferias' => $ferias,
+            'meses' => $meses
+        ];
 
-        return view('ferias.index', compact('ferias'));
+        // return response()->json($ferias);
+
+        return view('ferias.index', $data);
 
         // $data = [
 
@@ -53,6 +73,20 @@ class FeriasController extends Controller
 
         // return view('ferias.index', $data);
 
+    }
+
+    public function filtrar(Request $request)
+    {
+        $query = Ferias::with('servidor')
+        ->when($request->ano_exercicio, fn($q) => $q->where('ano_exercicio', $request->ano_exercicio))
+        ->when($request->mes, fn($q) => $q->whereHas('periodos', fn($p) => $p->whereMonth('inicio', $request->mes)))
+        ->when($request->busca, fn($q) => $q->whereHas('servidor', fn($s) =>
+            $s->where('nome', 'like', "%{$request->busca}%")
+              ->orWhere('cpf', 'like', "%{$request->busca}%")
+              ->orWhere('matricula', 'like', "%{$request->busca}%")
+        ));
+
+    return response()->json($query->get());
     }
 
     public function create(Request $request)
@@ -373,7 +407,8 @@ class FeriasController extends Controller
 
         $pdf = Pdf::loadView('ferias.pdf', compact('servidor', 'ferias'));
 
-        return $pdf->download("ferias_{$servidor->matricula}.pdf");
+        // return $pdf->download("ferias_{$servidor->matricula}.pdf");
+        return $pdf->stream("ferias_{$servidor->matricula}.pdf");
     }
 
 
