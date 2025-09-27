@@ -3,9 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Sistema de Férias' }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 
     <!-- Icons Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -22,6 +24,11 @@
                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-100">🏠 Dashboard</a>
                 <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
                     Servidores</a>
+                <a href="{{ route('secretarias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
+                    Secretarias</a>
+                <!-- vincular cargos com a secretarias -->
+                <a href="{{ route('vinculo.cargos.secretarias') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
+                    Administrar Cargos</a>
                 <a href="{{ route('ferias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Férias</a>
                 <a href="{{ route('ferias.import') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Importar
                     Ferias (.Csv)</a>

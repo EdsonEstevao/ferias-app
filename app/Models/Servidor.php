@@ -28,5 +28,10 @@ class Servidor extends Model
         return $this->hasMany(Ferias::class);
     }
 
+    public function vinculos()
+    {
+        return $this->hasMany(VinculoFuncional::class);
+    }
+
 
 }

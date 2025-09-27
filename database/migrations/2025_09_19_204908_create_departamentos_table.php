@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('servidores', function (Blueprint $table) {
+        Schema::create('departamentos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('secretaria_id')->constrained('secretarias')->onDelete('cascade');
             $table->string('nome');
-            $table->string('cpf')->unique();
-            $table->string('email')->unique();
-            $table->string('matricula')->unique();
-            $table->string('telefone')->nullable();
+            $table->string('sigla')->unique();
+            $table->boolean('ativo')->default(true);
+            $table->string('responsavel')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('servidores');
+        Schema::dropIfExists('departamentos');
     }
 };

@@ -59,7 +59,7 @@ class FeriasController extends Controller
             'ferias' => $ferias,
             'meses' => $meses
         ];
-
+        // dd($data);
         // return response()->json($ferias);
 
         return view('ferias.index', $data);

@@ -124,7 +124,9 @@
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
                     <div class="space-y-4" x-data="{ aberto: false }">
-                        {{-- Período original --}}
+
+                        {{-- @dd($periodo) --}}
+                        <!-- Período original -->
                         <div
                             class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
                             <div class="text-xl text-blue-600">📌</div>
@@ -137,24 +139,37 @@
                                     {{ date('d/m/Y', strtotime($periodo->fim)) }} —
                                     {{ $periodo->dias }} dias
                                 </p>
+                                @if ($periodo->ativo)
+                                    <p class="text-sm text-gray-600">
+                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
+                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
+                                        {{ $periodo->dias }} dias
+                                    </p>
+                                @endif
                                 <p class="text-xs text-gray-500">Situação: {{ $periodo->situacao }}</p>
-                                <button @click="aberto = !aberto" class="mt-2 text-xs text-blue-500 hover:underline">
+                                <!-- <button @click="aberto = !aberto" class="mt-2 text-xs text-blue-500 hover:underline">
                                     {{ 'aberto' ? 'Ocultar sequência' : 'Ver sequência completa' }}
+                                </button> -->
+                                <button @click="aberto = !aberto" class="text-xs text-blue-600 hover:underline">
+                                    <span x-text="aberto ? 'Ocultar detalhes' : 'Ver detalhes'"></span>
                                 </button>
                             </div>
                         </div>
 
-                        {{-- Filhos: interrupções e remarcações --}}
-                        <div x-show="aberto" class="pl-4 ml-6 space-y-4 border-l-2 border-gray-300">
+                        <!-- Filhos: interrupções e remarcações -->
+                        <div x-show="aberto" class="mt-2 text-sm text-gray-500">
+                            <!-- Detalhes adicionais aqui -->
                             <x-periodo :periodo="$periodo" />
                         </div>
+                        <!-- <div x-show="aberto" class="pl-4 ml-6 space-y-4 border-l-2 border-gray-300">
+                        </div> -->
                     </div>
                 @endforeach
             </div>
         @endforeach
 
         {{ $ferias->links() }}
-        {{-- Modal --}}
+        <!-- Modal -->
         <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"

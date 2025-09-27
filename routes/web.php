@@ -6,10 +6,17 @@ use App\Http\Controllers\FeriasImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SecretariaController;
 use App\Http\Controllers\ServidorController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VinculoController;
+use App\Http\Controllers\VinculoFuncionalController;
 use App\Livewire\FeriasPainel;
 use App\Livewire\GestorFeriasPainel;
+use App\Models\Cargo;
+use App\Models\CargoSecretariaSimbologia;
+use App\Models\Secretaria;
+use App\Models\Simbologia;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,6 +50,34 @@ Route::middleware(['role:admin|gestor'])->group(function () {
     });
 
 });
+
+
+Route::get('/api/movimentacoes', [VinculoFuncionalController::class, 'index']);
+Route::post('/api/movimentacoes', [VinculoFuncionalController::class, 'store']);
+Route::get('/relatorio/movimentacoes', [VinculoFuncionalController::class, 'pdf']);
+Route::get('/exportar/movimentacoes', [VinculoFuncionalController::class, 'excel']);
+
+
+
+//Secretarias Api
+Route::get('/vinculo-cargos-secretarias', [VinculoController::class, 'index'])->name('vinculo.cargos.secretarias');
+Route::get('/vinculos', [VinculoController::class, 'indexJson'])->name('vinculos.json');
+Route::post('/api/vinculos', [VinculoController::class, 'store']);
+
+
+
+Route::get('/secretarias', [SecretariaController::class, 'index'])->name('secretarias.index');
+Route::get('/secretarias/create', [SecretariaController::class, 'create'])->name('secretarias.create');
+Route::post('/secretarias', [SecretariaController::class, 'store'])->name('secretarias.store');
+Route::get('/secretarias/{secretaria}/edit', [SecretariaController::class, 'edit'])->name('secretarias.edit');
+Route::put('/secretarias/{secretaria}', [SecretariaController::class, 'update'])->name('secretarias.update');
+Route::delete('/secretarias/{secretaria}', [SecretariaController::class, 'destroy'])->name('secretarias.destroy');
+
+// Route::put('/secretarias/{id}', [SecretariaController::class, 'update'])->name('secretarias.update');
+// Route::delete('/secretarias/{id}', [SecretariaController::class, 'destroy'])->name('secretarias.destroy');
+
+
+
 
 // Relatorios de ferias do sevidores ativos
 Route::get('/relatorios/ferias-ativas', [RelatorioController::class, 'feriasAtivasPdf'])->name('relatorio.ferias.ativas.pdf');
