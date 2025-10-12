@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
 use App\Http\Controllers\FeriasImportController;
@@ -28,14 +29,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
-Route::middleware(['permission:visualizar ferias'])->group(function () {
-    Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
-});
+// Route::middleware(['permission:visualizar ferias'])->group(function () {
+//     Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
+// });
 
 Route::middleware(['role:admin|gestor'])->group(function () {
     Route::prefix('/ferias')->group(function () {
-        Route::get('/create', [FeriasController::class, 'create'])->name('ferias.create');
-        Route::post('/', [FeriasController::class, 'store'])->name('ferias.store');
+        Route::get('/', [FeriasController::class, 'index'])->name('ferias.index');
+
+        Route::get('/create/{servidor}', [FeriasController::class, 'create'])->name('ferias.create');
+        Route::post('/store', [FeriasController::class, 'store'])->name('ferias.store');
         Route::post('/lancar', [FeriasController::class, 'salvarTodos'])->name('ferias.lancar');
         Route::get('/interromper-ferias', [FeriasController::class, 'interromperFerias'])->name('ferias.interromper.periodo');
         Route::post('/interromper', [FeriasController::class, 'interromper'])->name('ferias.interromper');
@@ -51,7 +54,23 @@ Route::middleware(['role:admin|gestor'])->group(function () {
 
 });
 
+// Servidores
+Route::middleware(['role:admin|gestor'])->group(function () {
 
+    Route::prefix('/servidores')->group(function () {
+        Route::get('/', [ServidorController::class, 'index'])->name('servidores.index');
+        Route::get('/{servidor}/edit', [ServidorController::class, 'edit'])->name('servidores.edit');
+        Route::put('/{servidor}', [ServidorController::class, 'update'])->name('servidores.update');
+        Route::get('/create', [ServidorController::class, 'create'])->name('servidores.create');
+        Route::post('/', [ServidorController::class, 'store'])->name('servidores.store');
+        Route::get('/{servidor}', [ServidorController::class, 'show'])->name('servidores.show');
+        Route::delete('/{servidor}', [ServidorController::class, 'destroy'])->name('servidores.destroy');
+    });
+
+});
+
+
+// Movimentações Api
 Route::get('/api/movimentacoes', [VinculoFuncionalController::class, 'index']);
 Route::post('/api/movimentacoes', [VinculoFuncionalController::class, 'store']);
 Route::get('/relatorio/movimentacoes', [VinculoFuncionalController::class, 'pdf']);
@@ -72,6 +91,11 @@ Route::post('/secretarias', [SecretariaController::class, 'store'])->name('secre
 Route::get('/secretarias/{secretaria}/edit', [SecretariaController::class, 'edit'])->name('secretarias.edit');
 Route::put('/secretarias/{secretaria}', [SecretariaController::class, 'update'])->name('secretarias.update');
 Route::delete('/secretarias/{secretaria}', [SecretariaController::class, 'destroy'])->name('secretarias.destroy');
+
+
+// Cargos por Secretaria
+Route::get('api/cargos/{secretaria}', [CargoController::class, 'getCargosBySecretaria'])->name('api.cargos.by.secretaria');
+
 
 // Route::put('/secretarias/{id}', [SecretariaController::class, 'update'])->name('secretarias.update');
 // Route::delete('/secretarias/{id}', [SecretariaController::class, 'destroy'])->name('secretarias.destroy');
@@ -96,10 +120,10 @@ Route::middleware(['role:admin'])->group(function () {
 
 
 // Gestor
-Route::middleware(['role:gestor|admin'])->group(function () {
-    Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
+// Route::middleware(['role:gestor|admin'])->group(function () {
+//     Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
 
-});
+// });
 
 // Route::get('/gestor/ferias/{servidor}', FeriasPainel::class)
 //     ->middleware(['role:gestor|admin'])

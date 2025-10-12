@@ -15,12 +15,6 @@ class Servidor extends Model
         'email',
         'matricula',
         'telefone',
-        'secretaria',
-        'lotacao',
-        'departamento',
-        'processo_implantacao',
-        'processo_disposicao',
-        'numero_memorando',
     ];
 
     public function ferias()

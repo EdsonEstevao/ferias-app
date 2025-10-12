@@ -26,15 +26,19 @@ class Secretaria extends Model
         return $this->hasMany(CargoSecretariaSimbologia::class);
     }
 
+    public function cargos()
+    {
+        return $this->belongsToMany(
+            Cargo::class,
+            CargoSecretariaSimbologia::class,
+            'secretaria_id',
+            'cargo_id')->withPivot('simbologia_id');
+    }
+
     public function secretaria_origem()
     {
         return $this->belongsTo(Secretaria::class, 'secretaria_origem_id');
     }
-
-    //  public function origem()
-    // {
-    //     return $this->belongsTo(FeriasPeriodos::class, 'periodo_origem_id');
-    // }
 
     public function filhos()
     {
@@ -45,4 +49,6 @@ class Secretaria extends Model
     {
         return $this->filhos()->with('todosFilhosRecursivos');
     }
+
+
 }

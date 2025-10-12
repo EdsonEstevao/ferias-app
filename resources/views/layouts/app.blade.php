@@ -8,9 +8,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-
     <!-- Icons Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <style>
+        /* Estilos para o overlay do menu móvel */
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            display: none;
+        }
+
+        .mobile-menu-overlay.active {
+            display: block;
+        }
+
+        /* Transição suave para o menu móvel */
+        .mobile-sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Estilo para o botão hamburger */
+        .hamburger-button {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        @media (max-width: 767px) {
+            .hamburger-button {
+                display: block;
+            }
+
+            .mobile-sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 50;
+                overflow-y: auto;
+            }
+
+            .mobile-sidebar.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
 </head>
 
 <body class="text-gray-800 bg-gray-100">
@@ -18,24 +70,52 @@
     <div class="flex h-screen overflow-hidden">
 
         {{-- Menu lateral --}}
-        <aside class="hidden w-64 bg-white shadow-md md:block">
-            <div class="p-6 text-xl font-bold border-b">Painel</div>
+        <aside class="w-64 bg-white shadow-md mobile-sidebar md:block">
+            <div class="flex items-center justify-between p-6 text-xl font-bold border-b">
+                <span>Painel</span>
+                <button id="close-menu" class="text-gray-500 md:hidden hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             <nav class="p-4 space-y-2 text-sm">
                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-100">🏠 Dashboard</a>
+
                 <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
                     Servidores</a>
-                <a href="{{ route('secretarias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
-                    Secretarias</a>
-                <!-- vincular cargos com a secretarias -->
+
+                <!-- Menu com submenu -->
+                <div x-data="{ open: false }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        <span>👥 Secretarias</span>
+                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                        <a href="{{ route('secretarias.index') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Listar Secretarias</a>
+                        <a href="{{ route('secretarias.create') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Secretaria</a>
+                    </div>
+                </div>
+
                 <a href="{{ route('vinculo.cargos.secretarias') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
                     Administrar Cargos</a>
+
                 <a href="{{ route('ferias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Férias</a>
+
                 <a href="{{ route('ferias.import') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Importar
                     Ferias (.Csv)</a>
+
                 <a href="{{ route('logout') }}" class="block px-4 py-2 text-red-600 rounded hover:bg-red-100">🚪
                     Sair</a>
             </nav>
         </aside>
+
+        {{-- Overlay para fechar o menu ao clicar fora --}}
+        <div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
 
         {{-- Conteúdo principal --}}
         <div class="flex flex-col flex-1 overflow-y-auto">
@@ -43,6 +123,9 @@
             {{-- Cabeçalho fixo --}}
             <header class="sticky top-0 z-10 bg-white shadow-md">
                 <div class="flex items-center justify-between px-6 py-4">
+                    <button id="hamburger-button" class="hamburger-button">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <h1 class="text-lg font-semibold">Sistema de Gestão de Férias</h1>
                     <div class="text-sm text-gray-600">Olá, {{ auth()->user()->name }}</div>
                 </div>
@@ -56,6 +139,50 @@
     </div>
 
     <script src="https://kit.fontawesome.com/bf39cb216e.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerButton = document.getElementById('hamburger-button');
+            const closeMenuButton = document.getElementById('close-menu');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const sidebar = document.querySelector('.mobile-sidebar');
+
+            function openMenu() {
+                sidebar.classList.add('active');
+                mobileMenuOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Previne scroll no body
+            }
+
+            function closeMenu() {
+                sidebar.classList.remove('active');
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Restaura scroll no body
+            }
+
+            hamburgerButton.addEventListener('click', openMenu);
+            closeMenuButton.addEventListener('click', closeMenu);
+            mobileMenuOverlay.addEventListener('click', closeMenu);
+
+            // Fechar menu ao clicar em um link (para mobile)
+            const menuLinks = document.querySelectorAll('.mobile-sidebar a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 768) {
+                        closeMenu();
+                    }
+                });
+            });
+
+            // Fechar menu ao redimensionar a janela para desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    closeMenu();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

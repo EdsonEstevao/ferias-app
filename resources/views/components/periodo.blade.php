@@ -1,13 +1,6 @@
 @props(['periodo'])
 
 <div class="pl-4 mt-2 ml-4 border-l-2 ">
-    {{-- <p class="font-semibold text-gray-800">
-        {{ $periodo->situacao }} — {{ \Carbon\Carbon::parse($periodo->inicio)->format('d/m/Y') }} a
-        {{ \Carbon\Carbon::parse($periodo->fim)->format('d/m/Y') }}
-    </p> --}}
-
-
-
     @foreach ($periodo->todosFilhosRecursivos as $filho)
         <div
             class="flex flex-col px-2 py-2 rounded-lg {{ $filho->situacao === 'Interrompido' ? 'bg-red-100 ' : '' }} {{ $filho->situacao === 'Remarcado' ? 'bg-yellow-100' : '' }} {{ $filho->ativo ? ' shadow-lg' : '' }}">
@@ -22,8 +15,9 @@
                 </p>
                 <p class="text-xs text-gray-500">Situação: {{ $filho->situacao }}</p>
             </div>
+
             <div>
-                @if ($filho->ativo)
+                @if ($filho->ativo || $filho->situacao === 'Planejado')
                     <button @click="modalAberto = true; periodoSelecionado = {{ $filho->id }}"
                         class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
                         🔁 Remarcar

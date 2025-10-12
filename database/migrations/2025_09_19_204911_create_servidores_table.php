@@ -14,9 +14,9 @@ return new class extends Migration
        Schema::create('servidores', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->string('cpf')->unique();
-            $table->string('email')->unique();
-            $table->string('matricula')->unique();
+            $table->string('cpf')->unique()->nullable();
+            $table->string('email')->unique()->nullable();
+            $table->string('matricula')->unique()->nullable();
             $table->string('telefone')->nullable();
             $table->timestamps();
         });

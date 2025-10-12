@@ -1,4 +1,5 @@
 <x-app-layout>
+
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
             Férias
@@ -13,22 +14,22 @@
             🔍 Filtros
         </button>
         <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
-            class="flex gap-2 items-center flex-wrap">
-            <select name="ano_exercicio" class="border rounded px-2 py-1" id="ano_exercicio">
+            class="flex flex-wrap items-center gap-2">
+            <select name="ano_exercicio" class="px-2 py-1 border rounded" id="ano_exercicio">
                 <option value="">Todos os exercícios</option>
                 @for ($y = 2020; $y <= now()->year + 1; $y++)
                     <option value="{{ $y }}">{{ $y }}</option>
                 @endfor
             </select>
 
-            <select name="ano" class="border rounded px-2 py-1" id="ano">
+            <select name="ano" class="px-2 py-1 border rounded" id="ano">
                 <option value="">Todos os anos de início</option>
                 @for ($y = 2020; $y <= now()->year + 1; $y++)
                     <option value="{{ $y }}">{{ $y }}</option>
                 @endfor
             </select>
 
-            <select name="mes" class="border rounded px-2 py-1" id="mes">
+            <select name="mes" class="px-2 py-1 border rounded" id="mes">
                 <option value="">Todos os meses</option>
                 @foreach ($meses as $m => $mes)
                     <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
@@ -38,14 +39,14 @@
             </select>
 
             <button type="button" onclick="verificarRelatorio()"
-                class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">
+                class="px-3 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700">
                 🖨️ Gerar PDF
             </button>
 
         </form>
 
         <div class="mb-4 bg-transparent">
-            <div id="mensagem" class="mt-4 text-red-600 font-semibold px-4 py-2 bg-red-200 rounded-lg mb-2 hidden">
+            <div id="mensagem" class="hidden px-4 py-2 mt-4 mb-2 font-semibold text-red-600 bg-red-200 rounded-lg">
             </div>
 
         </div>
@@ -77,11 +78,6 @@
                                 {{ $mes }}
                             </option>
                         @endforeach
-                        {{-- @foreach (range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                            </option>
-                        @endforeach --}}
                     </select>
                 </div>
 
@@ -125,7 +121,6 @@
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
                     <div class="space-y-4" x-data="{ aberto: false }">
 
-                        {{-- @dd($periodo) --}}
                         <!-- Período original -->
                         <div
                             class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
@@ -134,11 +129,7 @@
                                 <p class="font-semibold text-gray-700">Período Original ({{ $periodo->ordem }}º Período
                                     {{ $periodo->tipo == 'Abono' ? 'de Abono' : 'de Férias' }})
                                 </p>
-                                <p class="text-sm text-gray-600">
-                                    {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
-                                    {{ date('d/m/Y', strtotime($periodo->fim)) }} —
-                                    {{ $periodo->dias }} dias
-                                </p>
+
                                 @if ($periodo->ativo)
                                     <p class="text-sm text-gray-600">
                                         {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
@@ -147,12 +138,77 @@
                                     </p>
                                 @endif
                                 <p class="text-xs text-gray-500">Situação: {{ $periodo->situacao }}</p>
-                                <!-- <button @click="aberto = !aberto" class="mt-2 text-xs text-blue-500 hover:underline">
-                                    {{ 'aberto' ? 'Ocultar sequência' : 'Ver sequência completa' }}
-                                </button> -->
                                 <button @click="aberto = !aberto" class="text-xs text-blue-600 hover:underline">
                                     <span x-text="aberto ? 'Ocultar detalhes' : 'Ver detalhes'"></span>
                                 </button>
+                            </div>
+                            <div class="" x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 transform scale-95"
+                                x-transition:enter-end="opacity-100 transform scale-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100 transform scale-100"
+                                x-transition:leave-end="opacity-0 transform scale-95">
+                                @if ($periodo->ativo || $periodo->situacao === 'Planejado')
+                                    <button @click="modalAberto = true; periodoSelecionado = {{ $periodo->id }}"
+                                        class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
+                                        🔁 Remarcar
+                                    </button>
+                                    @if ($periodo->situacao !== 'Interrompido')
+                                        <button @click="periodoId = {{ $periodo->id }}"
+                                            class="px-3 py-1 mt-3 text-white bg-red-600 rounded hover:bg-red-700">
+                                            ✋ Interromper este período
+                                        </button>
+                                    @endif
+
+                                    {{-- Formulário de interrupção --}}
+                                    <div x-show="periodoId === {{ $periodo->id }}" class="mt-4 space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Data da
+                                                Interrupção</label>
+                                            <input type="date" x-model="dataInterrupcao"
+                                                class="block w-full mt-1 border-gray-300 rounded">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                                            <textarea x-model="motivo" rows="3" class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                                        </div>
+
+                                        <button
+                                            @click="fetch('{{ route('ferias.interromper') }}', {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                                'Accept': 'application/json',
+                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                            },
+                                                            body: JSON.stringify({
+                                                                periodo_id: periodoId,
+                                                                data: dataInterrupcao,
+                                                                motivo: motivo
+                                                            })
+                                                        })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            alert(data.message);
+                                                            periodoId = null;
+                                                            dataInterrupcao = '';
+                                                            motivo = '';
+                                                            location.reload();
+                                                        })
+                                                        .catch(err => {
+                                                            console.error(err);
+                                                            alert('Erro ao interromper período');
+                                                        })"
+                                            class="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700">
+                                            ✅ Confirmar Interrupção
+                                        </button>
+                                        <button @click="periodoId = null; motivo = ''; dataInterrupcao = ''"
+                                            class="px-3 py-1 text-white bg-gray-600 rounded hover:bg-gray-700">
+                                            ❌ Cancelar
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -161,8 +217,6 @@
                             <!-- Detalhes adicionais aqui -->
                             <x-periodo :periodo="$periodo" />
                         </div>
-                        <!-- <div x-show="aberto" class="pl-4 ml-6 space-y-4 border-l-2 border-gray-300">
-                        </div> -->
                     </div>
                 @endforeach
             </div>

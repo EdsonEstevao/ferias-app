@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div x-data="cadastroServidor()" class="min-h-screen py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div x-data="atualizarServidor()" class="min-h-screen py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div class="max-w-4xl px-4 mx-auto sm:px-6 lg:px-8">
             <!-- Cabeçalho -->
             <div class="mb-8 text-center">
@@ -10,8 +10,8 @@
                         </path>
                     </svg>
                 </div>
-                <h1 class="mb-2 text-3xl font-bold text-gray-900">Cadastro de Servidor</h1>
-                <p class="max-w-2xl mx-auto text-lg text-gray-600">Preencha as informações do servidor para cadastrá-lo
+                <h1 class="mb-2 text-3xl font-bold text-gray-900">Editar informações do Servidor</h1>
+                <p class="max-w-2xl mx-auto text-lg text-gray-600">Preencha as informações do servidor para editá-lo
                     no sistema de gestão de férias</p>
             </div>
 
@@ -103,10 +103,11 @@
                         </button>
                     </nav>
                 </div>
-
+                {{-- @dd($servidor) --}}
                 <!-- Formulário -->
-                <form action="{{ route('servidores.store') }}" method="POST" class="p-8">
+                <form action="{{ route('servidores.update', $servidor->id) }}" method="POST" class="p-8">
                     @csrf
+                    @method('PUT')
 
                     <!-- Aba 1: Dados Pessoais -->
                     <div x-show="aba === 'pessoal'" x-transition:enter="transition ease-out duration-300"
@@ -115,7 +116,10 @@
                         x-transition:leave="transition ease-in duration-200"
                         x-transition:leave-start="opacity-100 translate-x-0"
                         x-transition:leave-end="opacity-0 -translate-x-4">
-                        @include('servidores.partials.pessoal')
+                        @include('servidores.partials.pessoal', [
+                            'servidor' => $servidor,
+                            'vinculo' => $servidor->vinculos->first(),
+                        ])
                     </div>
 
                     <!-- Aba 2: Vínculo Funcional -->
@@ -126,8 +130,8 @@
                         x-transition:leave-start="opacity-100 translate-x-0"
                         x-transition:leave-end="opacity-0 -translate-x-4">
                         @include('servidores.partials.funcional', [
-                            'vinculo' => null,
-                            'servidor' => null,
+                            'servidor' => $servidor,
+                            'vinculo' => $servidor->vinculos->first(),
                             'secretarias' => $secretarias,
                             'cargos' => $cargos,
                         ])
@@ -140,169 +144,12 @@
                         x-transition:leave="transition ease-in duration-200"
                         x-transition:leave-start="opacity-100 translate-x-0"
                         x-transition:leave-end="opacity-0 -translate-x-4">
-
-                        <!-- Seção de Endereço -->
                         @include('servidores.partials.endereco', [
-                            'servidor' => null,
-                            'endereco' => null,
-                            'vinculo' => null,
+                            'servidor' => $servidor,
+                            'vinculo' => $servidor->vinculos->first(),
                         ])
 
-                        {{-- <div class="space-y-6">
-                            <!-- Cabeçalho da Seção -->
-                            <div class="flex items-center pb-4 space-x-3 border-b border-gray-200">
-                                <div class="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                        </path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Endereço Residencial</h3>
-                                    <p class="text-sm text-gray-600">Informe o endereço completo do servidor</p>
-                                </div>
-                            </div>
-
-                            <!-- Campos de Endereço -->
-                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <!-- CEP -->
-                                <div class="md:col-span-1">
-                                    <label for="cep" class="block mb-2 text-sm font-medium text-gray-700">
-                                        CEP *
-                                    </label>
-                                    <input type="text" id="cep" name="cep"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg cep-mask form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="00000-000" x-model="cep" @blur="buscarCEP()">
-                                    <p class="mt-1 text-xs text-gray-500" x-show="buscandoCEP">Buscando endereço...
-                                    </p>
-                                </div>
-
-                                <!-- Logradouro -->
-                                <div class="md:col-span-2">
-                                    <label for="logradouro" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Endereço (Logradouro) *
-                                    </label>
-                                    <input type="text" id="logradouro" name="logradouro"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Rua, Avenida, Travessa..." x-model="endereco.logradouro">
-                                </div>
-
-                                <!-- Número e Complemento -->
-                                <div class="md:col-span-1">
-                                    <label for="numero" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Número *
-                                    </label>
-                                    <input type="text" id="numero" name="numero"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="123" x-model="endereco.numero">
-                                </div>
-
-                                <div class="md:col-span-1">
-                                    <label for="complemento" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Complemento
-                                    </label>
-                                    <input type="text" id="complemento" name="complemento"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Apto 101, Bloco B..." x-model="endereco.complemento">
-                                </div>
-
-                                <!-- Bairro -->
-                                <div class="md:col-span-1">
-                                    <label for="bairro" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Bairro *
-                                    </label>
-                                    <input type="text" id="bairro" name="bairro"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Centro" x-model="endereco.bairro">
-                                </div>
-                                <!-- Estado -->
-                                <div class="md:col-span-1">
-                                    <label for="estado" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Estado *
-                                    </label>
-                                    <select id="estado" name="estado"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        x-model="endereco.estado">
-                                        <option value="">Selecione o estado</option>
-                                        <option value="AC">Acre</option>
-                                        <option value="AL">Alagoas</option>
-                                        <option value="AP">Amapá</option>
-                                        <option value="AM">Amazonas</option>
-                                        <option value="BA">Bahia</option>
-                                        <option value="CE">Ceará</option>
-                                        <option value="DF">Distrito Federal</option>
-                                        <option value="ES">Espírito Santo</option>
-                                        <option value="GO">Goiás</option>
-                                        <option value="MA">Maranhão</option>
-                                        <option value="MT">Mato Grosso</option>
-                                        <option value="MS">Mato Grosso do Sul</option>
-                                        <option value="MG">Minas Gerais</option>
-                                        <option value="PA">Pará</option>
-                                        <option value="PB">Paraíba</option>
-                                        <option value="PR">Paraná</option>
-                                        <option value="PE">Pernambuco</option>
-                                        <option value="PI">Piauí</option>
-                                        <option value="RJ">Rio de Janeiro</option>
-                                        <option value="RN">Rio Grande do Norte</option>
-                                        <option value="RS">Rio Grande do Sul</option>
-                                        <option value="RO">Rondônia</option>
-                                        <option value="RR">Roraima</option>
-                                        <option value="SC">Santa Catarina</option>
-                                        <option value="SP">São Paulo</option>
-                                        <option value="SE">Sergipe</option>
-                                        <option value="TO">Tocantins</option>
-                                    </select>
-                                </div>
-
-                                <!-- Cidade -->
-                                <div class="md:col-span-1">
-                                    <label for="cidade" class="block mb-2 text-sm font-medium text-gray-700">
-                                        Cidade *
-                                    </label>
-                                    <input type="text" id="cidade" name="cidade"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="São Paulo" x-model="endereco.cidade">
-                                </div>
-
-
-
-                                <!-- Ponto de Referência -->
-                                <div class="md:col-span-2">
-                                    <label for="ponto_referencia"
-                                        class="block mb-2 text-sm font-medium text-gray-700">
-                                        Ponto de Referência
-                                    </label>
-                                    <input type="text" id="ponto_referencia" name="ponto_referencia"
-                                        class="w-full px-4 py-3 transition-colors duration-200 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Próximo ao mercado, em frente à praça..."
-                                        x-model="endereco.ponto_referencia">
-                                </div>
-                            </div>
-
-                            <!-- Mapa de Localização (Opcional) -->
-                            <div class="p-4 mt-6 border border-gray-200 rounded-lg bg-gray-50">
-                                <div class="flex items-center mb-3 space-x-2">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
-                                        </path>
-                                    </svg>
-                                    <span class="text-sm font-medium text-gray-700">Localização</span>
-                                </div>
-                                <p class="text-sm text-gray-600">
-                                    O endereço será usado para contato e correspondência oficial.
-                                    Certifique-se de que as informações estão corretas.
-                                </p>
-                            </div>
-                        </div> --}}
                     </div>
-
-
 
                     <!-- Aba 4: Documentação -->
                     <div x-show="aba === 'documentacao'" x-transition:enter="transition ease-out duration-300"
@@ -312,8 +159,8 @@
                         x-transition:leave-start="opacity-100 translate-x-0"
                         x-transition:leave-end="opacity-0 -translate-x-4">
                         @include('servidores.partials.documentacao', [
-                            'vinculo' => null,
-                            'servidor' => null,
+                            'servidor' => $servidor,
+                            'vinculo' => $servidor->vinculos->first(),
                         ])
                     </div>
 
@@ -383,21 +230,30 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('cadastroServidor', () => ({
+            Alpine.data('atualizarServidor', () => ({
                 aba: 'pessoal',
                 etapaAtual: 1,
                 nomeEtapa: 'Dados Pessoais',
                 cep: '',
                 buscandoCEP: false,
+                // endereco: {
+                //     logradouro: '',
+                //     numero: '',
+                //     complemento: '',
+                //     bairro: '',
+                //     cidade: '',
+                //     estado: '',
+                //     ponto_referencia: ''
+                // },
                 endereco: {
-                    logradouro: '',
-                    numero: '',
-                    complemento: '',
-                    bairro: '',
-                    cidade: '',
-                    estado: '',
-                    ponto_referencia: '',
-                    cep: '',
+                    logradouro: "{{ old('endereco', $servidor->vinculos->first()?->endereco) ?? '' }}",
+                    numero: "{{ old('numero', $servidor->vinculos->first()?->numero) ?? '' }}",
+                    complemento: "{{ old('complemento', $servidor->vinculos->first()?->complemento) ?? '' }}",
+                    bairro: "{{ old('bairro', $servidor->vinculos->first()?->bairro) ?? '' }}",
+                    cep: "{{ old('cep', $servidor->vinculos->first()?->cep) ?? '' }}",
+                    estado: "{{ old('estado', $servidor->vinculos->first()?->estado) ?? '' }}",
+                    cidade: "{{ old('cidade', $servidor->vinculos->first()?->cidade) ?? '' }}",
+                    ponto_referencia: "{{ old('ponto_referencia', $servidor->vinculos->first()?->ponto_referencia) ?? '' }}",
                 },
 
                 mudarAba(novaAba) {

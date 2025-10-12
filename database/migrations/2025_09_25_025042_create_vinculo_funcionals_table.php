@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('cargo');
             $table->enum('tipo_movimentacao', ['Nomeação', 'Exoneração', 'Tornado sem efeito']);
             $table->enum('status', ['Ativo', 'Inativo'])->default('Ativo');
-            $table->date('data_movimentacao');
+            $table->date('data_movimentacao'); // Data da nomeação ou exoneração
             $table->string('ato_normativo')->nullable();
             $table->text('observacao')->nullable();
             $table->timestamps();

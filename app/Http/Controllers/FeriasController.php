@@ -15,6 +15,7 @@ class FeriasController extends Controller
 {
     public function index(Request $request)
     {
+        // dd($request->all());
 
         $ano = $request->input('ano_exercicio') ?? date('Y');
         $query = $request->input('busca') ?? '';
@@ -89,13 +90,13 @@ class FeriasController extends Controller
     return response()->json($query->get());
     }
 
-    public function create(Request $request)
+    public function create(Request $request, $servidorId)
     {
-        // dd('create');
+        // dd($request->all(), $servidorId);
         if (Auth::user()->hasRole('servidor')) {
             return redirect()->route('ferias.index');
         }
-        $servidorId = $request->servidorId;
+        // $servidorId = $request->servidorId;
         $data = [
             'servidorId' => $servidorId,
             'servidores'=> Servidor::all()

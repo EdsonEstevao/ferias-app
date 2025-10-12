@@ -13,8 +13,9 @@
             novoFim: '',
             novoTipo: 'Férias',
             periodos: [],
+            diasCalculados: 0,
             adicionarPeriodo() {
-        
+
                 if (!this.novoInicio || !this.novoFim) return;
                 this.formPreventDefault();
                 const dias = (new Date(this.novoFim) - new Date(this.novoInicio)) / (1000 * 60 * 60 * 24) + 1;
@@ -35,9 +36,19 @@
                 document.getElementById('form').addEventListener('submit', function(e) {
                     e.preventDefault();
                 });
+            },
+            calcularDias() {
+                if (this.novoInicio && this.novoFim) {
+                    const inicio = new Date(this.novoInicio);
+                    const fim = new Date(this.novoFim);
+                    const diff = (fim - inicio) / (1000 * 60 * 60 * 24);
+                    this.diasCalculados = diff >= 0 ? diff + 1 : 0;
+                } else {
+                    this.diasCalculados = 0;
+                }
             }
-        
-        
+
+
         }">
             <h2 class="mb-6 text-2xl font-bold">📅 Lançar Férias</h2>
 
@@ -63,11 +74,13 @@
             <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-3">
                 <div>
                     <label>Data Início</label>
-                    <input type="date" x-model="novoInicio" class="w-full px-3 py-2 border rounded">
+                    <input type="date" x-model="novoInicio" @change="calcularDias"
+                        class="w-full px-3 py-2 border rounded">
                 </div>
                 <div>
                     <label>Data Fim</label>
-                    <input type="date" x-model="novoFim" class="w-full px-3 py-2 border rounded">
+                    <input type="date" x-model="novoFim" @change="calcularDias"
+                        class="w-full px-3 py-2 border rounded">
                 </div>
                 <div>
                     <label>Tipo</label>
@@ -78,8 +91,17 @@
                 </div>
             </div>
 
+            <div class="mb-4 px-3 py-2 text-sm text-gray-700 bg-red-100 rounded" x-show="diasCalculados > 0"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2">
+                <template x-if="diasCalculados > 0">
+                    <p class="text-red-400">Período de <strong><span x-text="diasCalculados"></span></strong> dias</p>
+                </template>
+            </div>
+
             <button @click="adicionarPeriodo" class="px-4 py-2 mb-6 text-white bg-blue-600 rounded hover:bg-blue-700">
-                ➕ Adicionar Período
+                <i class="mr-2 fas fa-plus"></i>Adicionar Período
             </button>
 
             {{-- Lista de períodos adicionados --}}
