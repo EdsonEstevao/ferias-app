@@ -16,7 +16,7 @@ class VinculoController extends Controller
     {
         $data = [];
 
-        $data['secretarias'] = Secretaria::orderBy('sigla')->get();
+        $data['secretarias'] = Secretaria::where('secretaria_origem_id', '=', null)->orderBy('sigla')->get();
         $data['cargos'] = Cargo::all();
         $data['simbologias'] = Simbologia::all();
         $data['vinculos'] = CargoSecretariaSimbologia::with(['cargo', 'secretaria', 'simbologia'])->get();

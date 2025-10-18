@@ -9,6 +9,8 @@
         <div class="max-w-5xl p-6 mx-auto bg-white rounded shadow" x-data="{
             servidorId: {{ $servidorId }},
             ano_exercicio: '{{ date('Y') }}',
+            tituloDiof: '',
+            linkDiof: '',
             novoInicio: '',
             novoFim: '',
             novoTipo: 'Férias',
@@ -70,6 +72,17 @@
                 <input type="number" x-model="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
             </div>
 
+            <!--Link do Diof -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Titulo</label>
+                <input type="text" x-model="tituloDiof" name="titulo_diof"
+                    placeholder="Portaria de férias nº 005 de 02 de Junho de 2023."
+                    class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
+                <input type="url" x-model="linkDiof" name="link_diof" placeholder="https://exemplo.com/diof"
+                    class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+            </div>
+
             {{-- Formulário de período --}}
             <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-3">
                 <div>
@@ -111,7 +124,8 @@
                     <ul class="ml-5 space-y-2 text-sm text-gray-700 list-disc">
                         <template x-for="(p, index) in periodos" :key="index">
                             <li>
-                                <span x-text="p.inicio"></span> a <span x-text="p.fim"></span> —
+                                <span x-text="formatarData(p.inicio)"></span> a <span
+                                    x-text="formatarData(p.fim)"></span> —
                                 <span x-text="p.dias"></span> dias
                                 <span x-text="p.tipo === 'Abono' ? '(Abono)' : '(Férias)'"
                                     :class="p.tipo === 'Abono' ? 'text-green-600' : 'text-blue-600'"></span>
@@ -124,7 +138,7 @@
             </template>
 
             {{-- Botão de envio (simulado) --}}
-            <button @click="salvarTodos(servidorId, ano_exercicio, periodos)"
+            <button @click="salvarTodos(servidorId, ano_exercicio, periodos, tituloDiof, linkDiof)"
                 class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                 ✅ Lançar Férias
             </button>
@@ -139,7 +153,7 @@
     {{-- @livewire('ferias-form', ['servidorId' => intval($servidorId)]) --}}
 
     <script>
-        function salvarTodos(servidorId, ano_exercicio, periodos) {
+        function salvarTodos(servidorId, ano_exercicio, periodos, tituloDiof, linkDiof) {
             console.log('salvar férias')
             fetch('{{ route('ferias.lancar') }}', {
                     method: 'POST',
@@ -151,7 +165,9 @@
                     body: JSON.stringify({
                         servidorId,
                         ano_exercicio,
-                        periodos
+                        periodos,
+                        tituloDiof,
+                        linkDiof
                     })
                 })
                 .then(res => res.json())
@@ -162,13 +178,24 @@
                         document.querySelector('#form').reset();
                         location.reload();
                     } else {
-                        alert('Erro ao lançar férias');
+                        console.error(data.message);
+                        console.log(data.errors);
+                        console.log(data);
+                        alert(data.message || 'Erro ao salvar férias');
                     }
                 })
                 .catch(err => {
                     console.error(err);
                     alert('Falha na comunicação com o servidor');
                 })
+        }
+
+        // data formato pt-br dd/mm/yyyy
+        function formatarData(data) {
+            if (!data) return '';
+            console.log(data);
+            const d = new Date(data + 'T00:00:00');
+            return d.toLocaleDateString('pt-BR');
         }
     </script>
 </x-app-layout>

@@ -16,6 +16,13 @@ class FeriasImportController extends Controller
 
     public function importCsv(Request $request)
     {
+        $request->validate([
+            'csv' => 'required',
+        ],
+        [
+            'csv.required' => 'Selecione um arquivo CSV',
+        ]);
+
         $file = $request->file('csv');
 
         if(!$file->isValid() || $file->getClientOriginalExtension() != 'csv' || !$file) {

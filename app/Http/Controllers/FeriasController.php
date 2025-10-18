@@ -109,12 +109,14 @@ class FeriasController extends Controller
     {
         // verificar se os periodos somam o total de ferias de 30 dias
 
+
         $request->validate([
             'ano_exercicio' => 'required|integer',
             'periodos.*.tipo' => 'required|in:Férias,Abono',
             'periodos.*.inicio' => 'required|date',
             'periodos.*.fim' => 'required|date|after_or_equal:periodos.*.inicio',
         ]);
+
         $diasFerias = 0;
         foreach ($request->periodos as $periodo) {
             if ($periodo['tipo'] == 'Férias') {
@@ -174,22 +176,41 @@ class FeriasController extends Controller
             'motivo' => 'required|string|max:255',
         ]);
 
+
+
         $periodo = FeriasPeriodos::find($data['periodo_id']);
 
         // Atualiza o período original
         $periodo->ativo = 0;
         $periodo->save();
 
+        if (!($periodo->fim instanceof Carbon)) {
+            $periodo->fim = Carbon::parse($periodo->fim);
+        }
+
+        if (!($data['data'] instanceof Carbon)) {
+            $data['data'] = Carbon::parse($data['data']);
+        }
+
+        $fim = Carbon::parse($periodo->fim);
+        $interrupcao = Carbon::parse($data['data']);
+
+        // Agora calcule a diferença
+        $diferenca = $interrupcao->diffInDays($fim) + 1;
+
+
         $novo = FeriasPeriodos::create([
             'ferias_id' => $periodo->ferias_id,
             'tipo' => $periodo->tipo,
-            'dias' => $periodo->dias,
+            'dias' => $diferenca,
             'ordem' => $periodo->ordem,
             'inicio' => $data['data'],
             'fim' => $periodo->fim,
             'situacao' => 'Interrompido',
             'justificativa' => $data['motivo'],
-            'periodo_origem_id' => $periodo->id
+            'periodo_origem_id' => $periodo->id,
+            'title' => $request->tituloDiof ?? null,
+            'url' => $request->linkDiof ?? null,
         ]);
 
         // Registra evento
@@ -275,6 +296,8 @@ class FeriasController extends Controller
             'dias' => $dias,
             'situacao' => 'Remarcado',
             'justificativa' => $data['justificativa'],
+            'title' => $request->tituloDiof ?? null,
+            'url' => $request->linkDiof ?? null,
             'periodo_origem_id' => $original->id,
         ]);
 
@@ -310,6 +333,11 @@ class FeriasController extends Controller
 
         // dd($servidor);
 
+        // verifica se o servidor tem ferias cadastradas para o ano escolhido
+        if (Ferias::where('servidor_id', $servidor->id)->where('ano_exercicio', $request->ano_exercicio)->exists()) {
+            return response()->json(['success' => false, 'message' => 'O servidor ja possui ferias cadastradas para o ano escolhido.']);
+        }
+
 
 
         $ferias = Ferias::create([
@@ -329,6 +357,8 @@ class FeriasController extends Controller
                     'dias' => $periodo['dias'],
                     'inicio' => $periodo['inicio'],
                     'fim' => $periodo['fim'],
+                    'title' => $request->tituloDiof,
+                    'url' => $request->linkDiof
                 ]);
             }
         }

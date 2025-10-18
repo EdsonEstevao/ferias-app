@@ -79,15 +79,19 @@
             </div>
             <nav class="p-4 space-y-2 text-sm">
                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-100">🏠 Dashboard</a>
+                <!-- icon servidores -->
 
-                <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
+                <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100"> <i
+                        class="text-blue-400 fa-solid fa-users"></i>
                     Servidores</a>
 
                 <!-- Menu com submenu -->
                 <div x-data="{ open: false }" class="space-y-1">
                     <button @click="open = !open"
                         class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
-                        <span>👥 Secretarias</span>
+                        <!-- icon secretarias -->
+
+                        <span><i class="text-yellow-300 fa-brands fa-fort-awesome"></i> Secretarias</span>
                         <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
                             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
@@ -100,17 +104,83 @@
                             class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Secretaria</a>
                     </div>
                 </div>
-
-                <a href="{{ route('vinculo.cargos.secretarias') }}" class="block px-4 py-2 rounded hover:bg-gray-100">👥
+                <!-- icon administrar cargos -->
+                <a href="{{ route('vinculo.cargos.secretarias') }}" class="block px-4 py-2 rounded hover:bg-gray-100">
+                    <i class="text-green-300 fas fa-users-cog"></i>
                     Administrar Cargos</a>
 
                 <a href="{{ route('ferias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Férias</a>
 
                 <a href="{{ route('ferias.import') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅 Importar
                     Ferias (.Csv)</a>
+                <!-- Menu com submenu Usuarios -->
+                <div x-data="{ open: false }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        <!-- icon usuarios -->
 
-                <a href="{{ route('logout') }}" class="block px-4 py-2 text-red-600 rounded hover:bg-red-100">🚪
-                    Sair</a>
+                        <span><i class="text-blue-400 fas fa-users"></i> Usuarios</span>
+                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                        <a href="{{ route('admin.users.index') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Listar Usuarios</a>
+                        <a href="{{ route('admin.users.create') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Usuario</a>
+                    </div>
+                </div>
+                <!-- Menu com submenu Role -->
+                <div x-data="{ open: false }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        <!-- icon role -->
+                        <span><i class="text-red-400 fas fa-user-tag"></i> Role</span>
+                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                        <a href="{{ route('admin.roles.index') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Listar Roles</a>
+                        <a href="{{ route('admin.roles.store') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Role</a>
+                    </div>
+                </div>
+                <!-- Menu com submenu Perfil -->
+                <div x-data="{ open: false }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full">
+                            </div>
+                            <span>{{ Auth::user()->name }}</span>
+                        </div>
+                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+
+                        <x-responsive-nav-link :href="route('profile.edit')">
+                            {{ __('Profile') }}
+                        </x-responsive-nav-link>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+
+                            <x-responsive-nav-link :href="route('logout')"
+                                onclick="event.preventDefault();
+                                                this.closest('form').submit();">
+                                Sair
+                            </x-responsive-nav-link>
+                        </form>
+                    </div>
+                </div>
+
             </nav>
         </aside>
 

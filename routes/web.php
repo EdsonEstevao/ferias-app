@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
@@ -20,12 +21,10 @@ use App\Models\Secretaria;
 use App\Models\Simbologia;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::middleware('auth')->get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 
@@ -113,9 +112,15 @@ Route::middleware(['role:admin'])->group(function () {
     Route::post('/admin/roles', [RoleController::class, 'store'])->name('admin.roles.store');
     Route::post('/admin/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('admin.roles.syncPermissions');
 
-    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
-    Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
-    Route::put('/admin/users/{user}/roles', [UserController::class, 'updateRoles'])->name('admin.users.updateRoles');
+    Route::group(['prefix' => '/admin'], function () {
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+        Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+        Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('admin.users.updateRoles');
+
+    });
 });
 
 

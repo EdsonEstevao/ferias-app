@@ -18,6 +18,8 @@ class FeriasPeriodos extends Model
         'fim',
         'situacao',
         'justificativa',
+        'title',
+        'url',
     ];
 
     public function ferias()
