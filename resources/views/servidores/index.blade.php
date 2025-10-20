@@ -53,8 +53,8 @@
                     </div>
                 </div>
 
-                <!-- Tabela -->
-                <div class="overflow-hidden">
+                <!-- Tabela responsivo -->
+                <div class="overflow-hidden overflow-x-auto ">
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -118,12 +118,13 @@
 
                                     <!-- Cargo -->
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900" x-text="s.cargo?.nome || '—'"></div>
+                                        <div class="text-sm text-gray-900" x-text="s.vinculos[0].cargo || '—'"></div>
                                     </td>
 
                                     <!-- Secretaria -->
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900" x-text="s.secretaria?.nome || '—'"></div>
+                                        <div class="text-sm text-gray-900" x-text="s.vinculos[0].secretaria || '—'">
+                                        </div>
                                     </td>
 
                                     <!-- Ações -->

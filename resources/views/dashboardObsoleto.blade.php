@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            Dashboard
+            {{ __('Dashboard') }}
         </h2>
     </x-slot>
 
@@ -19,12 +19,12 @@
                         <div class="p-4 bg-white rounded shadow">
                             <h3 class="text-sm font-semibold text-gray-600">Férias interrompidas</h3>
                             <p class="text-2xl font-bold text-red-600">{{ $totalInterrompidas }}</p>
-                            <p class="text-xs text-gray-500">Períodos ativos</p>
+                            <p class="text-xs text-gray-500">Períodos interrompidos</p>
                         </div>
                         <div class="p-4 bg-white rounded shadow">
-                            <h3 class="text-sm font-semibold text-gray-600">Férias Remarcadas</h3>
+                            <h3 class="text-sm font-semibold text-gray-600">Remarcações pendentes</h3>
                             <p class="text-2xl font-bold text-yellow-600">{{ $totalRemarcacoes }}</p>
-                            <p class="text-xs text-gray-500">Ativos</p>
+                            <p class="text-xs text-gray-500">Aguardando confirmação</p>
                         </div>
                     </div>
 
@@ -53,7 +53,6 @@
                                         <th class="px-4 py-2 text-left">Ano</th>
                                         <th class="px-4 py-2 text-left">Períodos</th>
                                         <th class="px-4 py-2 text-left">Situação</th>
-                                        <th class="px-4 py-2 text-left">Períodos</th>
                                         <th class="px-4 py-2 text-left">Ações</th>
                                     </tr>
                                 </thead>
@@ -71,11 +70,10 @@
                                                 </span>
                                             </td>
                                             <td class="px-4 py-2">
-                                                <span
-                                                    class="font-semibold">{{ $ferias->periodos->where('ativo', true)->count() }}</span>
+                                                <span class="font-semibold">{{ $ferias->periodos->count() }}</span>
                                             </td>
                                             <td class="px-4 py-2">
-                                                @foreach ($ferias->periodos->where('ativo', true)->take(2) as $periodo)
+                                                @foreach ($ferias->periodos->take(2) as $periodo)
                                                     <span
                                                         class="inline-block px-2 py-1 mb-1 text-xs rounded-full
                                                         {{ $periodo->situacao == 'Planejado'
@@ -89,39 +87,19 @@
                                                         <br>
                                                     @endif
                                                 @endforeach
-                                                @if ($ferias->periodos->where('ativo', true)->count() > 2)
-                                                    <span
-                                                        class="text-xs text-gray-500">+{{ $ferias->periodos->where('ativo', true)->count() - 2 }}
-                                                        mais</span>
-                                                @endif
-                                            </td>
-                                            <td class="px-4 py-2">
-                                                @foreach ($ferias->periodos->where('ativo', true)->take(2) as $periodo)
-                                                    <div class="text-xs">
-                                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} -
-                                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
-                                                        ({{ $periodo->dias }} dias)
-                                                    </div>
-                                                @endforeach
                                             </td>
                                             <td class="px-4 py-2">
                                                 <div class="flex space-x-2">
-                                                    <a href="{{ route('ferias.show', $ferias->id) }}"
+                                                    <a href="/ferias/{{ $ferias->id }}"
                                                         class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded hover:bg-blue-200">
                                                         👁️ Ver
                                                     </a>
-                                                    @if ($ferias->periodos->where('ativo', true)->where('situacao', 'Planejado')->count() > 0)
-                                                        <button
-                                                            class="px-3 py-1 text-xs text-green-600 bg-green-100 rounded hover:bg-green-200">
-                                                            🔁 Remarcar
-                                                        </button>
-                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
                                                 Nenhum lançamento de férias encontrado.
                                             </td>
                                         </tr>
@@ -130,7 +108,6 @@
                             </table>
                         </div>
 
-                        <!-- CORREÇÃO: Agora $ultimos é um Paginator e tem hasPages() -->
                         @if ($ultimos->hasPages())
                             <div class="mt-4">
                                 {{ $ultimos->links() }}
@@ -142,78 +119,91 @@
         </div>
     </div>
 
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Gráfico de Férias por Mês
-        const ctxMes = document.getElementById('graficoFeriasPorMes').getContext('2d');
-        new Chart(ctxMes, {
-            type: 'bar',
-            data: {
-                labels: {{ Js::from($meses) }},
-                datasets: [{
-                    label: 'Períodos de Férias',
-                    data: {{ Js::from($dadosGrafico) }},
-                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantidade de Períodos'
-                        }
+        // DEBUG: Verificar se os dados estão chegando
+        console.log('Meses:', {!! json_encode($meses) !!});
+        console.log('Dados por Mês:', {!! json_encode($dadosGrafico) !!});
+        // console.log('Meses:', {{ Js::from($meses) }});
+        // console.log('Dados por Mês:', {{ Js::from($dadosGrafico) }});
+
+        // Aguardar o DOM carregar completamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de Férias por Mês
+            const ctxMes = document.getElementById('graficoFeriasPorMes');
+
+            if (ctxMes) {
+                new Chart(ctxMes, {
+                    type: 'bar',
+                    data: {
+                        labels: {!! json_encode($meses) !!},
+                        datasets: [{
+                            label: 'Períodos de Férias',
+                            data: {!! json_encode($dadosGrafico) !!},
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Meses'
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Quantidade de Períodos'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Meses'
+                                }
+                            }
                         }
                     }
-                }
+                });
+            } else {
+                console.error('Elemento graficoFeriasPorMes não encontrado');
             }
-        });
 
-        // Gráfico de Situações (opcional - você pode implementar depois)
-        const ctxSituacao = document.getElementById('graficoSituacoes').getContext('2d');
+            // Gráfico de Situações
+            const ctxSituacao = document.getElementById('graficoSituacoes');
 
-        // Dados de exemplo para o gráfico de situações
-        console.log('Total com férias:', {{ Js::from($totalComFerias) }}, 'total interrompidas:',
-            {{ Js::from($totalInterrompidas) }}, 'total remarcacoes:', {{ Js::from($totalRemarcacoes) }});
-        const dadosSituacoes = {
+            if (ctxSituacao) {
+                // Dados de exemplo para situações - você pode implementar a busca real depois
+                const situacoesData = {
+                    'Planejado': {{ $totalComFerias - $totalInterrompidas }},
+                    'Interrompido': {{ $totalInterrompidas }},
+                    'Remarcado': {{ $totalRemarcacoes }}
+                };
 
-            labels: ['Planejado', 'Interrompido', 'Remarcado', 'Outros'],
-            datasets: [{
-                data: [{{ $totalFeriasPlanejadas - $totalRemarcacoes }},
-                    // data: [{{ $totalComFerias - $totalInterrompidas - $totalRemarcacoes }},
-                    // data: [{{ $totalComFerias }},
-                    {{ $totalInterrompidas }}, {{ $totalRemarcacoes }}, 0
-                ],
-                backgroundColor: [
-                    'rgba(34, 197, 94, 0.6)', // Verde - Planejado
-                    'rgba(239, 68, 68, 0.6)', // Vermelho - Interrompido
-                    'rgba(245, 158, 11, 0.6)', // Amarelo - Remarcado
-                    'rgba(156, 163, 175, 0.6)' // Cinza - Outros
-                ],
-                borderWidth: 1
-            }]
-        };
-
-        new Chart(ctxSituacao, {
-            type: 'doughnut',
-            data: dadosSituacoes,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+                new Chart(ctxSituacao, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(situacoesData),
+                        datasets: [{
+                            data: Object.values(situacoesData),
+                            backgroundColor: [
+                                'rgba(34, 197, 94, 0.6)', // Verde - Planejado
+                                'rgba(239, 68, 68, 0.6)', // Vermelho - Interrompido
+                                'rgba(245, 158, 11, 0.6)', // Amarelo - Remarcado
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
                     }
-                }
+                });
+            } else {
+                console.error('Elemento graficoSituacoes não encontrado');
             }
         });
     </script>

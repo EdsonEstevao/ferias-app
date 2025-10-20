@@ -82,13 +82,16 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
-                                        <label for="password" value=""
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
-                                        <input type="password" id="password" name="password"
-                                            placeholder="Digite a senha"
-                                            class="w-full p-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    </div>
+
+                                    @if (Auth::id() === $user->id)
+                                        <div>
+                                            <label for="password" value=""
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
+                                            <input type="password" id="password" name="password"
+                                                placeholder="Digite a senha"
+                                                class="w-full p-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        </div>
+                                    @endif
 
                                     <div>
                                         <label for="role"
@@ -110,7 +113,7 @@
                                 <div class="flex justify-end pt-4">
                                     <!-- Botão Voltar -->
                                     <a href="{{ route('admin.users.index') }}"
-                                        class="px-6 py-3 mr-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 focus:outline-none transition duration-200">
+                                        class="px-6 py-3 mr-2 text-white transition duration-200 bg-gray-600 rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 focus:outline-none">
                                         <div class="flex items-center space-x-2">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -122,7 +125,7 @@
                                     </a>
 
                                     <button type="submit"
-                                        class="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none transition duration-200">
+                                        class="px-6 py-3 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none">
                                         <div class="flex items-center space-x-2">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">

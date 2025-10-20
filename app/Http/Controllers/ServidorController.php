@@ -19,6 +19,8 @@ class ServidorController extends Controller
         $data = [];
         $servidores = Servidor::with('vinculos')->get();
 
+        // dd($servidores);
+
         $data = [
             'servidores' => $servidores,
             'mensagem' => session('mensagem', null)

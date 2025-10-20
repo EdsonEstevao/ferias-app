@@ -5,6 +5,7 @@ use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
 use App\Http\Controllers\FeriasImportController;
+use App\Http\Controllers\FeriasPeriodosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RoleController;
@@ -27,6 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 });
 
+Route::get('/api/dashboard/dados', [DashboardController::class, 'dadosDashboard']);
+Route::get('/api/dashboard/estatisticas', [DashboardController::class, 'estatisticasDetalhadas']);
+
 
 // Route::middleware(['permission:visualizar ferias'])->group(function () {
 //     Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
@@ -37,6 +41,10 @@ Route::middleware(['role:admin|gestor'])->group(function () {
         Route::get('/', [FeriasController::class, 'index'])->name('ferias.index');
 
         Route::get('/create/{servidor}', [FeriasController::class, 'create'])->name('ferias.create');
+        Route::get('/{id}/show', [FeriasController::class, 'show'])->name('ferias.show');
+        Route::get('/{id}/edit', [FeriasController::class, 'edit'])->name('ferias.edit');
+        Route::put('/{id}', [FeriasController::class, 'update'])->name('ferias.update');
+
         Route::post('/store', [FeriasController::class, 'store'])->name('ferias.store');
         Route::post('/lancar', [FeriasController::class, 'salvarTodos'])->name('ferias.lancar');
         Route::get('/interromper-ferias', [FeriasController::class, 'interromperFerias'])->name('ferias.interromper.periodo');
@@ -167,5 +175,21 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
+// Rotas para Férias
+// Route::get('/ferias', [FeriasController::class, 'index']);
+// Route::delete('/ferias/{id}', [FeriasController::class, 'destroy']);
+
+// Rotas para Períodos de Férias
+Route::get('/api/periodos-ferias', [FeriasPeriodosController::class, 'index']);
+Route::post('/api/periodos-ferias', [FeriasPeriodosController::class, 'store']);
+Route::put('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
+Route::delete('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
+
+// routes/api.php
+// Route::put('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
+// Route::delete('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
+Route::delete('/api/ferias/{id}', [FeriasController::class, 'destroy']);
 
 require __DIR__.'/auth.php';

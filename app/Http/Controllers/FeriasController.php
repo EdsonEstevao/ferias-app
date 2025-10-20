@@ -76,6 +76,27 @@ class FeriasController extends Controller
 
     }
 
+    public function show($id)
+    {
+        $ferias = Ferias::with([
+            'servidor',
+            'periodos' => function($query) {
+                // $query->where('ativo', true)
+                //       ->orderBy('inicio');
+                $query->orderBy('ordem')
+                        ->orderBy('inicio')
+                        ->orderBy('created_at');
+            },
+            'periodos.origem', // CORREÇÃO: usar 'origem' em vez de 'periodoOrigem'
+            'periodos.todosFilhosRecursivos' => function($query) {
+                $query->where('ativo', true)
+                      ->orderBy('inicio');
+            }
+        ])->findOrFail($id);
+
+        return view('ferias.show', compact('ferias'));
+    }
+
     public function filtrar(Request $request)
     {
         $query = Ferias::with('servidor')
@@ -83,8 +104,8 @@ class FeriasController extends Controller
         ->when($request->mes, fn($q) => $q->whereHas('periodos', fn($p) => $p->whereMonth('inicio', $request->mes)))
         ->when($request->busca, fn($q) => $q->whereHas('servidor', fn($s) =>
             $s->where('nome', 'like', "%{$request->busca}%")
-              ->orWhere('cpf', 'like', "%{$request->busca}%")
-              ->orWhere('matricula', 'like', "%{$request->busca}%")
+            ->orWhere('cpf', 'like', "%{$request->busca}%")
+            ->orWhere('matricula', 'like', "%{$request->busca}%")
         ));
 
     return response()->json($query->get());
@@ -149,6 +170,30 @@ class FeriasController extends Controller
         return redirect()->back()->with('success', 'Férias lançadas com sucesso!');
 
         //
+    }
+
+     public function edit($id)
+    {
+        $ferias = Ferias::with(['servidor', 'periodos'])->findOrFail($id);
+        return view('ferias.edit', compact('ferias'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $ferias = Ferias::findOrFail($id);
+
+        $request->validate([
+            'ano_exercicio' => 'required|integer',
+            'situacao' => 'required|string'
+        ]);
+
+        $ferias->update($request->all());
+
+        return redirect()->route('ferias.show', $ferias->id)
+            ->with('success', 'Férias atualizadas com sucesso!');
     }
 
 
@@ -442,5 +487,16 @@ class FeriasController extends Controller
         return $pdf->stream("ferias_{$servidor->matricula}.pdf");
     }
 
+    // Excluir Férias do ano
+    public function destroy(Ferias $ferias, $id)
+    {
+
+        // return $servidor->ferias()->get();
+
+        // $ferias->periodos()->delete();
+        $ferias->find($id)->delete();
+        return response()->json(['success' => true, 'message' => 'Férias excluídas com sucesso!']);
+        //
+    }
 
 }

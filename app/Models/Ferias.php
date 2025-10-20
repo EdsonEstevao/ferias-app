@@ -26,4 +26,17 @@ class Ferias extends Model
         return $this->hasMany(FeriasPeriodos::class);
     }
 
+    public function periodosAtivos()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')->where('ativo', true);
+    }
+
+    // Períodos originais (sem pai)
+    public function periodosOriginais()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')
+                    ->whereNull('periodo_origem_id')
+                    ->where('ativo', true);
+    }
+
 }
