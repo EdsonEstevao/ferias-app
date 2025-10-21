@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom pagination styles for Tailwind */
+.pagination {
+    @apply flex items-center justify-between sm:justify-between;
+}
+
+.pagination-info {
+    @apply text-sm text-gray-700 dark:text-gray-400;
+}
+
+.pagination-links {
+    @apply flex space-x-2;
+}
+
+.pagination-links a,
+.pagination-links span {
+    @apply px-3 py-1 text-sm font-medium border border-gray-300 rounded-md dark:border-gray-600;
+}
+
+.pagination-links a {
+    @apply text-gray-500 bg-white dark:text-gray-400 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+.pagination-links span {
+    @apply text-blue-600 border-blue-500 bg-blue-50 dark:bg-blue-900 dark:text-blue-300;
+}

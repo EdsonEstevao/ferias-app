@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
@@ -191,5 +192,17 @@ Route::delete('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'de
 // Route::put('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
 // Route::delete('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
 Route::delete('/api/ferias/{id}', [FeriasController::class, 'destroy']);
+
+
+// routes/web.php
+// Route::middleware(['auth', 'role:admin'])->group(function () {
+//     Route::get('/admin/audit', [AuditController::class, 'index'])->name('audit.index');
+//     Route::get('/admin/audit/{auditLog}', [AuditController::class, 'show'])->name('audit.show');
+// });
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+    Route::get('/audit/{audit}', [AuditController::class, 'show'])->name('audit.show');
+});
 
 require __DIR__.'/auth.php';

@@ -46,4 +46,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+     public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
+    /**
+     * Relacionamento com os logs de auditoria onde o usuário é o responsável pela ação
+     */
+    public function auditLogsAsActor()
+    {
+        return $this->hasMany(AuditLog::class, 'user_id');
+    }
 }

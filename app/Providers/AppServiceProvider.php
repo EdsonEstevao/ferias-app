@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Foundation\AliasLoader;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
         //
 
         //layout app
+        // Registrar EventServiceProvider
+        $this->app->register(\App\Providers\EventServiceProvider::class);
+
+        Blade::directive('formatValue', function ($expression) {
+            return "<?php echo \App\Models\AuditLog::formatValueStatic($expression); ?>";
+        });
+
 
 
 
