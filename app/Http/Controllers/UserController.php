@@ -129,14 +129,37 @@ class UserController extends Controller
     public function edit(User $user, Request $request)
     {
         // dd($user, $request->all());
-        return view('admin.users.edit', [
-            'user' => $user::with('roles')->find($user->id),
-            'roles' => Role::all(),
-        ]);
+        // return view('admin.users.edit', [
+        //     'user' => $user::with('roles')->find($user->id),
+        //     'roles' => Role::all(),
+        // ]);
+
+         // Prevenir que Admin edite Super Admin
+        if (Auth::user()->hasRole('admin') && $user->hasRole('super admin')) {
+            abort(403, 'Não permitido editar Super Admin');
+        }
+
+        $roles = Role::where('name', '!=', 'super admin')->get(); // Admin não vê Super Admin
+
+        return view('admin.users.edit', compact('user', 'roles'));
     }
+
+
 
     public function update(Request $request, User $user)
     {
+          // Validar permissões
+        if (Auth::user()->hasRole('admin') && $user->hasRole('super admin')) {
+            abort(403, 'Não permitido modificar Super Admin');
+        }
+
+        // Se for Admin, não permitir atribuir role Super Admin
+        if (Auth::user()->hasRole('admin') && $request->role === 'super admin') {
+            abort(403, 'Não permitido atribuir role Super Admin');
+        }
+
+
+
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,

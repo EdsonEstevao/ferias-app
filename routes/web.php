@@ -37,7 +37,7 @@ Route::get('/api/dashboard/estatisticas', [DashboardController::class, 'estatist
 //     Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
 // });
 
-Route::middleware(['role:admin|gestor'])->group(function () {
+Route::middleware(['role:admin|gestor|super admin'])->group(function () {
     Route::prefix('/ferias')->group(function () {
         Route::get('/', [FeriasController::class, 'index'])->name('ferias.index');
 
@@ -63,7 +63,7 @@ Route::middleware(['role:admin|gestor'])->group(function () {
 });
 
 // Servidores
-Route::middleware(['role:admin|gestor'])->group(function () {
+Route::middleware(['role:admin|gestor|super admin'])->group(function () {
 
     Route::prefix('/servidores')->group(function () {
         Route::get('/', [ServidorController::class, 'index'])->name('servidores.index');
@@ -116,7 +116,7 @@ Route::get('/relatorios/ferias-ativas', [RelatorioController::class, 'feriasAtiv
 Route::get('/verificar-ferias', [RelatorioController::class, 'verificarFerias']);
 
 
-Route::middleware(['role:admin'])->group(function () {
+Route::middleware(['role:admin|super admin'])->group(function () {
     Route::get('/admin/roles', [RoleController::class, 'index'])->name('admin.roles.index');
     Route::post('/admin/roles', [RoleController::class, 'store'])->name('admin.roles.store');
     Route::post('/admin/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('admin.roles.syncPermissions');
@@ -143,7 +143,7 @@ Route::middleware(['role:admin'])->group(function () {
 //     ->middleware(['role:gestor|admin'])
 //     ->name('gestor.ferias.painel');
 Route::get('/gestor/ferias/{servidorId}', FeriasPainel::class)
-    ->middleware(['role:gestor|admin'])
+    ->middleware(['role:gestor|admin|super admin'])
     ->name('gestor.ferias.painel');
 
 // Route::get('/gestor/servidores/{servidor}/ferias', GestorFeriasPainel::class)
@@ -152,7 +152,7 @@ Route::get('/gestor/ferias/{servidorId}', FeriasPainel::class)
 
 
 
-Route::middleware(['role:gestor|admin'])->group(function (){
+Route::middleware(['role:gestor|admin|super admin'])->group(function (){
     Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
     Route::get('/servidores/{servidor}/edit', [ServidorController::class, 'edit'])->name('servidores.edit');
     Route::put('/servidores/{servidor}', [ServidorController::class, 'update'])->name('servidores.update');
@@ -200,9 +200,16 @@ Route::delete('/api/ferias/{id}', [FeriasController::class, 'destroy']);
 //     Route::get('/admin/audit/{auditLog}', [AuditController::class, 'show'])->name('audit.show');
 // });
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// Route::middleware(['auth', 'role:admin|super admin'])->prefix('admin')->name('admin.')->group(function () {
+//     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+//     Route::get('/audit/{audit}', [AuditController::class, 'show'])->name('audit.show');
+// });
+
+Route::middleware(['auth', 'role:super admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
     Route::get('/audit/{audit}', [AuditController::class, 'show'])->name('audit.show');
 });
+
+
 
 require __DIR__.'/auth.php';

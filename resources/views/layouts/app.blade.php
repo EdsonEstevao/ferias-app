@@ -78,17 +78,20 @@
                 </button>
             </div>
             <nav class="p-4 space-y-2 text-sm">
-                <a href="{{ route('dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-100">🏠 Dashboard</a>
+                <a href="{{ route('dashboard') }}"
+                    class="block px-4 py-2 rounded {{ request()->routeIs('dashboard') ? ' bg-gray-600 text-amber-100' : '' }}">🏠
+                    Dashboard</a>
                 <!-- icon servidores -->
 
-                <a href="{{ route('servidores.index') }}" class="block px-4 py-2 rounded hover:bg-gray-100"> <i
-                        class="text-blue-400 fa-solid fa-users"></i>
+                <a href="{{ route('servidores.index') }}"
+                    class="block px-4 py-2 rounded {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100' : '' }} ">
+                    <i class="text-blue-400 fa-solid fa-users"></i>
                     Servidores</a>
 
                 <!-- Menu com submenu -->
                 <div x-data="{ open: false }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('secretarias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('secretarias.create') ? ' bg-gray-600 text-amber-100' : '' }} focus:outline-none">
                         <!-- icon secretarias -->
 
                         <span><i class="text-yellow-300 fa-brands fa-fort-awesome"></i> Secretarias</span>
@@ -99,20 +102,23 @@
                     </button>
                     <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                         <a href="{{ route('secretarias.index') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-200">Listar Secretarias</a>
+                            class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                                class="fa-solid fa-bars-staggered "></i> Listar Secretarias</a>
                         <a href="{{ route('secretarias.create') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Secretaria</a>
+                            class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 text-indigo-600 transition-all ease-linear duration-300"><i
+                                class="fa-solid fa-circle-plus "></i> Adicionar Secretaria</a>
                     </div>
                 </div>
                 <!-- icon administrar cargos -->
-                <a href="{{ route('vinculo.cargos.secretarias') }}" class="block px-4 py-2 rounded hover:bg-gray-100">
+                <a href="{{ route('vinculo.cargos.secretarias') }}"
+                    class="block px-4 py-2 rounded {{ request()->routeIs('vinculo.cargos.secretarias') ? ' bg-gray-600 text-amber-100' : '' }} ">
                     <i class="text-green-300 fas fa-users-cog"></i>
                     Administrar Cargos</a>
 
                 <!-- Menu com submenu Férias -->
                 <div x-data="{ open: false }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('ferias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.import') ? ' bg-gray-600 text-amber-100' : '' }}">
                         <!-- icon ferias -->
 
                         <span><i class="text-red-400 fas fa-calendar"></i> Ferias</span>
@@ -122,9 +128,11 @@
                         </svg>
                     </button>
                     <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
-                        <a href="{{ route('ferias.index') }}" class="block px-4 py-2 rounded hover:bg-gray-200">
+                        <a href="{{ route('ferias.index') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200 transition-all ease-linear duration-300">
                             📅 Listar Férias</a>
-                        <a href="{{ route('ferias.import') }}" class="block px-4 py-2 rounded hover:bg-gray-100">📅
+                        <a href="{{ route('ferias.import') }}"
+                            class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 transition-all ease-linear duration-300">📅
                             Importar
                             Ferias (.Csv)</a>
                     </div>
@@ -133,13 +141,13 @@
                 <!-- Menu com submenu roles admin -->
 
                 <!-- permissão somente para administradores visualizar -->
-                @role('admin')
+                @role('admin|super admin')
                     <div x-data="{ open: false }" class="space-y-1">
                         <button @click="open = !open"
-                            class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                            class="flex items-center justify-between w-full px-4 py-2 rounded focus:outline-none {{ request()->routeIs('admin.users.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('admin.users.create') ? ' bg-gray-600 text-amber-100' : '' }}">
                             <!-- icon usuarios -->
 
-                            <span><i class="text-blue-400 fas fa-users"></i> Usuarios</span>
+                            <span><i class="text-blue-600 fas fa-users"></i> Usuarios</span>
                             <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
                                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
@@ -147,15 +155,18 @@
                         </button>
                         <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                             <a href="{{ route('admin.users.index') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-200">Listar Usuarios</a>
+                                class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                                    class="fa-solid fa-bars-staggered "></i> Listar Usuarios</a>
                             <a href="{{ route('admin.users.create') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Usuario</a>
+                                class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 text-indigo-600 transition-all ease-linear duration-300"><i
+                                    class="fa-solid fa-user-plus"></i>
+                                Adicionar Usuario</a>
                         </div>
                     </div>
                     <!-- Menu com submenu Role -->
                     <div x-data="{ open: false }" class="space-y-1">
                         <button @click="open = !open"
-                            class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                            class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('admin.roles.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('admin.roles.create') ? ' bg-gray-600 text-amber-100' : '' }}">
                             <!-- icon role -->
                             <span><i class="text-red-400 fas fa-user-tag"></i> Role</span>
                             <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
@@ -165,16 +176,38 @@
                         </button>
                         <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                             <a href="{{ route('admin.roles.index') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-200">Listar Roles</a>
+                                class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                                    class="fa-solid fa-bars-staggered "></i> Listar Roles</a>
                             <a href="{{ route('admin.roles.store') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-200">Adicionar Role</a>
+                                class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-300 text-indigo-600 transition-all ease-linear duration-300"><i
+                                    class="fa-solid fa-person-circle-plus"></i> Adicionar Role</a>
+                        </div>
+                    </div>
+                @endrole
+                <!-- permissão somente para super administradores visualizar -->
+                @role('super admin')
+                    <div x-data="{ open: false }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('admin.audit.index') ? ' bg-gray-600 text-amber-100' : '' }}  focus:outline-none">
+                            <!-- icon auditoria -->
+                            <span><i class="fa-duotone fa-solid fa-audio-description text-lime-700"></i> Auditoria</span>
+                            <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                            <a href="{{ route('admin.audit.index') }}"
+                                class="block px-4 py-2 rounded hover:bg-gray-200"><i
+                                    class="fa-duotone fa-solid fa-users-viewfinder text-red-500"></i> Visualizar</a>
+
                         </div>
                     </div>
                 @endrole
                 <!-- Menu com submenu Perfil -->
                 <div x-data="{ open: false }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-gray-100 focus:outline-none">
+                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('profile.edit') ? ' bg-gray-600 text-amber-100' : '' }} focus:outline-none">
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 bg-green-400 rounded-full">
                             </div>

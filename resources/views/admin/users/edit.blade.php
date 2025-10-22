@@ -93,7 +93,7 @@
                                         </div>
                                     @endif
 
-                                    <div>
+                                    {{-- <div>
                                         <label for="role"
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
                                         <select id="role" name="role"
@@ -105,6 +105,19 @@
                                                         {{ $userRole->id == $role->id ? 'selected' : '' }}>
                                                         {{ ucfirst($role->name) }}</option>
                                                 @endforeach
+                                            @endforeach
+                                        </select>
+                                    </div> --}}
+                                    <div>
+                                        <label for="role"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
+                                        <select id="role" name="role"
+                                            class="w-full p-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ $user->hasRole($role->name) ? 'selected' : '' }}>
+                                                    {{ ucfirst($role->name) }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
