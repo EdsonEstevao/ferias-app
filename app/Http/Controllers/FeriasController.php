@@ -20,7 +20,7 @@ class FeriasController extends Controller
         $ano = $request->input('ano_exercicio') ?? date('Y');
         $query = $request->input('busca') ?? '';
 
-        $query = Ferias::query()->with('servidor', 'periodos.todosFilhosRecursivos');
+        $query = Ferias::query()->with(['servidor', 'periodos.todosFilhosRecursivos']);
 
         if ($request->filled('ano_exercicio')) {
             $query->where('ano_exercicio', $request->ano_exercicio);
@@ -60,19 +60,35 @@ class FeriasController extends Controller
             'ferias' => $ferias,
             'meses' => $meses
         ];
-        // dd($data);
-        // return response()->json($ferias);
 
         return view('ferias.index', $data);
 
-        // $data = [
+        // $ferias = Ferias::with([
+        // 'servidor',
+        // 'periodos' => function($query) {
+        //         $query->whereNull('periodo_origem_id')
+        //             ->where('ativo', true);
+        //     },
+        //     'periodos.filhos' => function($query) {
+        //         $query->where('ativo', true)
+        //             ->orderBy('created_at', 'asc');
+        //     },
+        //     'periodos.filhos.filhos' // Para níveis mais profundos
+        // ])
+        // ->whereHas('servidor')
+        // ->orderBy('ano_exercicio', 'desc')
+        // ->paginate(10);
 
-        //     'ferias' => $ferias,
+        // $meses = [
+        //     '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
+        //     '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
+        //     '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
+        //     '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
         // ];
 
-        // // dd($ferias);
+        // return view('ferias.index', compact('ferias', 'meses'));
 
-        // return view('ferias.index', $data);
+
 
     }
 

@@ -28,7 +28,8 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Total de Períodos</p>
-                                <p class="font-semibold">{{ $ferias->periodos->count() }}</p>
+                                {{-- <p class="font-semibold">{{ $ferias->periodos->count() }}</p> --}}
+                                <p class="font-semibold">{{ $ferias->periodos->where('ativo', true)->count() }}</p>
                             </div>
                         </div>
                     </div>

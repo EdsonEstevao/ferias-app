@@ -96,13 +96,16 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2">
-                                                @foreach ($ferias->periodos->where('ativo', true)->take(2) as $periodo)
-                                                    <div class="text-xs">
-                                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} -
-                                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
-                                                        ({{ $periodo->dias }} dias)
-                                                    </div>
-                                                @endforeach
+                                                <div class="flex gap-2 flex-col">
+                                                    @foreach ($ferias->periodos->where('ativo', true)->take(2) as $periodo)
+                                                        <div
+                                                            class="text-xs {{ $periodo->tipo === 'Abono' ? 'bg-red-200 px-2 py-1 rounded-md w-max' : '' }}">
+                                                            {{ date('d/m/Y', strtotime($periodo->inicio)) }} -
+                                                            {{ date('d/m/Y', strtotime($periodo->fim)) }}
+                                                            ({{ $periodo->dias }} dias - {{ $periodo->tipo }})
+                                                        </div>
+                                                    @endforeach
+                                                </div>
                                             </td>
                                             <td class="px-4 py-2">
                                                 <div class="flex space-x-2">
@@ -110,7 +113,7 @@
                                                         class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded hover:bg-blue-200">
                                                         👁️ Ver
                                                     </a>
-                                                    @if ($ferias->periodos->where('ativo', true)->where('situacao', 'Planejado')->count() > 0)
+                                                    @if ($ferias->periodos->where('ativo', true)->whereIn('situacao', ['Planejado', 'Interrompido', 'Remarcado'])->count() > 0)
                                                         <button
                                                             class="px-3 py-1 text-xs text-green-600 bg-green-100 rounded hover:bg-green-200">
                                                             🔁 Remarcar

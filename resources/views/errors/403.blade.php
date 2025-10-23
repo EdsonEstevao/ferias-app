@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-guest-layout>
     <div class="flex items-center justify-center min-h-screen bg-gray-100">
         <div class="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-md">
             <div class="mb-4 text-6xl">🔒</div>
@@ -34,4 +34,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-guest-layout>

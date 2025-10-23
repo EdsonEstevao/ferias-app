@@ -183,27 +183,27 @@ Route::middleware('auth')->group(function () {
 // Route::delete('/ferias/{id}', [FeriasController::class, 'destroy']);
 
 // Rotas para Períodos de Férias
+/*/api/periodos-ferias/${periodoId}/usufruir*/
+
 Route::get('/api/periodos-ferias', [FeriasPeriodosController::class, 'index']);
 Route::post('/api/periodos-ferias', [FeriasPeriodosController::class, 'store']);
-Route::put('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
+Route::post('/api/periodos-ferias/{id}/usufruir', [FeriasPeriodosController::class, 'marcarComoUsufruido']);
+Route::post('/api/periodos-ferias/{id}/desusufruir', [FeriasPeriodosController::class, 'desmarcarUsufruto']);
 Route::delete('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
 
+Route::prefix('periodos-ferias')->group(function () {
+    Route::put('/{periodo}', [FeriasPeriodosController::class, 'update']);
+    Route::delete('/{periodo}', [FeriasPeriodosController::class, 'destroy']);
+});
+
+
+
+
 // routes/api.php
-// Route::put('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
-// Route::delete('/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
 Route::delete('/api/ferias/{id}', [FeriasController::class, 'destroy']);
 
 
-// routes/web.php
-// Route::middleware(['auth', 'role:admin'])->group(function () {
-//     Route::get('/admin/audit', [AuditController::class, 'index'])->name('audit.index');
-//     Route::get('/admin/audit/{auditLog}', [AuditController::class, 'show'])->name('audit.show');
-// });
 
-// Route::middleware(['auth', 'role:admin|super admin'])->prefix('admin')->name('admin.')->group(function () {
-//     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
-//     Route::get('/audit/{audit}', [AuditController::class, 'show'])->name('audit.show');
-// });
 
 Route::middleware(['auth', 'role:super admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');

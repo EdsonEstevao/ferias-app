@@ -116,28 +116,8 @@
                                 {{ $registro->situacao }}
                             </span>
                         </p>
-
-                        <!-- NOVO: Resumo de usufruto -->
-                        @php
-                            $totalDias = $registro->periodos->where('ativo', true)->sum('dias');
-                            $diasUsufruidos = $registro->periodos->where('usufruido', true)->sum('dias');
-                            $diasPendentes = $totalDias - $diasUsufruidos;
-                        @endphp
-
-                        <div class="flex gap-4 mt-2 text-xs">
-                            <span class="px-2 py-1 font-semibold text-green-800 bg-green-200 rounded">
-                                ✅ {{ $diasUsufruidos }} dias usufruídos
-                            </span>
-                            <span class="px-2 py-1 font-semibold text-yellow-800 bg-yellow-200 rounded">
-                                ⏳ {{ $diasPendentes }} dias pendentes
-                            </span>
-                            <span class="px-2 py-1 font-semibold text-blue-800 bg-blue-200 rounded">
-                                📊 {{ $totalDias }} dias totais
-                            </span>
-                        </div>
                     </div>
                     <div class="flex gap-2">
-                        <!-- Botões existentes -->
                         <a href="{{ route('ferias.pdf', $registro->servidor->id) }}" target="_blank"
                             class="px-3 py-1 text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-50">
                             🖨️ PDF
@@ -151,35 +131,19 @@
                 </div>
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
-                    <div class="space-y-4 mb-2" x-data="{
-                        aberto: true,
-                        periodoInicio: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}', // {{ $periodo->inicio }}',
-                        periodoFim: '{{ date('Y-m-d', strtotime($periodo->fim)) }}', // {{ $periodo->fim }}',
+                    <div class="space-y-4" x-data="{
+                        aberto: false,
+                        periodoInicio: '{{ $periodo->inicio }}',
+                        periodoFim: '{{ $periodo->fim }}',
                     }">
 
-                        <!-- Período original - ATUALIZADO -->
+                        <!-- Período original -->
                         <div
-                            class="flex items-start gap-3 px-3 py-2 rounded-md {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : ($periodo->usufruido ? 'bg-green-100 border-l-4 border-green-500' : 'bg-blue-50') }}">
-                            <div class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
-                                {{ $periodo->usufruido ? '✅' : '📌' }}
-                            </div>
+                            class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
+                            <div class="text-xl text-blue-600">📌</div>
                             <div class="flex-1">
-                                <p class="font-semibold text-gray-700">
-                                    @if ($periodo->tipo !== 'Abono')
-                                        {{ $periodo->ordem }}º Período
-                                    @endif
-                                    {{ $periodo->tipo == 'Abono' ? 'Abono' : 'de Férias' }}
-                                    @if ($periodo->usufruido)
-                                        <span
-                                            class="px-2 py-1 ml-2 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
-                                            ✅ USUFRUÍDO
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-2 py-1 ml-2 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
-                                            ⏳ PENDENTE
-                                        </span>
-                                    @endif
+                                <p class="font-semibold text-gray-700">Período Original ({{ $periodo->ordem }}º Período
+                                    {{ $periodo->tipo == 'Abono' ? 'de Abono' : 'de Férias' }})
                                 </p>
 
                                 <!-- link da Portaria -->
@@ -192,60 +156,34 @@
                                     </p>
                                 @endif
 
-                                {{-- @if ($periodo->ativo) --}}
-                                <p class="text-sm text-gray-600">
-                                    {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
-                                    {{ date('d/m/Y', strtotime($periodo->fim)) }}
-                                    {{ $periodo->dias }} dias
-                                </p>
-                                {{-- @endif --}}
-
-                                <p class="text-xs text-gray-500">
-                                    Situação: {{ $periodo->situacao }}
-                                    @if ($periodo->usufruido && $periodo->data_usufruto)
-                                        • Usufruído em: {{ date('d/m/Y', strtotime($periodo->data_usufruto)) }}
-                                    @endif
-                                </p>
+                                @if ($periodo->ativo)
+                                    <p class="text-sm text-gray-600">
+                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
+                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
+                                        {{ $periodo->dias }} dias
+                                    </p>
+                                @endif
+                                <p class="text-xs text-gray-500">Situação: {{ $periodo->situacao }}</p>
 
                                 <div class="flex gap-2 mt-2">
-
                                     <button @click="aberto = !aberto" class="text-xs text-blue-600 hover:underline">
                                         <span x-text="aberto ? 'Ocultar detalhes' : 'Ver detalhes'"></span>
                                     </button>
 
-
-                                    @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                    @if ($periodo->ativo && $periodo->situacao === 'Planejado')
                                         <button
                                             @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
                                             class="text-xs text-green-600 hover:underline">
                                             ✏️ Editar
                                         </button>
-                                        @role('super admin')
-                                            <button
-                                                @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
-                                                class="text-xs text-red-600 hover:underline">
-                                                🗑️ Excluir
-                                            </button>
-                                        @endrole
 
-
-                                        <!-- NOVO: Botão para marcar como usufruído -->
-                                        <button @click="marcarComoUsufruido({{ $periodo->id }})"
-                                            class="text-xs text-purple-600 hover:underline">
-                                            ✅ Marcar como Usufruído
+                                        <button
+                                            @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
+                                            class="text-xs text-red-600 hover:underline">
+                                            🗑️ Excluir
                                         </button>
                                     @endif
-                                    @if ($periodo->situacao !== 'Usufruido' || $periodo->tipo == 'Abono')
-                                        @if ($periodo->usufruido)
-                                            <button @click="desmarcarUsufruto({{ $periodo->id }})"
-                                                class="text-xs text-orange-600 hover:underline">
-                                                ↩️ Desmarcar Usufruto
-                                            </button>
-                                        @endif
-                                    @endif
                                 </div>
-
-                                <!-- Resto do código permanece igual -->
                                 {{-- Formulário de interrupção --}}
                                 <div x-show="periodoId === {{ $periodo->id }}"
                                     class="mt-4 space-y-4 transition duration-300 transform"
@@ -327,15 +265,13 @@
                                     </button>
                                 </div>
                             </div>
-
                             <div class="" x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100"
                                 x-transition:leave="transition ease-in duration-200"
                                 x-transition:leave-start="opacity-100 transform scale-100"
                                 x-transition:leave-end="opacity-0 transform scale-95">
-
-                                @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                @if ($periodo->ativo && $periodo->situacao === 'Planejado')
                                     <button
                                         @click="modalAberto = true; periodoSelecionado = {{ $periodo->id }}; filhos = {{ json_encode($periodo) }}"
                                         class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
@@ -516,11 +452,8 @@
         </div>
 
         <!-- Modal Confirmação Exclusão -->
-        <div x-show="modalConfirmacaoAberto" x-cloak x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-all duration-300">
+        <div x-show="modalConfirmacaoAberto"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
 
             <div class="w-full max-w-md p-6 bg-white rounded shadow-lg">
                 <h3 class="mb-4 text-lg font-bold text-red-600">Confirmar Exclusão</h3>
@@ -750,58 +683,6 @@
                     this.mensagemErro = mensagem;
                     this.mensagemSucesso = '';
                     setTimeout(() => this.mensagemErro = '', 5000);
-                },
-                // feriasManager
-                // Adicionar estes métodos no seu feriasManager()
-                async marcarComoUsufruido(periodoId) {
-                    try {
-                        const response = await fetch(`/api/periodos-ferias/${periodoId}/usufruir`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        });
-
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso('Período marcado como usufruído!');
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao marcar como usufruído');
-                        }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao marcar como usufruído');
-                        console.error('Erro:', error);
-                    }
-                },
-
-                async desmarcarUsufruto(periodoId) {
-                    if (!confirm('Tem certeza que deseja desmarcar o usufruto deste período?')) {
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(
-                            `/api/periodos-ferias/${periodoId}/desusufruir`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            });
-
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso('Usufruto desmarcado com sucesso!');
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao desmarcar usufruto');
-                        }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao desmarcar usufruto');
-                        console.error('Erro:', error);
-                    }
                 }
             }));
         });

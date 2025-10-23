@@ -67,21 +67,108 @@ class FeriasPeriodosController extends Controller
         }
     }
 
-    public function destroy($id): JsonResponse
+    public function updateAjax(Request $request, $id): JsonResponse
     {
-        try {
-            $periodo = FeriasPeriodos::findOrFail($id);
-            $periodo->delete();
+        // dd($request->all(), $id);
 
+        $periodo = FeriasPeriodos::findOrFail($id);
+        if($periodo->podeSerUsufruido()){
+
+            $periodo->marcarComoUsufruido();
             return response()->json([
-                'message' => 'Período excluído com sucesso!'
+                'message' => 'Período atualizado com sucesso!',
+                'periodo' => $periodo
             ]);
-
-        } catch (\Exception $e) {
+        }else{
             return response()->json([
-                'message' => 'Erro ao excluir período',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Período não pode ser usufruido',
+                'periodo' => $periodo
+            ]);
         }
+
     }
+
+    public function marcarComoUsufruido($id)
+    {
+        $periodo = FeriasPeriodos::findOrFail($id);
+        // Verificar se pode marcar como usufruído
+        if (!$periodo->ativo) {
+            return response()->json(['error' => 'Período inativo não pode ser usufruído'], 422);
+        }
+
+        if ($periodo->usufruido) {
+            return response()->json(['error' => 'Período já está marcado como usufruído'], 422);
+        }
+
+        $periodo->marcarComoUsufruido();
+
+        $ferias = FeriasPeriodos::where('id', $periodo->periodo_origem_id)
+                                ->get();
+
+        $ferias->each(function ($feria) {
+            $feria->marcarComoUsufruido();
+        });
+
+        // $ferias->marcarComoUsufruido();
+
+
+        return response()->json(['message' => 'Período marcado como usufruído com sucesso!']);
+    }
+
+    public function desmarcarUsufruto( $id)
+    {
+        $periodo = FeriasPeriodos::findOrFail($id);
+        if (!$periodo->usufruido) {
+            return response()->json(['error' => 'Período não está marcado como usufruído'], 422);
+        }
+
+        $periodo->desmarcarUsufruto();
+
+
+        $ferias = FeriasPeriodos::where('id', $periodo->periodo_origem_id)
+                                ->get();
+
+        $ferias->each(function ($feria) {
+            $feria->desmarcarUsufruto();
+        });
+
+        return response()->json(['message' => 'Usufruto desmarcado com sucesso!']);
+    }
+
+    // public function marcarComoUsufruido(Request $request, $id)
+    // {
+    //     dd($request->all(), $id);
+
+    //     $periodo = FeriasPeriodos::findOrFail($id);
+    //     if($periodo->podeSerUsufruido()){
+    //         $periodo->marcarComoUsufruido();
+    //         return response()->json([
+    //             'message' => 'Período atualizado com sucesso!',
+    //             'periodo' => $periodo
+    //         ]);
+    //     }else{
+    //         return response()->json([
+    //             'message' => 'Período não pode ser usufruido',
+    //             'periodo' => $periodo
+    //         ]);
+    //     }
+    // }
+
+    // public function destroy($id): JsonResponse
+    // {
+    //     try {
+    //         $periodo = FeriasPeriodos::findOrFail($id);
+    //         $periodo->delete();
+
+    //         return response()->json([
+    //             'message' => 'Período excluído com sucesso!'
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Erro ao excluir período',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 }

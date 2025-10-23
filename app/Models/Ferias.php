@@ -39,4 +39,66 @@ class Ferias extends Model
                     ->where('ativo', true);
     }
 
+    // ========== NOVOS MÉTODOS ==========
+
+    /**
+     * Períodos usufruídos
+     */
+    public function periodosUsufruidos()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')
+                    ->where('usufruido', true);
+    }
+
+    /**
+     * Períodos pendentes (não usufruídos)
+     */
+    public function periodosPendentes()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')
+                    ->where('usufruido', false)
+                    ->where('ativo', true);
+    }
+
+    /**
+     * Verificar se tem períodos usufruídos
+     */
+    public function temPeriodosUsufruidos()
+    {
+        return $this->periodos()->where('usufruido', true)->exists();
+    }
+
+    /**
+     * Verificar se tem períodos pendentes
+     */
+    public function temPeriodosPendentes()
+    {
+        return $this->periodos()
+                    ->where('usufruido', false)
+                    ->where('ativo', true)
+                    ->whereIn('situacao', ['Planejado', 'Remarcado', 'Interrompido'])
+                    ->exists();
+    }
+
+    /**
+     * Total de dias usufruídos
+     */
+    public function getTotalDiasUsufruidosAttribute()
+    {
+        return $this->periodos()
+                    ->where('usufruido', true)
+                    ->sum('dias');
+    }
+
+    /**
+     * Total de dias pendentes
+     */
+    public function getTotalDiasPendentesAttribute()
+    {
+        return $this->periodos()
+                    ->where('usufruido', false)
+                    ->where('ativo', true)
+                    ->sum('dias');
+    }
+
 }
