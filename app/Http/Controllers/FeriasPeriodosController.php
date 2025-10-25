@@ -102,8 +102,13 @@ class FeriasPeriodosController extends Controller
 
         $periodo->marcarComoUsufruido();
 
-        $ferias = FeriasPeriodos::where('id', $periodo->periodo_origem_id)
+
+
+        $ferias = FeriasPeriodos::where('ferias_id', $periodo->ferias_id)
+                                    ->where('ordem', $periodo->ordem)
                                 ->get();
+
+        // dd($ferias);
 
         $ferias->each(function ($feria) {
             $feria->marcarComoUsufruido();
@@ -125,7 +130,8 @@ class FeriasPeriodosController extends Controller
         $periodo->desmarcarUsufruto();
 
 
-        $ferias = FeriasPeriodos::where('id', $periodo->periodo_origem_id)
+        $ferias = FeriasPeriodos::where('ferias_id', $periodo->ferias_id)
+                                    ->where('ordem', $periodo->ordem)
                                 ->get();
 
         $ferias->each(function ($feria) {

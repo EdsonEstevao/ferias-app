@@ -201,6 +201,7 @@ Route::post('/api/periodos-ferias/{id}/usufruir', [FeriasPeriodosController::cla
 Route::post('/api/periodos-ferias/{id}/desusufruir', [FeriasPeriodosController::class, 'desmarcarUsufruto']);
 Route::put('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
 
+
 Route::prefix('periodos-ferias')->group(function () {
     Route::put('/{periodo}', [FeriasPeriodosController::class, 'update']);
     Route::delete('/{periodo}', [FeriasPeriodosController::class, 'destroy']);

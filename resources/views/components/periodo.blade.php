@@ -83,12 +83,21 @@
                                 </button>
                             @endif
 
-                            @if ($filho->usufruido)
+                            @if ($filho->situacao !== 'Usufruido' || $filho->tipo == 'Abono')
+                                @if ($filho->usufruido && $filho->ativo)
+                                    <button @click="desmarcarUsufruto({{ $filho->id }})"
+                                        class="text-xs text-orange-600 hover:underline">
+                                        ↩️ Desmarcar Usufruto
+                                    </button>
+                                @endif
+                            @endif
+
+                            {{-- @if ($filho->usufruido)
                                 <button @click="desmarcarUsufruto({{ $filho->id }})"
                                     class="text-xs text-orange-600 hover:underline">
                                     ↩️ Desmarcar Usufruto
                                 </button>
-                            @endif
+                            @endif --}}
                         </div>
 
                         @if ($filho->ativo && $filho->situacao === $filho->situacao && !$filho->usufruido)

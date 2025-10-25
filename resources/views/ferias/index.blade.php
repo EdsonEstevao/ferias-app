@@ -709,7 +709,7 @@
                         let url, message;
 
                         if (this.tipoExclusao === 'periodo') {
-                            url = `/api/periodos-ferias/${this.itemParaExcluir}`;
+                            url = `/periodos-ferias/${this.itemParaExcluir}`;
                             message = 'Período excluído com sucesso!';
                         } else {
                             url = `/api/ferias/${this.itemParaExcluir}`;
