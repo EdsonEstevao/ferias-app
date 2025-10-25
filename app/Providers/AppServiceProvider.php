@@ -31,13 +31,15 @@ class AppServiceProvider extends ServiceProvider
         //layout app
         // Registrar EventServiceProvider
         $this->app->register(\App\Providers\EventServiceProvider::class);
+        $this->app->register(\App\Providers\HelperServiceProvider::class);
+        // $this->app->register(\App\Providers\UserActivityServiceProvider::class);
 
         Blade::directive('formatValue', function ($expression) {
             return "<?php echo \App\Models\AuditLog::formatValueStatic($expression); ?>";
-        });
+});
 
 
 
 
-    }
+}
 }

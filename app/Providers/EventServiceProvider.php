@@ -50,7 +50,7 @@ class EventServiceProvider extends ServiceProvider
     protected function registerObservers()
     {
         $observers = [
-            User::class => UserObserver::class,
+            // User::class => UserObserver::class,
             Ferias::class => FeriasObserver::class,
             FeriasPeriodos::class => FeriasPeriodosObserver::class
         ];

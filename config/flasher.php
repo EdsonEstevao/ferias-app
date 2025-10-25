@@ -52,4 +52,11 @@ return Configuration::from([
     //         'message' => 'Entity saved successfully',
     //     ],
     // ],
+
+    // 'livewire' => [
+    //     'listener' => [
+    //         // Desabilitar features problemáticas
+    //         'session' => false,
+    //     ],
+    // ],
 ]);

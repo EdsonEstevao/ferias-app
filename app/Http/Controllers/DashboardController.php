@@ -14,6 +14,7 @@ class DashboardController extends Controller
     //
     public function index()
     {
+        // dd(getOnlineUsersCount());
         // Últimos lançamentos de férias (ordenados por data de criação)
         $ultimosLancamentos = Ferias::with('servidor', 'periodos')
         ->orderByDesc('created_at')

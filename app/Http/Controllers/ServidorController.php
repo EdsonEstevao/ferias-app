@@ -15,19 +15,44 @@ use Illuminate\Http\Request;
 class ServidorController extends Controller
 {
     //
-    public function index(){
+    public function index(Request $request) {
         $data = [];
-        $servidores = Servidor::with('vinculos')->get();
+        // $servidores = Servidor::with(['vinculos' => function($query) {
+        //     $query->where('status', 'Ativo');
+        // }])->get();
 
-        // dd($servidores);
+         $query = Servidor::with(['vinculos' => function($query) {
+            $query->where('status', 'Ativo');
+        }]);
 
-        $data = [
-            'servidores' => $servidores,
-            'mensagem' => session('mensagem', null)
-        ];
-        // dd($data);
+        // Busca por nome, CPF ou matrícula
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nome', 'LIKE', "%{$search}%")
+                  ->orWhere('cpf', 'LIKE', "%{$search}%")
+                  ->orWhere('matricula', 'LIKE', "%{$search}%");
+            });
+        }
 
-        return view('servidores.index', $data);
+        $servidores = $query->orderBy('nome')->paginate(10);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'servidores' => $servidores->items(),
+                'pagination' => [
+                    'current_page' => $servidores->currentPage(),
+                    'last_page' => $servidores->lastPage(),
+                    'per_page' => $servidores->perPage(),
+                    'total' => $servidores->total(),
+                    'from' => $servidores->firstItem(),
+                    'to' => $servidores->lastItem(),
+                ]
+            ]);
+        }
+
+        return view('servidores.index', compact('servidores'));
+
 
     }
     public function create()

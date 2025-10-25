@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuditController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeriasController;
@@ -16,11 +15,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VinculoController;
 use App\Http\Controllers\VinculoFuncionalController;
 use App\Livewire\FeriasPainel;
-use App\Livewire\GestorFeriasPainel;
-use App\Models\Cargo;
-use App\Models\CargoSecretariaSimbologia;
-use App\Models\Secretaria;
-use App\Models\Simbologia;
 use Illuminate\Support\Facades\Route;
 
 // Route::middleware('auth')->get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -31,6 +25,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::get('/api/dashboard/dados', [DashboardController::class, 'dadosDashboard']);
 Route::get('/api/dashboard/estatisticas', [DashboardController::class, 'estatisticasDetalhadas']);
+
+Route::middleware('auth')->group(function () {
+    Route::get('/online-users-count', function () {
+
+        try {
+            return response()->json([
+                'status' => 'success',
+                'count' => getOnlineUsersCount(),
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
+    });
+});
+
 
 
 // Route::middleware(['permission:visualizar ferias'])->group(function () {
@@ -189,7 +199,7 @@ Route::get('/api/periodos-ferias', [FeriasPeriodosController::class, 'index']);
 Route::post('/api/periodos-ferias', [FeriasPeriodosController::class, 'store']);
 Route::post('/api/periodos-ferias/{id}/usufruir', [FeriasPeriodosController::class, 'marcarComoUsufruido']);
 Route::post('/api/periodos-ferias/{id}/desusufruir', [FeriasPeriodosController::class, 'desmarcarUsufruto']);
-Route::delete('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'destroy']);
+Route::put('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
 
 Route::prefix('periodos-ferias')->group(function () {
     Route::put('/{periodo}', [FeriasPeriodosController::class, 'update']);

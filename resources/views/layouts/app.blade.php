@@ -102,10 +102,10 @@
                     </button>
                     <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                         <a href="{{ route('secretarias.index') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
                                 class="fa-solid fa-bars-staggered "></i> Listar Secretarias</a>
                         <a href="{{ route('secretarias.create') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 text-indigo-600 transition-all ease-linear duration-300"><i
+                            class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200"><i
                                 class="fa-solid fa-circle-plus "></i> Adicionar Secretaria</a>
                     </div>
                 </div>
@@ -129,10 +129,10 @@
                     </button>
                     <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                         <a href="{{ route('ferias.index') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200 transition-all ease-linear duration-300">
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
                             📅 Listar Férias</a>
                         <a href="{{ route('ferias.import') }}"
-                            class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 transition-all ease-linear duration-300">📅
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">📅
                             Importar
                             Ferias (.Csv)</a>
                     </div>
@@ -155,10 +155,10 @@
                         </button>
                         <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                             <a href="{{ route('admin.users.index') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                                class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
                                     class="fa-solid fa-bars-staggered "></i> Listar Usuarios</a>
                             <a href="{{ route('admin.users.create') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-200 text-indigo-600 transition-all ease-linear duration-300"><i
+                                class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200"><i
                                     class="fa-solid fa-user-plus"></i>
                                 Adicionar Usuario</a>
                         </div>
@@ -176,10 +176,10 @@
                         </button>
                         <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                             <a href="{{ route('admin.roles.index') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-600 text-amber-300 transition-all ease-linear duration-300"><i
+                                class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
                                     class="fa-solid fa-bars-staggered "></i> Listar Roles</a>
                             <a href="{{ route('admin.roles.store') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-600 hover:text-indigo-300 text-indigo-600 transition-all ease-linear duration-300"><i
+                                class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-300"><i
                                     class="fa-solid fa-person-circle-plus"></i> Adicionar Role</a>
                         </div>
                     </div>
@@ -199,7 +199,7 @@
                         <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
                             <a href="{{ route('admin.audit.index') }}"
                                 class="block px-4 py-2 rounded hover:bg-gray-200"><i
-                                    class="fa-duotone fa-solid fa-users-viewfinder text-red-500"></i> Visualizar</a>
+                                    class="text-red-500 fa-duotone fa-solid fa-users-viewfinder"></i> Visualizar</a>
 
                         </div>
                     </div>
@@ -209,7 +209,10 @@
                     <button @click="open = !open"
                         class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('profile.edit') ? ' bg-gray-600 text-amber-100' : '' }} focus:outline-none">
                         <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-green-400 rounded-full">
+                            {{-- <div class="w-2 h-2 bg-green-400 rounded-full">
+                            </div> --}}
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Você está online">
+
                             </div>
                             <span>{{ Auth::user()->name }}</span>
                         </div>
@@ -236,6 +239,21 @@
                 </div>
 
             </nav>
+            <!-- Contador seguro de usuários online -->
+            <!-- deixa o contador visivel no final do menu abaixo-->
+            @auth
+                {{-- <div class="flex items-center px-3 py-1 text-xs text-gray-600 border rounded-lg bg-gray-50 position-fixed bottom-2 right-2" --}}
+                <div class="absolute bottom-0 left-0 flex items-center w-full px-3 py-1 text-xs text-gray-600 border bg-gray-50"
+                    title="Usuários ativos nos últimos 5 minutos">
+                    <div class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Online: </span>
+                    <strong class="ml-1" id="onlineUsersCount">
+                        {{-- {{ getOnlineUsersCount() }} --}}
+                    </strong>
+                    {{-- teste --}}
+
+                </div>
+            @endauth
         </aside>
 
         {{-- Overlay para fechar o menu ao clicar fora --}}
@@ -245,13 +263,77 @@
         <div class="flex flex-col flex-1 overflow-y-auto">
 
             {{-- Cabeçalho fixo --}}
-            <header class="sticky top-0 z-10 bg-white shadow-md">
+            {{-- <header class="sticky top-0 z-10 bg-white shadow-md">
                 <div class="flex items-center justify-between px-6 py-4">
                     <button id="hamburger-button" class="hamburger-button">
                         <i class="fas fa-bars"></i>
                     </button>
                     <h1 class="text-lg font-semibold">Sistema de Gestão de Férias</h1>
                     <div class="text-sm text-gray-600">Olá, {{ auth()->user()->name }}</div>
+                </div>
+
+            </header> --}}
+            {{-- Cabeçalho fixo --}}
+            {{-- Cabeçalho fixo --}}
+            <header class="sticky top-0 z-10 bg-white shadow-md">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <button id="hamburger-button" class="hamburger-button">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="text-lg font-semibold">Sistema de Gestão de Férias</h1>
+
+                    <div class="flex items-center space-x-4">
+                        <!-- Contador de usuários online com dropdown -->
+                        <div x-data="{ showOnlineUsers: false }" class="relative">
+                            <button @click="showOnlineUsers = !showOnlineUsers"
+                                class="flex items-center px-3 py-1 text-sm text-gray-600 transition-colors rounded-full bg-green-50 hover:bg-green-100">
+                                <div class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span>Online: </span>
+                                <strong class="ml-1" id="onlineUsersCount">
+                                    {{ \App\Models\User::online()->count() }}
+                                </strong>
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown com lista de usuários online -->
+                            <div x-show="showOnlineUsers" @click.away="showOnlineUsers = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 transform scale-95"
+                                x-transition:enter-end="opacity-100 transform scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 transform scale-100"
+                                x-transition:leave-end="opacity-0 transform scale-95"
+                                class="absolute right-0 z-50 w-64 mt-2 bg-white border rounded-lg shadow-lg">
+                                <div class="p-3 border-b">
+                                    <h3 class="font-semibold text-gray-900">Usuários Online</h3>
+                                    <p class="text-xs text-gray-500">Ativos nos últimos 5 minutos</p>
+                                </div>
+                                <div class="overflow-y-auto max-h-60">
+                                    @forelse(\App\Models\User::online()->get() as $user)
+                                        <div class="flex items-center px-3 py-2 hover:bg-gray-50">
+                                            <div class="w-2 h-2 mr-2 bg-green-500 rounded-full"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 truncate">
+                                                    {{ $user->name }}</p>
+                                                <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
+                                            </div>
+                                            <span
+                                                class="ml-2 text-xs text-gray-400">{{ $user->last_activity_at->diffForHumans() }}</span>
+                                        </div>
+                                    @empty
+                                        <div class="px-3 py-4 text-center text-gray-500">
+                                            <p>Nenhum usuário online</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-gray-600">Olá, {{ auth()->user()->name }}</div>
+                    </div>
                 </div>
             </header>
 
@@ -306,7 +388,112 @@
                 }
             });
         });
+
+
+        // Atualização segura da contagem de usuários online
+        function atualizarContagemOnline() {
+            const userToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            if (!userToken) return;
+
+            fetch('/online-users-count', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': userToken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta da API');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    if (data.status === 'success') {
+                        const element = document.getElementById('onlineUsersCount');
+                        if (element) {
+                            element.textContent = data.count ?? 0;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('Erro ao atualizar contagem online:', error);
+                    // Não mostrar erro para o usuário, é uma funcionalidade não crítica
+                });
+        }
+
+        // Atualizar de forma segura
+        document.addEventListener('DOMContentLoaded', function() {
+            // Esperar 2 segundos após o carregamento
+            setTimeout(atualizarContagemOnline, 2000);
+
+            // Atualizar a cada 45 segundos (não muito frequente)
+            setInterval(atualizarContagemOnline, 45000);
+
+            // Atualizar quando a página ganha foco
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    setTimeout(atualizarContagemOnline, 1000);
+                }
+            });
+        });
     </script>
+    {{-- <script>
+        // Atualização segura da contagem de usuários online
+        function atualizarContagemOnline() {
+            const userToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            if (!userToken) return;
+
+            fetch('/online-users-count', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': userToken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta da API');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const element = document.getElementById('onlineUsersCount');
+                        if (element) {
+                            element.textContent = data.count;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('Erro ao atualizar contagem online:', error);
+                    // Não mostrar erro para o usuário, é uma funcionalidade não crítica
+                });
+        }
+
+        // Atualizar de forma segura
+        document.addEventListener('DOMContentLoaded', function() {
+            // Esperar 2 segundos após o carregamento
+            setTimeout(atualizarContagemOnline, 2000);
+
+            // Atualizar a cada 45 segundos (não muito frequente)
+            setInterval(atualizarContagemOnline, 45000);
+
+            // Atualizar quando a página ganha foco
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    setTimeout(atualizarContagemOnline, 1000);
+                }
+            });
+        });
+    </script> --}}
 </body>
 
 </html>
