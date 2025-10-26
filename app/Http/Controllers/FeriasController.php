@@ -18,7 +18,7 @@ class FeriasController extends Controller
         // dd($request->all());
 
         $ano = $request->input('ano_exercicio') ?? date('Y');
-        $query = $request->input('busca') ?? '';
+        // $query = $request->input('busca') ?? '';
 
         $query = Ferias::query()->with(['servidor', 'periodos.todosFilhosRecursivos']);
 
@@ -31,6 +31,7 @@ class FeriasController extends Controller
                 $q->where('nome', 'like', "%{$request->busca}%")
                 ->orWhere('cpf', 'like', "%{$request->busca}%")
                 ->orWhere('matricula', 'like', "%{$request->busca}%");
+                // ->orderBy('ordem', 'desc')
             });
         }
 
@@ -40,6 +41,8 @@ class FeriasController extends Controller
                 $q->where('ativo', 1);
             });
         }
+
+        // $query = $query->orderBy('ordem', 'desc');
 
         $ferias = $query->paginate(10);
         $meses = [
@@ -513,6 +516,60 @@ class FeriasController extends Controller
         $ferias->find($id)->delete();
         return response()->json(['success' => true, 'message' => 'Férias excluídas com sucesso!']);
         //
+    }
+
+    // remarcação com multiplos periodos
+    public function remarcarMultiplosPeriodos(Request $request)
+    {
+       $request->validate([
+            'periodo_id' => 'required|exists:ferias_periodos,id',
+            'periodos' => 'required|array|min:2|max:3',
+            'periodos.*.inicio' => 'required|date',
+            'periodos.*.fim' => 'required|date|after_or_equal:periodos.*.inicio',
+        ]);
+
+        $original = FeriasPeriodos::find($request->periodo_id);
+        $ferias = $original->ferias;
+
+        $original->justificativa = 'Fracionamento de férias';
+        $original->ativo = 0;
+        $original->save();
+
+
+        foreach ($request->periodos as $index => $p) {
+            $inicio = Carbon::parse($p['inicio']);
+            $fim = Carbon::parse($p['fim']);
+            $dias = $inicio->diffInDays($fim) + 1;
+            $title = $p['titulo'];
+            $url = $p['linkDiof'];
+
+            if ($dias < 5) {
+                return response()->json(['message' => 'Cada período deve ter no mínimo 5 dias.'], 422);
+            }
+
+            FeriasPeriodos::create([
+                'ferias_id' => $ferias->id,
+                'inicio' => $inicio,
+                'fim' => $fim,
+                'dias' => $dias,
+                'ordem' => $index + 1,
+                'tipo' => 'Férias',
+                'periodo_origem_id' => $original->id,
+                'situacao' => 'Remarcado',
+                'title' => $title,
+                'url' => $url,
+                'justificativa' => 'Fracionamento de férias',
+            ]);
+
+            $original->eventos()->create([
+                'acao' => 'Remarcação',
+                'data_acao' => now(),
+                'descricao' => 'Férias fracionadas',
+                'user_id' => Auth::id(),
+            ]);
+        }
+        flash()->success('Férias fracionadas com sucesso!');
+        return response()->json(['message' => 'Férias fracionadas com sucesso!']);
     }
 
 }

@@ -1,4 +1,4 @@
-<div class="ml-6 space-y-2 border-l-2 border-gray-300 pl-4">
+<div class="pl-4 ml-6 space-y-2 border-l-2 border-gray-300">
     @foreach ($periodo->todosFilhosRecursivos as $filho)
         <div x-data="{
             aberto: false,
@@ -101,8 +101,12 @@
                         </div>
 
                         @if ($filho->ativo && $filho->situacao === $filho->situacao && !$filho->usufruido)
-                            <button
+                            {{-- <button
                                 @click="modalAberto = true; periodoSelecionado = {{ $filho->id }}; filhos = {{ json_encode($filho) }}"
+                                class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
+                                🔁 Remarcar
+                            </button> --}}
+                            <button @click="abrirModalRemarcacao({{ $filho->id }}, {{ json_encode($filho) }})"
                                 class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
                                 🔁 Remarcar
                             </button>
@@ -133,11 +137,11 @@
                                     <label class="block text-sm font-medium text-gray-700">Titulo</label>
                                     <input type="text" x-model="tituloDiof" name="titulo_diof"
                                         placeholder="Portaria de férias nº 005 de 02 de Junho de 2023."
-                                        class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
                                     <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
                                     <input type="url" x-model="linkDiof" name="link_diof"
                                         placeholder="https://exemplo.com/diof"
-                                        class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
                                 </div>
 
                                 <div>

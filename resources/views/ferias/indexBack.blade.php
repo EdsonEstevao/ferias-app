@@ -116,8 +116,31 @@
                                 {{ $registro->situacao }}
                             </span>
                         </p>
+
+                        <!-- NOVO: Resumo de usufruto -->
+                        @php
+                            $totalDias = $registro->periodos->where('ativo', true)->sum('dias');
+                            $diasUsufruidos = $registro->periodos
+                                ->where('usufruido', true)
+                                ->where('ativo', true)
+                                ->sum('dias');
+                            $diasPendentes = $totalDias - $diasUsufruidos;
+                        @endphp
+
+                        <div class="flex gap-4 mt-2 text-xs">
+                            <span class="px-2 py-1 font-semibold text-green-800 bg-green-200 rounded">
+                                ✅ {{ $diasUsufruidos }} dias usufruídos
+                            </span>
+                            <span class="px-2 py-1 font-semibold text-yellow-800 bg-yellow-200 rounded">
+                                ⏳ {{ $diasPendentes }} dias pendentes
+                            </span>
+                            <span class="px-2 py-1 font-semibold text-blue-800 bg-blue-200 rounded">
+                                📊 {{ $totalDias }} dias totais
+                            </span>
+                        </div>
                     </div>
                     <div class="flex gap-2">
+                        <!-- Botões existentes -->
                         <a href="{{ route('ferias.pdf', $registro->servidor->id) }}" target="_blank"
                             class="px-3 py-1 text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-50">
                             🖨️ PDF
@@ -131,19 +154,35 @@
                 </div>
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
-                    <div class="space-y-4" x-data="{
-                        aberto: false,
-                        periodoInicio: '{{ $periodo->inicio }}',
-                        periodoFim: '{{ $periodo->fim }}',
+                    <div class="mb-2 space-y-4" x-data="{
+                        aberto: true,
+                        periodoInicio: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}',
+                        periodoFim: '{{ date('Y-m-d', strtotime($periodo->fim)) }}',
                     }">
 
-                        <!-- Período original -->
+                        <!-- Período original - ATUALIZADO -->
                         <div
-                            class="flex items-start gap-3 {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : 'text-blue-600' }}">
-                            <div class="text-xl text-blue-600">📌</div>
+                            class="flex items-start gap-3 px-3 py-2 rounded-md {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : ($periodo->usufruido ? 'bg-green-100 border-l-4 border-green-500' : 'bg-blue-50') }}">
+                            <div class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
+                                {{ $periodo->usufruido ? '✅' : '📌' }}
+                            </div>
                             <div class="flex-1">
-                                <p class="font-semibold text-gray-700">Período Original ({{ $periodo->ordem }}º Período
-                                    {{ $periodo->tipo == 'Abono' ? 'de Abono' : 'de Férias' }})
+                                <p class="font-semibold text-gray-700">
+                                    @if ($periodo->tipo !== 'Abono')
+                                        {{ $periodo->ordem }}º Período
+                                    @endif
+                                    {{ $periodo->tipo == 'Abono' ? 'Abono' : 'de Férias' }}
+                                    @if ($periodo->usufruido)
+                                        <span
+                                            class="px-2 py-1 ml-2 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+                                            ✅ USUFRUÍDO
+                                        </span>
+                                    @else
+                                        <span
+                                            class="px-2 py-1 ml-2 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                                            ⏳ PENDENTE
+                                        </span>
+                                    @endif
                                 </p>
 
                                 <!-- link da Portaria -->
@@ -156,34 +195,60 @@
                                     </p>
                                 @endif
 
-                                @if ($periodo->ativo)
-                                    <p class="text-sm text-gray-600">
-                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
-                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
-                                        {{ $periodo->dias }} dias
-                                    </p>
-                                @endif
-                                <p class="text-xs text-gray-500">Situação: {{ $periodo->situacao }}</p>
+                                {{-- @if ($periodo->ativo) --}}
+                                <p class="text-sm text-gray-600">
+                                    {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
+                                    {{ date('d/m/Y', strtotime($periodo->fim)) }}
+                                    {{ $periodo->dias }} dias
+                                </p>
+                                {{-- @endif --}}
+
+                                <p class="text-xs text-gray-500">
+                                    Situação: {{ $periodo->situacao }}
+                                    @if ($periodo->usufruido && $periodo->data_usufruto)
+                                        • Usufruído em: {{ date('d/m/Y', strtotime($periodo->data_usufruto)) }}
+                                    @endif
+                                </p>
 
                                 <div class="flex gap-2 mt-2">
+
                                     <button @click="aberto = !aberto" class="text-xs text-blue-600 hover:underline">
                                         <span x-text="aberto ? 'Ocultar detalhes' : 'Ver detalhes'"></span>
                                     </button>
 
-                                    @if ($periodo->ativo && $periodo->situacao === 'Planejado')
+
+                                    @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
                                         <button
                                             @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
                                             class="text-xs text-green-600 hover:underline">
                                             ✏️ Editar
                                         </button>
+                                        @role('super admin')
+                                            <button
+                                                @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
+                                                class="text-xs text-red-600 hover:underline">
+                                                🗑️ Excluir
+                                            </button>
+                                        @endrole
 
-                                        <button
-                                            @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
-                                            class="text-xs text-red-600 hover:underline">
-                                            🗑️ Excluir
+
+                                        <!-- NOVO: Botão para marcar como usufruído -->
+                                        <button @click="marcarComoUsufruido({{ $periodo->id }})"
+                                            class="text-xs text-purple-600 hover:underline">
+                                            ✅ Marcar como Usufruído
                                         </button>
                                     @endif
+                                    @if ($periodo->situacao !== 'Usufruido' || $periodo->tipo == 'Abono')
+                                        @if ($periodo->usufruido)
+                                            <button @click="desmarcarUsufruto({{ $periodo->id }})"
+                                                class="text-xs text-orange-600 hover:underline">
+                                                ↩️ Desmarcar Usufruto
+                                            </button>
+                                        @endif
+                                    @endif
                                 </div>
+
+                                <!-- Resto do código permanece igual -->
                                 {{-- Formulário de interrupção --}}
                                 <div x-show="periodoId === {{ $periodo->id }}"
                                     class="mt-4 space-y-4 transition duration-300 transform"
@@ -265,15 +330,22 @@
                                     </button>
                                 </div>
                             </div>
+
                             <div class="" x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100"
                                 x-transition:leave="transition ease-in duration-200"
                                 x-transition:leave-start="opacity-100 transform scale-100"
                                 x-transition:leave-end="opacity-0 transform scale-95">
-                                @if ($periodo->ativo && $periodo->situacao === 'Planejado')
-                                    <button
+
+                                @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                    {{-- <button
                                         @click="modalAberto = true; periodoSelecionado = {{ $periodo->id }}; filhos = {{ json_encode($periodo) }}"
+                                        class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
+                                        🔁 Remarcar
+                                    </button> --}}
+                                    <button
+                                        @click="abrirModalRemarcacao({{ $periodo->id }}, {{ json_encode($periodo) }})"
                                         class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
                                         🔁 Remarcar
                                     </button>
@@ -305,7 +377,7 @@
         {{ $ferias->links() }}
 
         <!-- Modal Remarcar -->
-        <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        {{-- <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
@@ -402,6 +474,148 @@
                     </div>
                 </div>
             </div>
+        </div> --}}
+
+        <!-- Modal Remarcar com Múltiplos Períodos -->
+        <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+            <div class="w-full max-w-4xl p-6 bg-white rounded shadow-lg max-h-[90vh] overflow-y-auto"
+                @click.away="modalAberto = false">
+                <h3 class="mb-4 text-lg font-bold">Remarcar Férias - <span x-text="filhos.dias"
+                        class="font-semibold text-blue-600"></span> Dias Disponíveis</h3>
+
+                <!-- Resumo de Dias -->
+                <div class="p-4 mb-4 rounded-lg bg-blue-50">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-semibold">Dias totais:</span>
+                            <span x-text="filhos.dias" class="ml-2 text-blue-700"></span>
+                        </div>
+                        <div>
+                            <span class="font-semibold">Dias distribuídos:</span>
+                            <span x-text="totalDiasDistribuidos" class="ml-2"
+                                :class="totalDiasDistribuidos > filhos.dias ? 'text-red-600' : 'text-green-600'"></span>
+                        </div>
+                        <div x-show="totalDiasDistribuidos !== filhos.dias" class="text-sm text-orange-600">
+                            ⚠️ Restam <span x-text="filhos.dias - totalDiasDistribuidos"></span> dias para distribuir
+                        </div>
+                        <div x-show="totalDiasDistribuidos === filhos.dias" class="text-sm text-green-600">
+                            ✅ Todos os dias foram distribuídos
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Períodos -->
+                <div class="space-y-4">
+                    <template x-for="(periodo, index) in periodosRemarcacao" :key="index">
+                        <div class="p-4 border border-gray-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-gray-700">Período <span x-text="index + 1"></span></h4>
+                                <button type="button" @click="removerPeriodo(index)"
+                                    x-show="periodosRemarcacao.length > 1" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-times"></i> Remover
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                <!-- Data Início -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Data Início</label>
+                                    <input type="date" x-model="periodo.inicio"
+                                        @change="validarDatasPeriodo(index)" :min="obterMinDate(index)"
+                                        class="block w-full mt-1 border-gray-300 rounded">
+                                </div>
+
+                                <!-- Data Fim -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Data Fim</label>
+                                    <input type="date" x-model="periodo.fim"
+                                        @change="validarDatasPeriodo(index); calcularDiasPeriodo(index)"
+                                        :min="periodo.inicio || ''" class="block w-full mt-1 border-gray-300 rounded">
+                                </div>
+
+                                <!-- Dias -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Dias</label>
+                                    <input type="number" x-model="periodo.dias" @input="atualizarFimPorDias(index)"
+                                        min="1" :max="diasDisponiveis(index)"
+                                        class="block w-full mt-1 border-gray-300 rounded">
+                                    <p class="mt-1 text-xs text-gray-500" x-text="'Máx: ' + diasDisponiveis(index)">
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Link do DIOF por período -->
+                            <div class="grid grid-cols-1 gap-4 mt-3 md:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Título do Período</label>
+                                    <input type="text" x-model="periodo.titulo"
+                                        placeholder="Ex: 1º período de férias 2024"
+                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
+                                    <input type="url" x-model="periodo.linkDiof"
+                                        placeholder="https://exemplo.com/diof"
+                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
+                                </div>
+                            </div>
+
+                            <!-- Observações -->
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-gray-700">Observações</label>
+                                <textarea x-model="periodo.observacoes" rows="2" placeholder="Observações específicas deste período..."
+                                    class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                            </div>
+
+                            <!-- Resumo do período -->
+                            <div x-show="periodo.dias > 0" class="p-2 mt-2 text-sm rounded bg-gray-50">
+                                <span class="font-medium" x-text="periodo.dias"></span> dias -
+                                <span x-text="periodo.inicio ? formatarData(periodo.inicio) : '...'"></span>
+                                a
+                                <span x-text="periodo.fim ? formatarData(periodo.fim) : '...'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Botão Adicionar Período -->
+                <div class="mt-4">
+                    <button type="button" @click="adicionarPeriodo()"
+                        :disabled="totalDiasDistribuidos >= filhos.dias"
+                        :class="totalDiasDistribuidos >= filhos.dias ?
+                            'bg-gray-400 cursor-not-allowed' :
+                            'bg-blue-600 hover:bg-blue-700'"
+                        class="px-4 py-2 text-white rounded">
+                        <i class="fas fa-plus"></i> Adicionar Outro Período
+                    </button>
+                </div>
+
+                <!-- Justificativa Geral -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700">Justificativa Geral da Remarcação</label>
+                    <textarea x-model="justificativaGeral" rows="3"
+                        placeholder="Justificativa para a remarcação de todos os períodos..."
+                        class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="flex justify-end gap-2 mt-6">
+                    <button @click="fecharModalRemarcacao()"
+                        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+
+                    <button @click="confirmarRemarcacaoMultiplosPeriodos()" :disabled="!podeConfirmarRemarcacao()"
+                        :class="podeConfirmarRemarcacao() ?
+                            'bg-green-600 hover:bg-green-700' :
+                            'bg-gray-400 cursor-not-allowed'"
+                        class="px-4 py-2 text-white rounded">
+                        ✅ Confirmar Remarcação
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Modal Editar Período -->
@@ -419,14 +633,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Data Início</label>
-                        <input type="date" x-model="periodoEditando.inicio"
-                            class="block w-full mt-1 border-gray-ounded" required>
+                        <input type="date" x-model="periodoEditando.inicio" name="edit-inicio"
+                            @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-ounded" required>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Data Fim</label>
-                        <input type="date" x-model="periodoEditando.fim"
-                            class="block w-full mt-1 border-gray-300 rounded" required>
+                        <input type="date" x-model="periodoEditando.fim" name="edit-fim"
+                            @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded" required>
                     </div>
 
                     <div>
@@ -452,8 +666,11 @@
         </div>
 
         <!-- Modal Confirmação Exclusão -->
-        <div x-show="modalConfirmacaoAberto"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div x-show="modalConfirmacaoAberto" x-cloak x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 bg-black bg-opacity-50">
 
             <div class="w-full max-w-md p-6 bg-white rounded shadow-lg">
                 <h3 class="mb-4 text-lg font-bold text-red-600">Confirmar Exclusão</h3>
@@ -504,6 +721,12 @@
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('feriasManager', () => ({
+                modalAberto: false,
+                periodoSelecionado: null,
+                // Novos estados para múltiplos períodos
+                periodosRemarcacao: [],
+                justificativaGeral: '',
+                totalDiasDistribuidos: 0,
                 // Estados existentes
                 filtroAberto: true,
                 modalAberto: false,
@@ -539,6 +762,192 @@
                     console.log('Ferias Manager inicializado');
                 },
 
+                // Método para abrir o modal com múltiplos períodos
+                abrirModalRemarcacao(periodoId, periodoData) {
+                    this.modalAberto = true;
+                    this.periodoSelecionado = periodoId;
+                    this.filhos = periodoData;
+
+                    // Inicializar com um período vazio
+                    this.periodosRemarcacao = [{
+                        inicio: '',
+                        fim: '',
+                        dias: 0,
+                        titulo: '',
+                        linkDiof: '',
+                        observacoes: ''
+                    }];
+
+                    this.justificativaGeral = '';
+                    this.totalDiasDistribuidos = 0;
+                },
+
+                // Adicionar novo período
+                adicionarPeriodo() {
+                    if (this.totalDiasDistribuidos >= this.filhos.dias) {
+                        alert('Todos os dias já foram distribuídos!');
+                        return;
+                    }
+
+                    this.periodosRemarcacao.push({
+                        inicio: '',
+                        fim: '',
+                        dias: 0,
+                        titulo: '',
+                        linkDiof: '',
+                        observacoes: ''
+                    });
+                },
+
+                // Remover período
+                removerPeriodo(index) {
+                    if (this.periodosRemarcacao.length > 1) {
+                        const diasRemovidos = this.periodosRemarcacao[index].dias || 0;
+                        this.periodosRemarcacao.splice(index, 1);
+                        this.totalDiasDistribuidos -= diasRemovidos;
+                    }
+                },
+
+                // Calcular dias de um período específico
+                calcularDiasPeriodo(index) {
+                    const periodo = this.periodosRemarcacao[index];
+                    if (periodo.inicio && periodo.fim) {
+                        const inicio = new Date(periodo.inicio);
+                        const fim = new Date(periodo.fim);
+
+                        if (fim >= inicio) {
+                            const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+                            const diasAnteriores = periodo.dias || 0;
+
+                            periodo.dias = diff;
+                            this.totalDiasDistribuidos += (diff - diasAnteriores);
+                        } else {
+                            periodo.dias = 0;
+                            alert('⚠️ A data final não pode ser anterior à data inicial.');
+                        }
+                    }
+                },
+
+                // Atualizar data fim baseado nos dias
+                atualizarFimPorDias(index) {
+                    const periodo = this.periodosRemarcacao[index];
+                    if (periodo.inicio && periodo.dias > 0) {
+                        const inicio = new Date(periodo.inicio);
+                        const fim = new Date(inicio);
+                        fim.setDate(fim.getDate() + periodo.dias - 1);
+                        periodo.fim = fim.toISOString().split('T')[0];
+
+                        this.calcularTotalDiasDistribuidos();
+                    }
+                },
+
+                // Calcular total de dias distribuídos
+                calcularTotalDiasDistribuidos() {
+                    this.totalDiasDistribuidos = this.periodosRemarcacao.reduce((total, periodo) => {
+                        return total + (parseInt(periodo.dias) || 0);
+                    }, 0);
+                },
+
+                // Validar datas do período
+                validarDatasPeriodo(index) {
+                    const periodo = this.periodosRemarcacao[index];
+                    if (periodo.inicio && periodo.fim) {
+                        const inicio = new Date(periodo.inicio);
+                        const fim = new Date(periodo.fim);
+
+                        if (fim < inicio) {
+                            alert('⚠️ A data final não pode ser anterior à data inicial.');
+                            periodo.fim = '';
+                            periodo.dias = 0;
+                        }
+                    }
+                },
+
+                // Obter data mínima para um período
+                obterMinDate(index) {
+                    if (index === 0) return '';
+
+                    // Para períodos subsequentes, a data início deve ser depois do fim do período anterior
+                    const periodoAnterior = this.periodosRemarcacao[index - 1];
+                    if (periodoAnterior && periodoAnterior.fim) {
+                        const minDate = new Date(periodoAnterior.fim);
+                        minDate.setDate(minDate.getDate() + 1);
+                        return minDate.toISOString().split('T')[0];
+                    }
+                    return '';
+                },
+
+                // Dias disponíveis para um período
+                diasDisponiveis(index) {
+                    const diasUsados = this.periodosRemarcacao.reduce((total, periodo, i) => {
+                        return i !== index ? total + (parseInt(periodo.dias) || 0) : total;
+                    }, 0);
+
+                    return Math.max(0, this.filhos.dias - diasUsados);
+                },
+
+                // Formatar data para exibição
+                formatarData(dataString) {
+                    if (!dataString) return '';
+                    const data = new Date(dataString + 'T00:00:00');
+                    return data.toLocaleDateString('pt-BR');
+                },
+
+                // Fechar modal de remarcação
+                fecharModalRemarcacao() {
+                    this.modalAberto = false;
+                    this.periodosRemarcacao = [];
+                    this.justificativaGeral = '';
+                    this.totalDiasDistribuidos = 0;
+                },
+
+                // Verificar se pode confirmar a remarcação
+                podeConfirmarRemarcacao() {
+                    return this.totalDiasDistribuidos === this.filhos.dias &&
+                        this.periodosRemarcacao.every(p => p.inicio && p.fim && p.dias > 0) &&
+                        this.justificativaGeral.trim() !== '';
+                },
+
+                // Confirmar remarcação com múltiplos períodos
+                async confirmarRemarcacaoMultiplosPeriodos() {
+                    if (!this.podeConfirmarRemarcacao()) {
+                        alert('Preencha todos os períodos corretamente e a justificativa!');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('{{ route('ferias.remarcar.multiplus') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                periodo_id: this.periodoSelecionado,
+                                periodos: this.periodosRemarcacao,
+                                justificativa: this.justificativaGeral
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            this.mostrarMensagemSucesso(data.message ||
+                                'Períodos remarcados com sucesso!');
+                            this.fecharModalRemarcacao();
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            throw new Error(data.message || 'Erro ao remarcar períodos');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagemErro(error.message);
+                        console.error('Erro:', error);
+                    }
+                },
+
+
+
                 // Métodos existentes
                 calcularDias() {
                     if (this.novaInicio) {
@@ -565,6 +974,28 @@
                     }
                 },
 
+                // Métodos existentes
+                calcularDiasEdicao() {
+
+                    if (document.querySelector('input[name="edit-inicio"]').value === '') {
+
+                        document.querySelector('input[name="edit-fim"]').value = '';
+                        document.querySelector('input[name="edit-inicio"]').focus();
+                        alert('⚠️ A data inicial nao pode ser vazia');
+                    }
+
+                    const inicio = new Date(this.periodoEditando.inicio);
+                    const fim = new Date(inicio);
+                    fim.setDate(fim.getDate() + this.periodoEditando.dias -
+                        1);
+                    this.periodoEditando.fim = fim.toISOString().split('T')[0];
+
+
+                    console.log('fim', this.periodoEditando.fim);
+                },
+
+
+
                 // Novos métodos para edição
                 abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
                     this.periodoEditando = {
@@ -575,6 +1006,9 @@
                         justificativa: justificativa || ''
                     };
                     this.modalEditarAberto = true;
+                    document.querySelector('input[name="edit-inicio"]').value = dataInicio;
+
+                    document.querySelector('input[name="edit-fim"]').value = dataFim;
                 },
 
                 fecharModalEditar() {
@@ -642,7 +1076,7 @@
                         let url, message;
 
                         if (this.tipoExclusao === 'periodo') {
-                            url = `/api/periodos-ferias/${this.itemParaExcluir}`;
+                            url = `/periodos-ferias/${this.itemParaExcluir}`;
                             message = 'Período excluído com sucesso!';
                         } else {
                             url = `/api/ferias/${this.itemParaExcluir}`;
@@ -683,6 +1117,60 @@
                     this.mensagemErro = mensagem;
                     this.mensagemSucesso = '';
                     setTimeout(() => this.mensagemErro = '', 5000);
+                },
+                // feriasManager
+                // Adicionar estes métodos no seu feriasManager()
+                async marcarComoUsufruido(periodoId) {
+                    try {
+                        const response = await fetch(
+                            `/api/periodos-ferias/${periodoId}/usufruir`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            });
+
+                        if (response.ok) {
+                            this.mostrarMensagemSucesso('Período marcado como usufruído!');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            throw new Error('Erro ao marcar como usufruído');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagemErro('Erro ao marcar como usufruído');
+                        console.error('Erro:', error);
+                    }
+                },
+
+                async desmarcarUsufruto(periodoId) {
+                    if (!confirm(
+                            'Tem certeza que deseja desmarcar o usufruto deste período?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(
+                            `/api/periodos-ferias/${periodoId}/desusufruir`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            });
+
+                        if (response.ok) {
+                            this.mostrarMensagemSucesso('Usufruto desmarcado com sucesso!');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            throw new Error('Erro ao desmarcar usufruto');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagemErro('Erro ao desmarcar usufruto');
+                        console.error('Erro:', error);
+                    }
                 }
             }));
         });

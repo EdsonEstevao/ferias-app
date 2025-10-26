@@ -96,7 +96,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2">
-                                                <div class="flex gap-2 flex-col">
+                                                <div class="flex flex-col gap-2">
                                                     @foreach ($ferias->periodos->where('ativo', true)->take(2) as $periodo)
                                                         <div
                                                             class="text-xs {{ $periodo->tipo === 'Abono' ? 'bg-red-200 px-2 py-1 rounded-md w-max' : '' }}">
@@ -110,12 +110,12 @@
                                             <td class="px-4 py-2">
                                                 <div class="flex space-x-2">
                                                     <a href="{{ route('ferias.show', $ferias->id) }}"
-                                                        class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded hover:bg-blue-200">
+                                                        class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded hover:bg-blue-200 text-nowrap">
                                                         👁️ Ver
                                                     </a>
                                                     @if ($ferias->periodos->where('ativo', true)->whereIn('situacao', ['Planejado', 'Interrompido', 'Remarcado'])->count() > 0)
                                                         <button
-                                                            class="px-3 py-1 text-xs text-green-600 bg-green-100 rounded hover:bg-green-200">
+                                                            class="px-3 py-1 text-xs text-green-600 bg-green-100 rounded hover:bg-green-200 text-nowrap">
                                                             🔁 Remarcar
                                                         </button>
                                                     @endif

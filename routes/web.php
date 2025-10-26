@@ -61,6 +61,11 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
         Route::get('/interromper-ferias', [FeriasController::class, 'interromperFerias'])->name('ferias.interromper.periodo');
         Route::post('/interromper', [FeriasController::class, 'interromper'])->name('ferias.interromper');
         Route::post('/remarcar', [FeriasController::class, 'remarcar'])->name('ferias.remarcar');
+
+        Route::post('/remarcar-multiplos', [FeriasController::class, 'remarcarMultiplosPeriodos'])
+        ->name('ferias.remarcar.multiplus');
+
+
         Route::post('/fracionar', [FeriasController::class, 'fracionar'])->name('ferias.fracionar');
         Route::get('/{servidor}/pdf', [FeriasController::class, 'gerarPdf'])->name('ferias.pdf');
         Route::get('/api/ferias', [FeriasController::class, 'filtrar']);
