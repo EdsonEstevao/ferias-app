@@ -44,7 +44,7 @@ class FeriasController extends Controller
 
         // $query = $query->orderBy('ordem', 'desc');
 
-        $ferias = $query->paginate(10);
+        $ferias = $query->paginate(10)->withQueryString();
         $meses = [
             1 => 'Janeiro',
             2 => 'Fevereiro',
@@ -97,23 +97,24 @@ class FeriasController extends Controller
 
     public function show($id)
     {
-        $ferias = Ferias::with([
-            'servidor',
-            'periodos' => function($query) {
-                // $query->where('ativo', true)
-                //       ->orderBy('inicio');
-                $query->orderBy('ordem')
-                        ->orderBy('inicio')
-                        ->orderBy('created_at');
-            },
-            'periodos.origem', // CORREÇÃO: usar 'origem' em vez de 'periodoOrigem'
-            'periodos.todosFilhosRecursivos' => function($query) {
-                $query->where('ativo', true)
-                      ->orderBy('inicio');
-            }
-        ])->findOrFail($id);
+         $ferias = Ferias::with([
+        'servidor',
+        'periodos' => function($query) {
+                            $query->orderBy('ordem')
+                                ->orderBy('inicio')
+                                ->orderBy('created_at');
+                        },
+                        'periodos.origem',
+                        'periodos.filhos', // Carrega apenas os filhos diretos
+                        'periodos.filhos.eventos', // Se precisar dos eventos dos filhos
+                        'periodos.eventos', // Eventos dos períodos originais
+                    ])->findOrFail($id);
 
-        return view('ferias.show', compact('ferias'));
+
+
+
+    return view('ferias.show', compact('ferias'));
+
     }
 
     public function filtrar(Request $request)

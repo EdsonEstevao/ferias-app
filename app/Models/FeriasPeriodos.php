@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 class FeriasPeriodos extends Model
@@ -52,6 +53,20 @@ class FeriasPeriodos extends Model
     public function todosFilhosRecursivos()
     {
         return $this->filhos()->with('todosFilhosRecursivos');
+    }
+    /**
+     * Retorna todos os filhos recursivamente como uma Collection
+     */
+    public function getTodosFilhosRecursivosAttribute()
+    {
+        $todosFilhos = new Collection();
+
+        foreach ($this->filhos as $filho) {
+            $todosFilhos->push($filho);
+            $todosFilhos = $todosFilhos->merge($filho->todosFilhosRecursivos);
+        }
+
+        return $todosFilhos;
     }
     // ========== NOVOS MÉTODOS ==========
 

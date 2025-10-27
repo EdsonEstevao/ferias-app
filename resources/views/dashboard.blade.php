@@ -136,7 +136,7 @@
                         <!-- CORREÇÃO: Agora $ultimos é um Paginator e tem hasPages() -->
                         @if ($ultimos->hasPages())
                             <div class="mt-4">
-                                {{ $ultimos->links() }}
+                                {{ $ultimos->withQueryString()->onEachSide(1)->appends('search', $search)->links('pagination::tailwind') }}
                             </div>
                         @endif
                     </div>

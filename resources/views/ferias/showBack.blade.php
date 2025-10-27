@@ -108,19 +108,15 @@
                                 </div>
 
                                 <!-- Períodos Filhos (Remarcações/Interrupções) -->
-                                @php
-                                    $todosFilhosRecursivos = $periodo->todosFilhosRecursivos;
-                                @endphp
-
-                                @if ($todosFilhosRecursivos->count() > 0)
+                                @if ($periodo->filhos->count() > 0)
                                     <div class="pl-4 mt-4 ml-4 border-l-2 border-blue-300">
                                         <p class="mb-3 text-sm font-medium text-gray-700">
                                             📋 Histórico de Alterações:
                                         </p>
-                                        @foreach ($todosFilhosRecursivos->sortBy('created_at') as $filho)
+                                        @foreach ($periodo->filhos->sortBy('created_at') as $filho)
                                             <div
                                                 class="p-3 mb-3 rounded border
-                {{ $filho->ativo ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 opacity-75' }}">
+                                                {{ $filho->ativo ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 opacity-75' }}">
 
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <span class="text-sm font-medium">
@@ -128,11 +124,11 @@
                                                     </span>
                                                     <span
                                                         class="px-2 py-1 text-xs rounded-full
-                        {{ $filho->situacao == 'Planejado'
-                            ? 'bg-green-100 text-green-800'
-                            : ($filho->situacao == 'Interrompido'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-yellow-100 text-yellow-800') }}">
+                                                        {{ $filho->situacao == 'Planejado'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : ($filho->situacao == 'Interrompido'
+                                                                ? 'bg-red-100 text-red-800'
+                                                                : 'bg-yellow-100 text-yellow-800') }}">
                                                         {{ $filho->tipo }}
                                                     </span>
                                                     @if ($filho->ativo)
@@ -168,24 +164,6 @@
                                                             class="text-blue-600 hover:underline">
                                                             📄 {{ $filho->title }}
                                                         </a>
-                                                    </p>
-                                                @endif
-
-                                                <!-- Mostrar hierarquia (opcional) -->
-                                                @php
-                                                    $nivel = 0;
-                                                    $periodoAtual = $filho;
-                                                    while (
-                                                        $periodoAtual->periodo_origem_id &&
-                                                        $periodoAtual->periodo_origem_id != $periodo->id
-                                                    ) {
-                                                        $nivel++;
-                                                        $periodoAtual = $periodoAtual->origem;
-                                                    }
-                                                @endphp
-                                                @if ($nivel > 0)
-                                                    <p class="text-xs text-gray-500">
-                                                        ↳ {{ $nivel }}ª geração de alteração
                                                     </p>
                                                 @endif
 
@@ -234,7 +212,6 @@
                     </div>
 
                     <!-- Resumo -->
-                    <!-- Resumo -->
                     <div class="p-4 rounded-lg bg-blue-50">
                         <h4 class="font-semibold text-blue-800">📊 Resumo:</h4>
                         <div class="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-3">
@@ -250,10 +227,6 @@
                                 <strong>Total de Alterações:</strong>
                                 {{ $ferias->periodos->whereNotNull('periodo_origem_id')->count() }}
                             </div>
-                            {{-- <div>
-                                <strong>Alterações Recursivas:</strong>
-                                {{ $periodosOriginais->sum(function ($periodo) {return $periodo->todosFilhosRecursivos->count();}) }}
-                            </div> --}}
                         </div>
                     </div>
 

@@ -395,7 +395,7 @@
             </div>
         @endforeach
 
-        {{ $ferias->links() }}
+        {{ $ferias->withQueryString()->onEachSide(1)->links('pagination::tailwind') }}
 
         <!-- Modal Remarcar com Múltiplos Períodos - Mobile Optimized -->
         <div x-show="modalAberto"
