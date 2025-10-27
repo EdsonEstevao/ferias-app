@@ -79,11 +79,11 @@
                             <label class="block text-sm font-medium text-gray-700">Titulo</label>
                             <input type="text" x-model="tituloDiof" name="titulo_diof"
                                 placeholder="Portaria de férias nº 005 de 02 de Junho de 2023."
-                                class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+                                class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
                             <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
                             <input type="url" x-model="linkDiof" name="link_diof"
                                 placeholder="https://exemplo.com/diof"
-                                class="block w-full mt-1 border-gray-300 rounded px-3 py-2">
+                                class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
                         </div>
 
                         <div>
@@ -141,6 +141,6 @@
                 @endif
             </div>
         </div>
-        <x-periodo :periodo="$filho" />
+        {{-- <x-periodo :periodo="$filho" /> --}}
     @endforeach
 </div>

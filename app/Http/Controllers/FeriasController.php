@@ -110,10 +110,15 @@ class FeriasController extends Controller
                         'periodos.eventos', // Eventos dos períodos originais
                     ])->findOrFail($id);
 
+        $periodosOriginais = $ferias->periodos->whereNull('periodo_origem_id')->sortBy('ordem');
+
+
+        // dd($ferias, $periodosOriginais);
 
 
 
-    return view('ferias.show', compact('ferias'));
+
+    return view('ferias.show', compact('ferias', 'periodosOriginais'));
 
     }
 
@@ -522,9 +527,11 @@ class FeriasController extends Controller
     // remarcação com multiplos periodos
     public function remarcarMultiplosPeriodos(Request $request)
     {
+
+        // dd($request->all());
        $request->validate([
             'periodo_id' => 'required|exists:ferias_periodos,id',
-            'periodos' => 'required|array|min:2|max:3',
+            'periodos' => 'required|array|min:1|max:3',
             'periodos.*.inicio' => 'required|date',
             'periodos.*.fim' => 'required|date|after_or_equal:periodos.*.inicio',
         ]);
@@ -545,6 +552,7 @@ class FeriasController extends Controller
             $url = $p['linkDiof'];
 
             if ($dias < 5) {
+                flash()->error('Cada período deve ter no mínimo 5 dias.');
                 return response()->json(['message' => 'Cada período deve ter no mínimo 5 dias.'], 422);
             }
 

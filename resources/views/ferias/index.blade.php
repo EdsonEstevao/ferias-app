@@ -233,9 +233,20 @@
                                             </button>
 
                                             @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
-                                                <button
+                                                {{-- <button
                                                     @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
                                                     class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap">
+                                                    ✏️ Editar
+                                                </button> --}}
+                                                <button
+                                                    class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap"
+                                                    data-periodo-id="{{ $periodo->id }}"
+                                                    data-inicio="{{ $periodo->inicio }}"
+                                                    data-url="{{ $periodo->url }}"
+                                                    data-title="{{ $periodo->title }}"
+                                                    data-fim="{{ $periodo->fim }}" data-dias="{{ $periodo->dias }}"
+                                                    data-justificativa="{{ $periodo->justificativa }}"
+                                                    @click="abrirModalEditarPeriodo($event)">
                                                     ✏️ Editar
                                                 </button>
                                                 @role('super admin')
@@ -251,14 +262,14 @@
                                                     ✅ Usufruído
                                                 </button>
                                             @endif
-                                            @if ($periodo->situacao !== 'Usufruido' || $periodo->tipo == 'Abono')
-                                                @if ($periodo->usufruido)
-                                                    <button @click="desmarcarUsufruto({{ $periodo->id }})"
-                                                        class="w-full px-2 py-2 text-xs text-orange-600 bg-orange-200 rounded shadow-lg hover:bg-orange-500 hover:text-orange-100 text-nowrap">
-                                                        ↩️ Desmarcar
-                                                    </button>
-                                                @endif
+
+                                            @if ($periodo->usufruido && $periodo->ativo)
+                                                <button @click="desmarcarUsufruto({{ $periodo->id }})"
+                                                    class="w-full px-2 py-2 text-xs text-orange-600 bg-orange-200 rounded shadow-lg hover:bg-orange-500 hover:text-orange-100 text-nowrap">
+                                                    ↩️ Desmarcar Usufruto
+                                                </button>
                                             @endif
+
 
                                             @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
                                                 <button
@@ -277,23 +288,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Botões de Ação Mobile -->
-                            {{-- <div class="flex flex-wrap gap-1 sm:flex-col sm:gap-2">
-                                @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
-                                    <button
-                                        @click="abrirModalRemarcacao({{ $periodo->id }}, {{ json_encode($periodo) }})"
-                                        class="flex-1 px-2 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700 sm:px-3 sm:text-sm">
-                                        🔁 Remarcar
-                                    </button>
-                                    @if ($periodo->situacao !== 'Interrompido')
-                                        <button @click="periodoId = {{ $periodo->id }}"
-                                            class="flex-1 px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700 sm:px-3 sm:text-sm">
-                                            ✋ Interromper
-                                        </button>
-                                    @endif
-                                @endif
-                            </div> --}}
                         </div>
 
                         <!-- Formulário de interrupção Mobile -->
@@ -381,7 +375,7 @@
                         </div>
 
                         <!-- Filhos: interrupções e remarcações -->
-                        <div x-show="aberto" class="mt-2 text-sm text-gray-500"
+                        <div x-show="aberto" class="text-sm text-gray-500"
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 transform scale-95"
                             x-transition:enter-end="opacity-100 transform scale-100"
@@ -577,6 +571,19 @@
                         <input type="number" x-model="periodoEditando.dias"
                             class="block w-full mt-1 border-gray-300 rounded" required>
                     </div>
+                    <!-- input Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Título da Portaria</label>
+                        <input type="text" x-model="periodoEditando.title" name="edit-title"
+                            class="block w-full mt-1 border-gray-300 rounded">
+                    </div>
+
+                    <!-- input url -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">URL</label>
+                        <input type="url" x-model="periodoEditando.url" name="edit-url"
+                            class="block w-full mt-1 border-gray-300 rounded">
+                    </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Observação</label>
@@ -619,35 +626,6 @@
     </div>
 
     <script>
-        // function verificarRelatorio() {
-        //     const ano_exercicio = document.getElementById('ano_exercicio').value;
-        //     const ano = document.getElementById('ano').value;
-        //     const mes = document.getElementById('mes').value;
-
-        //     fetch(`/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`)
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             if (data.tem_dados) {
-        //                 const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
-        //                     `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
-        //                 window.open(url, '_blank');
-        //             } else {
-        //                 const mensagem = document.getElementById('mensagem');
-        //                 mensagem.innerText = 'Nenhum dado encontrado para os filtros selecionados.';
-        //                 mensagem.style.opacity = 1;
-        //                 mensagem.style.transition = 'opacity 0.5s ease-in-out';
-        //                 mensagem.classList.remove('hidden');
-
-        //                 setTimeout(() => {
-        //                     mensagem.style.transition = 'opacity 1s';
-        //                     mensagem.style.opacity = 0;
-        //                 }, 5000);
-        //             }
-        //         })
-        //         .catch(() => {
-        //             document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
-        //         });
-        // }
         function verificarRelatorio() {
             const ano_exercicio = document.getElementById('ano_exercicio').value;
             const ano = document.getElementById('ano').value;
@@ -956,18 +934,31 @@
 
 
                 // Novos métodos para edição
-                abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
+                // abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
+                //     this.periodoEditando = {
+                //         id: id,
+                //         inicio: dataInicio,
+                //         fim: dataFim,
+                //         dias: dias,
+                //         justificativa: justificativa || ''
+                //     };
+                //     this.modalEditarAberto = true;
+                //     document.querySelector('input[name="edit-inicio"]').value = dataInicio;
+
+                //     document.querySelector('input[name="edit-fim"]').value = dataFim;
+                // },
+                abrirModalEditarPeriodo(event) {
+                    const button = event.target;
                     this.periodoEditando = {
-                        id: id,
-                        inicio: dataInicio,
-                        fim: dataFim,
-                        dias: dias,
-                        justificativa: justificativa || ''
+                        id: button.dataset.periodoId,
+                        inicio: button.dataset.inicio,
+                        fim: button.dataset.fim,
+                        dias: button.dataset.dias,
+                        url: button.dataset.url,
+                        title: button.dataset.title,
+                        justificativa: button.dataset.justificativa
                     };
                     this.modalEditarAberto = true;
-                    document.querySelector('input[name="edit-inicio"]').value = dataInicio;
-
-                    document.querySelector('input[name="edit-fim"]').value = dataFim;
                 },
 
                 fecharModalEditar() {
@@ -977,6 +968,8 @@
                         inicio: '',
                         fim: '',
                         dias: 0,
+                        url: '',
+                        title: '',
                         justificativa: ''
                     };
                 },
