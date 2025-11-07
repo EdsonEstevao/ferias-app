@@ -18,6 +18,9 @@
                 $filho->usufruido => 'bg-green-100 border-l-4 border-green-500',
                 default => 'bg-gray-50 border-l-4 border-gray-300',
             };
+
+            // Encontrar o status original correspondente
+
         @endphp
 
         <div style="margin-left: {{ $nivel * 20 }}px;" class="p-3 {{ $classes }} rounded">
@@ -80,8 +83,10 @@
                     <div class="mt-2">
                         <div class="flex flex-wrap gap-2">
                             @if ($filho->ativo && $filho->situacao === 'Remarcado' && !$filho->usufruido)
-                                <button data-periodo-id="{{ $filho->id }}" data-inicio="{{ $filho->inicio }}"
-                                    data-fim="{{ $filho->fim }}" data-dias="{{ $filho->dias }}"
+                                <button data-periodo-id="{{ $filho->id }}"
+                                    data-inicio="{{ $filho->inicio_formatado }}"
+                                    data-fim="{{ $filho->fim_formatado }}" data-title="{{ $filho->title }}"
+                                    data-url="{{ $filho->url }}" data-dias="{{ $filho->dias }}"
                                     data-justificativa="{{ $filho->justificativa }}"
                                     @click="abrirModalEditarPeriodo($event)">
                                     ✏️ Editar
@@ -116,13 +121,106 @@
                                     class="px-3 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
                                     🔁 Remarcar
                                 </button>
+                                @role('super admin')
+                                    <button
+                                        @click="confirmarExclusaoPeriodo({{ $filho->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
+                                        class="px-2 py-2 text-xs text-red-600 bg-red-200 rounded shadow-lg hover:bg-red-500 hover:text-red-100 text-nowrap">
+                                        🗑️ Excluir
+                                    </button>
+                                @endrole
 
                                 @if ($filho->situacao !== 'Interrompido')
                                     <button @click="periodoId = {{ $filho->id }}"
                                         class="px-3 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700">
-                                        ✋ Interromper
+                                        ✋ Interromper este Período
                                     </button>
                                 @endif
+
+                            </div>
+                            <!-- Formulário de interrupção Mobile -->
+                            <div x-show="periodoId === {{ $filho->id }}"
+                                class="p-3 mt-2 space-y-3 transition duration-300 transform rounded bg-gray-50"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transform opacity-100 scale-100"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Data da
+                                        Interrupção</label>
+                                    <input type="date" x-model="dataInterrupcao" :min="periodoInicio"
+                                        :max="periodoFim"
+                                        class="block w-full mt-1 text-sm border-gray-300 rounded">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Título</label>
+                                    <input type="text" x-model="tituloDiof" name="titulo_diof"
+                                        placeholder="Portaria de férias..."
+                                        class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
+                                    <input type="url" x-model="linkDiof" name="link_diof"
+                                        placeholder="https://exemplo.com/diof"
+                                        class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                                    <textarea x-model="motivo" rows="2" class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button
+                                        @click="fetch('{{ route('ferias.interromper') }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({
+                                                periodo_id: periodoId,
+                                                data: dataInterrupcao,
+                                                motivo: motivo,
+                                                linkDiof: linkDiof,
+                                                tituloDiof: tituloDiof,
+                                            })
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            alert(data.message);
+                                            periodoId = null;
+                                            dataInterrupcao = '';
+                                            motivo = '';
+                                            linkDiof = '';
+                                            tituloDiof = '';
+                                            location.reload();
+                                        })
+                                        .catch(err => {
+                                            console.error(err);
+                                            alert('Erro ao interromper período');
+                                        })"
+                                        class="flex-1 px-3 py-2 text-sm text-white bg-red-600 rounded hover:bg-red-700">
+                                        ✅ Confirmar
+                                    </button>
+                                    <button
+                                        @click="setTimeout(() => {
+                                            periodoId = null;
+                                            motivo = '';
+                                            dataInterrupcao = '';
+                                            tituloDiof = '';
+                                            linkDiof = '';
+                                            novaInicio = '';
+                                            novaFim = '';
+                                        }, 10);"
+                                        class="flex-1 px-3 py-2 text-sm text-white bg-gray-600 rounded hover:bg-gray-700">
+                                        ❌ Cancelar
+                                    </button>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -130,5 +228,7 @@
             </div>
         </div>
     @endforeach
+
+
 
 </div>

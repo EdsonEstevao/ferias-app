@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\FeriasFiltroExport;
 use App\Models\Ferias;
 use App\Models\FeriasEvento;
 use App\Models\FeriasPeriodos;
 use App\Models\Servidor;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FeriasController extends Controller
 {
@@ -61,37 +65,11 @@ class FeriasController extends Controller
         ];
         $data = [
             'ferias' => $ferias,
-            'meses' => $meses
+            'meses' => $meses,
+
         ];
 
         return view('ferias.index', $data);
-
-        // $ferias = Ferias::with([
-        // 'servidor',
-        // 'periodos' => function($query) {
-        //         $query->whereNull('periodo_origem_id')
-        //             ->where('ativo', true);
-        //     },
-        //     'periodos.filhos' => function($query) {
-        //         $query->where('ativo', true)
-        //             ->orderBy('created_at', 'asc');
-        //     },
-        //     'periodos.filhos.filhos' // Para níveis mais profundos
-        // ])
-        // ->whereHas('servidor')
-        // ->orderBy('ano_exercicio', 'desc')
-        // ->paginate(10);
-
-        // $meses = [
-        //     '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março',
-        //     '04' => 'Abril', '05' => 'Maio', '06' => 'Junho',
-        //     '07' => 'Julho', '08' => 'Agosto', '09' => 'Setembro',
-        //     '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
-        // ];
-
-        // return view('ferias.index', compact('ferias', 'meses'));
-
-
 
     }
 
@@ -537,6 +515,9 @@ class FeriasController extends Controller
         ]);
 
         $original = FeriasPeriodos::find($request->periodo_id);
+
+
+
         $ferias = $original->ferias;
 
         $original->justificativa = 'Fracionamento de férias';
@@ -561,7 +542,7 @@ class FeriasController extends Controller
                 'inicio' => $inicio,
                 'fim' => $fim,
                 'dias' => $dias,
-                'ordem' => $index + 1,
+                'ordem' => $dias > 10 ? $index + 1 : $original->ordem,
                 'tipo' => 'Férias',
                 'periodo_origem_id' => $original->id,
                 'situacao' => 'Remarcado',
@@ -581,4 +562,310 @@ class FeriasController extends Controller
         return response()->json(['message' => 'Férias fracionadas com sucesso!']);
     }
 
+    public function detalhes($id)
+    {
+        try {
+            // Buscar o período específico de férias
+            $periodo = FeriasPeriodos::with([
+                'ferias.servidor', // Carrega as férias e o servidor relacionado
+                'origem', // Carrega o período original se for uma remarcação
+                'ferias.periodos' => function($query) {
+                    $query->where('ativo', true)
+                        ->orderBy('inicio');
+                }
+            ])->findOrFail($id);
+
+            // Buscar todos os períodos ativos das mesmas férias para as estatísticas
+            $todosPeriodos = $periodo->ferias->periodos;
+
+            // Estatísticas para o card
+            $estatisticas = [
+                'total_periodos' => $todosPeriodos->count(),
+                'total_dias' => $todosPeriodos->sum('dias'),
+                'periodos_planejados' => $todosPeriodos->where('situacao', 'Planejado')->count(),
+                'periodos_usufruidos' => $todosPeriodos->where('usufruido', true)->count(),
+                'periodos_interrompidos' => $todosPeriodos->where('situacao', 'Interrompido')->count(),
+                'periodos_remarcados' => $todosPeriodos->whereNotNull('periodo_origem_id')->count(),
+            ];
+
+            return view('ferias.detalhes', compact('periodo', 'estatisticas', 'todosPeriodos'));
+
+        } catch (Exception $e) {
+            Log::error('Erro ao carregar detalhes do período: ' . $e->getMessage());
+            return redirect()->route('ferias.index')
+                ->with('error', 'Período de férias não encontrado.');
+        }
+    }
+
+    /**
+     * Filtros
+     */
+    public function filtro(Request $request)
+    {
+        $query = FeriasPeriodos::with(['ferias.servidor'])
+            ->where('ativo', true);
+
+        // Filtro por tipo
+        if ($request->filled('tipo')) {
+            if ($request->tipo == 'ferias') {
+                $query->where('tipo', '!=', 'Abono');
+            } else {
+                $query->where('tipo', 'Abono');
+            }
+        }
+
+        // Filtro por ano de exercício
+        if ($request->filled('ano_exercicio')) {
+            $query->whereHas('ferias', function($q) use ($request) {
+                $q->where('ano_exercicio', $request->ano_exercicio);
+            });
+        }
+
+        // Filtro por mês
+        if ($request->filled('mes')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('inicio', $request->mes)
+                ->orWhereMonth('fim', $request->mes);
+            });
+        }
+
+        // Filtro por situação
+        if ($request->filled('situacao')) {
+            $query->where('situacao', $request->situacao);
+        }
+
+        // Busca por servidor
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+            $query->whereHas('ferias.servidor', function($q) use ($busca) {
+                $q->where('nome', 'like', "%{$busca}%")
+                  ->orWhere('matricula', 'like', "%{$busca}%")
+                  ->orWhere('cpf', 'like', "%{$busca}%");
+            });
+        }
+
+        $periodos = $query->orderBy('inicio', 'desc')->paginate(20);
+
+        // CORREÇÃO DAS ESTATÍSTICAS
+        $totalRegistros = $periodos->total();
+
+        // Correção para contar servidores únicos
+        $servidoresIds = $query->get()->pluck('ferias.servidor_id')->unique()->count();
+        $totalServidores = $servidoresIds;
+
+        // Alternativa mais eficiente usando subquery
+        // $totalServidores = Ferias::whereIn('id', $query->select('ferias_id')->get()->pluck('ferias_id'))
+        //                         ->distinct('servidor_id')
+        //                         ->count('servidor_id');
+
+        $totalDias = $query->sum('dias');
+        $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
+
+        $meses = $this->getMeses();
+
+        $data = [
+            'periodos' => $periodos,
+            'totalRegistros' => $totalRegistros,
+            'totalServidores' => $totalServidores,
+            'totalDias' => $totalDias,
+            'totalUsufruidos' => $totalUsufruidos,
+            'meses' => $meses
+        ];
+
+        return view('ferias.filtro', $data);
+    }
+
+    public function filtroPdf(Request $request)
+    {
+        // dd($request->all());
+
+        try {
+            $query = FeriasPeriodos::with(['ferias.servidor'])->where('ativo', true);
+
+            // Aplicar os mesmos filtros
+            if ($request->filled('tipo')) {
+                if ($request->tipo == 'ferias') {
+                    $query->where('tipo', '!=', 'Abono');
+                } else {
+                    $query->where('tipo', 'Abono');
+                }
+            }
+
+            if ($request->filled('ano_exercicio')) {
+                $query->whereHas('ferias', function($q) use ($request) {
+                    $q->where('ano_exercicio', $request->ano_exercicio);
+                });
+            }
+
+            if ($request->filled('mes')) {
+                $query->where(function($q) use ($request) {
+                    $q->whereMonth('inicio', $request->mes)
+                    ->orWhereMonth('fim', $request->mes);
+                });
+            }
+
+            if ($request->filled('situacao')) {
+                $query->where('situacao', $request->situacao);
+            }
+
+            if ($request->filled('busca')) {
+                $busca = $request->busca;
+                $query->whereHas('ferias.servidor', function($q) use ($busca) {
+                    $q->where('nome', 'like', "%{$busca}%")
+                    ->orWhere('matricula', 'like', "%{$busca}%")
+                    ->orWhere('cpf', 'like', "%{$busca}%");
+                });
+            }
+
+
+            $mesesNomes = $this->getMeses();
+
+            $mesFiltro = request('mes');
+            $nomeMes = $mesesNomes[$mesFiltro] ?? $mesFiltro;
+
+
+            $periodos = $query->orderBy('inicio', 'desc')->get();
+
+
+            $data = [
+                'nomeMes' => $nomeMes,
+                'mesFiltro' => $mesFiltro,
+                'periodos' => $periodos,
+            ];
+
+            $pdf = Pdf::loadView('ferias.pdf.filtro', $data);
+            return $pdf->stream('ferias-filtro-' . now()->format('d-m-Y') . '.pdf');
+
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao gerar PDF: ' . $e->getMessage());
+        }
+    }
+
+    public function filtroExcel(Request $request)
+    {
+        // Implementar exportação Excel
+        // return Excel::download(new FeriasFiltroExport($request), 'ferias-filtro-' . now()->format('d-m-Y') . '.xlsx');
+        try {
+            return Excel::download(new FeriasFiltroExport($request), 'ferias-filtro-' . now()->format('d-m-Y') . '.xlsx');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao gerar Excel: ' . $e->getMessage());
+        }
+    }
+
+    private function getMeses(): array
+    {
+        return  [
+                1 => 'Janeiro',
+                2 => 'Fevereiro',
+                3 => 'Março',
+                4 => 'Abril',
+                5 => 'Maio',
+                6 => 'Junho',
+                7 => 'Julho',
+                8 => 'Agosto',
+                9 => 'Setembro',
+                10 => 'Outubro',
+                11 => 'Novembro',
+                12 => 'Dezembro',
+            ];
+    }
+
+    public function filtroDados(Request $request)
+{
+    $query = FeriasPeriodos::with(['ferias.servidor'])
+        ->where('ativo', true);
+
+    // Aplicar filtros (mesma lógica do método filtro)
+    if ($request->filled('tipo')) {
+        if ($request->tipo == 'ferias') {
+            $query->where('tipo', '!=', 'Abono');
+        } else {
+            $query->where('tipo', 'Abono');
+        }
+    }
+
+    if ($request->filled('ano_exercicio')) {
+        $query->whereHas('ferias', function($q) use ($request) {
+            $q->where('ano_exercicio', $request->ano_exercicio);
+        });
+    }
+
+    if ($request->filled('mes')) {
+        $query->where(function($q) use ($request) {
+            $q->whereMonth('inicio', $request->mes)
+              ->orWhereMonth('fim', $request->mes);
+        });
+    }
+
+    if ($request->filled('situacao')) {
+        $query->where('situacao', $request->situacao);
+    }
+
+    if ($request->filled('busca')) {
+        $busca = $request->busca;
+        $query->whereHas('ferias.servidor', function($q) use ($busca) {
+            $q->where('nome', 'like', "%{$busca}%")
+              ->orWhere('matricula', 'like', "%{$busca}%")
+              ->orWhere('cpf', 'like', "%{$busca}%");
+        });
+    }
+
+    // Ordenação
+    $ordenacao = $request->get('ordenar', 'inicio');
+    $direcao = $request->get('direcao', 'desc');
+    $query->orderBy($ordenacao, $direcao);
+
+    $periodos = $query->paginate(20);
+
+    // Estatísticas
+    $totalRegistros = $periodos->total();
+    $totalServidores = $periodos->getCollection()->pluck('ferias.servidor_id')->unique()->count();
+    $totalDias = $query->sum('dias');
+    $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
+
+    // Formatar dados para JSON
+    $periodosFormatados = $periodos->getCollection()->map(function($periodo) {
+        return [
+            'id' => $periodo->id,
+            'ferias_id' => $periodo->ferias_id,
+            'servidor_nome' => $periodo->ferias->servidor->nome,
+            'servidor_matricula' => $periodo->ferias->servidor->matricula,
+            'ano_exercicio' => $periodo->ferias->ano_exercicio,
+            'tipo' => $periodo->tipo,
+            'inicio' => $periodo->inicio->format('Y-m-d'), // Garantir formato ISO
+            'fim' => $periodo->fim->format('Y-m-d'), // Garantir formato ISO
+            'dias' => $periodo->dias,
+            'situacao' => $periodo->situacao,
+            'usufruido' => $periodo->usufruido
+        ];
+    });
+
+    return response()->json([
+        'periodos' => [
+            'data' => $periodosFormatados,
+            'current_page' => $periodos->currentPage(),
+            'last_page' => $periodos->lastPage(),
+            'per_page' => $periodos->perPage(),
+            'total' => $periodos->total(),
+            'from' => $periodos->firstItem(),
+            'to' => $periodos->lastItem(),
+            'links' => $periodos->linkCollection()->toArray()
+        ],
+        'estatisticas' => [
+            'totalRegistros' => $totalRegistros,
+            'totalServidores' => $totalServidores,
+            'totalDias' => $totalDias,
+            'totalUsufruidos' => $totalUsufruidos
+        ],
+        'paginacao' => [
+            'current_page' => $periodos->currentPage(),
+            'last_page' => $periodos->lastPage(),
+            'per_page' => $periodos->perPage(),
+            'total' => $periodos->total(),
+            'from' => $periodos->firstItem(),
+            'to' => $periodos->lastItem(),
+            'links' => $periodos->linkCollection()->toArray()
+        ]
+    ]);
+}
 }

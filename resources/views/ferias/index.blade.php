@@ -20,21 +20,22 @@
             <!-- Gerar PDF Mobile -->
             <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
                 class="flex flex-col w-full gap-2 mt-2 sm:flex-row sm:items-center sm:w-auto">
-                <select name="ano_exercicio" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                <select name="ano_exercicio" id="ano_exercicio"
+                    class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
                     <option value="">Todos os exercícios</option>
                     @for ($y = 2020; $y <= now()->year + 1; $y++)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endfor
                 </select>
 
-                <select name="ano" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                <select name="ano" id="ano" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
                     <option value="">Todos os anos</option>
                     @for ($y = 2020; $y <= now()->year + 1; $y++)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endfor
                 </select>
 
-                <select name="mes" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                <select name="mes" id="mes" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
                     <option value="">Todos os meses</option>
                     @foreach ($meses as $m => $mes)
                         <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
@@ -43,7 +44,7 @@
                     @endforeach
                 </select>
 
-                <button type="button" onclick="verificarRelatorio()"
+                <button type="button" @click="verificarRelatorio()"
                     class="flex items-center justify-center px-3 py-2 text-sm text-white bg-indigo-600 rounded hover:bg-indigo-700 sm:px-3">
                     <span class="mr-1">🖨️</span>
                     PDF
@@ -164,6 +165,7 @@
                     </div>
                 </div>
 
+
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
                     <div class="mb-3 space-y-3" x-data="{
                         aberto: false,
@@ -233,18 +235,14 @@
                                             </button>
 
                                             @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
-                                                {{-- <button
-                                                    @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
-                                                    class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap">
-                                                    ✏️ Editar
-                                                </button> --}}
                                                 <button
                                                     class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap"
                                                     data-periodo-id="{{ $periodo->id }}"
-                                                    data-inicio="{{ $periodo->inicio }}"
+                                                    data-inicio="{{ date('Y-m-d', strtotime($periodo->inicio)) }}"
                                                     data-url="{{ $periodo->url }}"
                                                     data-title="{{ $periodo->title }}"
-                                                    data-fim="{{ $periodo->fim }}" data-dias="{{ $periodo->dias }}"
+                                                    data-fim="{{ date('Y-m-d', strtotime($periodo->fim)) }}"
+                                                    data-dias="{{ $periodo->dias }}"
                                                     data-justificativa="{{ $periodo->justificativa }}"
                                                     @click="abrirModalEditarPeriodo($event)">
                                                     ✏️ Editar
@@ -383,13 +381,14 @@
                             x-transition:leave-start="opacity-100 transform scale-100"
                             x-transition:leave-end="opacity-0 transform scale-95">
                             <x-periodo :periodo="$periodo" />
+
                         </div>
                     </div>
                 @endforeach
             </div>
         @endforeach
 
-        {{ $ferias->withQueryString()->onEachSide(1)->links('pagination::tailwind') }}
+        {{ $ferias->withQueryString()->onEachSide(3)->links('pagination::tailwind') }}
 
         <!-- Modal Remarcar com Múltiplos Períodos - Mobile Optimized -->
         <div x-show="modalAberto"
@@ -554,23 +553,25 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Data Início</label>
                             <input type="date" x-model="periodoEditando.inicio" name="edit-inicio"
-                                @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded"
+                                @change="calcularDiasEdicao()" class="block w-full mt-1 border-gray-300 rounded"
                                 required>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Data Fim</label>
                             <input type="date" x-model="periodoEditando.fim" name="edit-fim"
-                                @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded"
+                                @change="calcularDiasEdicao()" class="block w-full mt-1 border-gray-300 rounded"
                                 required>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Dias</label>
-                        <input type="number" x-model="periodoEditando.dias"
-                            class="block w-full mt-1 border-gray-300 rounded" required>
+                        <input type="number" x-model="periodoEditando.dias" readonly
+                            class="block w-full mt-1 bg-gray-100 border-gray-300 rounded cursor-not-allowed">
+                        <p class="mt-1 text-xs text-gray-500" x-text="diasCalculadosTexto"></p>
                     </div>
+
                     <!-- input Title -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Título da Portaria</label>
@@ -602,481 +603,483 @@
             </div>
         </div>
 
-        <!-- Modal Confirmação Exclusão Mobile -->
-        <div x-show="modalConfirmacaoAberto" x-cloak x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-50 flex items-center justify-center p-2 transition-all duration-300 bg-black bg-opacity-50">
+        <script>
+            // function verificarRelatorio() {
+            //     const ano_exercicio = document.getElementById('ano_exercicio').value;
+            //     const ano = document.getElementById('ano').value;
+            //     const mes = document.getElementById('mes').value;
 
-            <div class="w-full max-w-md p-4 bg-white rounded shadow-lg sm:p-6">
-                <h3 class="mb-4 text-lg font-bold text-red-600">Confirmar Exclusão</h3>
-                <p class="mb-4 text-sm" x-text="mensagemConfirmacao"></p>
+            //     fetch(`/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`)
+            //         .then(response => response.json())
+            //         .then(data => {
+            //             if (data.tem_dados) {
+            //                 const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
+            //                     `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
+            //                 // window.open(url, '_blank');
+            //             } else {
+            //                 const mensagem = document.getElementById('mensagem');
+            //                 mensagem.innerText = 'Nenhum dado encontrado para os filtros selecionados.';
+            //                 mensagem.style.opacity = 1;
+            //                 mensagem.style.transition = 'opacity 0.5s ease-in-out';
+            //                 mensagem.classList.remove('hidden');
 
-                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
-                    <button @click="fecharModalConfirmacao"
-                        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
-                    <button @click="confirmarAcaoExclusao"
-                        class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
-                        Confirmar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+            //                 setTimeout(() => {
+            //                     mensagem.style.transition = 'opacity 1s';
+            //                     mensagem.style.opacity = 0;
+            //                 }, 5000);
+            //             }
+            //         })
+            //         .catch(() => {
+            //             document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
+            //         });
+            // }
 
-    <script>
-        function verificarRelatorio() {
-            const ano_exercicio = document.getElementById('ano_exercicio').value;
-            const ano = document.getElementById('ano').value;
-            const mes = document.getElementById('mes').value;
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('feriasManager', () => ({
+                    modalAberto: false,
+                    periodoSelecionado: null,
+                    // Novos estados para múltiplos períodos
+                    periodosRemarcacao: [],
+                    justificativaGeral: '',
+                    totalDiasDistribuidos: 0,
+                    // Estados existentes
+                    filtroAberto: true,
+                    modalAberto: false,
+                    periodoSelecionado: null,
+                    novaInicio: '',
+                    novaFim: '',
+                    justificativa: '',
+                    motivo: '',
+                    dataInterrupcao: '',
+                    periodoId: null,
+                    linkDiof: '',
+                    tituloDiof: '',
+                    filhos: [],
+                    diasCalculados: 0,
 
-            fetch(`/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.tem_dados) {
-                        const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
-                            `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
-                        window.open(url, '_blank');
-                    } else {
-                        const mensagem = document.getElementById('mensagem');
-                        mensagem.innerText = 'Nenhum dado encontrado para os filtros selecionados.';
-                        mensagem.style.opacity = 1;
-                        mensagem.style.transition = 'opacity 0.5s ease-in-out';
-                        mensagem.classList.remove('hidden');
-
-                        setTimeout(() => {
-                            mensagem.style.transition = 'opacity 1s';
-                            mensagem.style.opacity = 0;
-                        }, 5000);
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
-                });
-        }
-
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('feriasManager', () => ({
-                modalAberto: false,
-                periodoSelecionado: null,
-                // Novos estados para múltiplos períodos
-                periodosRemarcacao: [],
-                justificativaGeral: '',
-                totalDiasDistribuidos: 0,
-                // Estados existentes
-                filtroAberto: true,
-                modalAberto: false,
-                periodoSelecionado: null,
-                novaInicio: '',
-                novaFim: '',
-                justificativa: '',
-                motivo: '',
-                dataInterrupcao: '',
-                periodoId: null,
-                linkDiof: '',
-                tituloDiof: '',
-                filhos: [],
-                diasCalculados: 0,
-
-                // Novos estados para edição/exclusão
-                modalEditarAberto: false,
-                modalConfirmacaoAberto: false,
-                periodoEditando: {
-                    id: null,
-                    inicio: '',
-                    fim: '',
-                    dias: 0,
-                    justificativa: ''
-                },
-                itemParaExcluir: null,
-                tipoExclusao: '', // 'periodo' ou 'ferias'
-                mensagemConfirmacao: '',
-                mensagemSucesso: '',
-                mensagemErro: '',
-
-                init() {
-                    console.log('Ferias Manager inicializado');
-                },
-
-                // Método para abrir o modal com múltiplos períodos
-                abrirModalRemarcacao(periodoId, periodoData) {
-                    this.modalAberto = true;
-                    this.periodoSelecionado = periodoId;
-                    this.filhos = periodoData;
-
-                    // Inicializar com um período vazio
-                    this.periodosRemarcacao = [{
-                        inicio: '',
-                        fim: '',
-                        dias: 0,
-                        titulo: '',
-                        linkDiof: '',
-                        observacoes: ''
-                    }];
-
-                    this.justificativaGeral = '';
-                    this.totalDiasDistribuidos = 0;
-                },
-
-                // Adicionar novo período
-                adicionarPeriodo() {
-                    if (this.totalDiasDistribuidos >= this.filhos.dias) {
-                        alert('Todos os dias já foram distribuídos!');
-                        return;
-                    }
-
-                    this.periodosRemarcacao.push({
-                        inicio: '',
-                        fim: '',
-                        dias: 0,
-                        titulo: '',
-                        linkDiof: '',
-                        observacoes: ''
-                    });
-                },
-
-                // Remover período
-                removerPeriodo(index) {
-                    if (this.periodosRemarcacao.length > 1) {
-                        const diasRemovidos = this.periodosRemarcacao[index].dias || 0;
-                        this.periodosRemarcacao.splice(index, 1);
-                        this.totalDiasDistribuidos -= diasRemovidos;
-                    }
-                },
-
-                // Calcular dias de um período específico
-                calcularDiasPeriodo(index) {
-                    const periodo = this.periodosRemarcacao[index];
-                    if (periodo.inicio && periodo.fim) {
-                        const inicio = new Date(periodo.inicio);
-                        const fim = new Date(periodo.fim);
-
-                        if (fim >= inicio) {
-                            const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
-                            const diasAnteriores = periodo.dias || 0;
-
-                            periodo.dias = diff;
-                            this.totalDiasDistribuidos += (diff - diasAnteriores);
-                        } else {
-                            periodo.dias = 0;
-                            alert('⚠️ A data final não pode ser anterior à data inicial.');
-                        }
-                    }
-                },
-
-                // Atualizar data fim baseado nos dias
-                atualizarFimPorDias(index) {
-                    const periodo = this.periodosRemarcacao[index];
-                    if (periodo.inicio && periodo.dias > 0) {
-                        const inicio = new Date(periodo.inicio);
-                        const fim = new Date(inicio);
-                        fim.setDate(fim.getDate() + periodo.dias - 1);
-                        periodo.fim = fim.toISOString().split('T')[0];
-
-                        this.calcularTotalDiasDistribuidos();
-                    }
-                },
-
-                // Calcular total de dias distribuídos
-                calcularTotalDiasDistribuidos() {
-                    this.totalDiasDistribuidos = this.periodosRemarcacao.reduce((total, periodo) => {
-                        return total + (parseInt(periodo.dias) || 0);
-                    }, 0);
-                },
-
-                // Validar datas do período
-                validarDatasPeriodo(index) {
-                    const periodo = this.periodosRemarcacao[index];
-                    if (periodo.inicio && periodo.fim) {
-                        const inicio = new Date(periodo.inicio);
-                        const fim = new Date(periodo.fim);
-
-                        if (fim < inicio) {
-                            alert('⚠️ A data final não pode ser anterior à data inicial.');
-                            periodo.fim = '';
-                            periodo.dias = 0;
-                        }
-                    }
-                },
-
-                // Obter data mínima para um período
-                obterMinDate(index) {
-                    if (index === 0) return '';
-
-                    // Para períodos subsequentes, a data início deve ser depois do fim do período anterior
-                    const periodoAnterior = this.periodosRemarcacao[index - 1];
-                    if (periodoAnterior && periodoAnterior.fim) {
-                        const minDate = new Date(periodoAnterior.fim);
-                        minDate.setDate(minDate.getDate() + 1);
-                        return minDate.toISOString().split('T')[0];
-                    }
-                    return '';
-                },
-
-                // Dias disponíveis para um período
-                diasDisponiveis(index) {
-                    const diasUsados = this.periodosRemarcacao.reduce((total, periodo, i) => {
-                        return i !== index ? total + (parseInt(periodo.dias) || 0) : total;
-                    }, 0);
-
-                    return Math.max(0, this.filhos.dias - diasUsados);
-                },
-
-                // Formatar data para exibição
-                formatarData(dataString) {
-                    if (!dataString) return '';
-                    const data = new Date(dataString + 'T00:00:00');
-                    return data.toLocaleDateString('pt-BR');
-                },
-
-                // Fechar modal de remarcação
-                fecharModalRemarcacao() {
-                    this.modalAberto = false;
-                    this.periodosRemarcacao = [];
-                    this.justificativaGeral = '';
-                    this.totalDiasDistribuidos = 0;
-                },
-
-                // Verificar se pode confirmar a remarcação
-                podeConfirmarRemarcacao() {
-                    return this.totalDiasDistribuidos === this.filhos.dias &&
-                        this.periodosRemarcacao.every(p => p.inicio && p.fim && p.dias > 0) &&
-                        this.justificativaGeral.trim() !== '';
-                },
-
-                // Confirmar remarcação com múltiplos períodos
-                async confirmarRemarcacaoMultiplosPeriodos() {
-                    if (!this.podeConfirmarRemarcacao()) {
-                        alert('Preencha todos os períodos corretamente e a justificativa!');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch('{{ route('ferias.remarcar.multiplus') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                periodo_id: this.periodoSelecionado,
-                                periodos: this.periodosRemarcacao,
-                                justificativa: this.justificativaGeral
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso(data.message ||
-                                'Períodos remarcados com sucesso!');
-                            this.fecharModalRemarcacao();
-                            setTimeout(() => location.reload(), 1500);
-                        } else {
-                            throw new Error(data.message || 'Erro ao remarcar períodos');
-                        }
-                    } catch (error) {
-                        this.mostrarMensagemErro(error.message);
-                        console.error('Erro:', error);
-                    }
-                },
-
-
-
-                // Métodos existentes
-                calcularDias() {
-                    if (this.novaInicio) {
-                        const inicio = new Date(this.novaInicio);
-
-                        if (this.filhos?.dias) {
-                            const fim = new Date(inicio);
-                            fim.setDate(fim.getDate() + this.filhos.dias - 1);
-                            this.novaFim = fim.toISOString().split('T')[0];
-                        }
-
-                        if (this.novaFim) {
-                            const fim = new Date(this.novaFim);
-                            if (fim >= inicio) {
-                                const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
-                                this.diasCalculados = diff;
-                            } else {
-                                this.diasCalculados = 0;
-                                alert('⚠️ A data final não pode ser anterior à data inicial.');
-                            }
-                        }
-                    } else {
-                        this.diasCalculados = 0;
-                    }
-                },
-
-                // Métodos existentes
-                calcularDiasEdicao() {
-
-                    if (document.querySelector('input[name="edit-inicio"]').value === '') {
-
-                        document.querySelector('input[name="edit-fim"]').value = '';
-                        document.querySelector('input[name="edit-inicio"]').focus();
-                        alert('⚠️ A data inicial nao pode ser vazia');
-                    }
-
-                    const inicio = new Date(this.periodoEditando.inicio);
-                    const fim = new Date(inicio);
-                    fim.setDate(fim.getDate() + this.periodoEditando.dias -
-                        1);
-                    this.periodoEditando.fim = fim.toISOString().split('T')[0];
-
-
-                    console.log('fim', this.periodoEditando.fim);
-                },
-
-
-
-                // Novos métodos para edição
-                // abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
-                //     this.periodoEditando = {
-                //         id: id,
-                //         inicio: dataInicio,
-                //         fim: dataFim,
-                //         dias: dias,
-                //         justificativa: justificativa || ''
-                //     };
-                //     this.modalEditarAberto = true;
-                //     document.querySelector('input[name="edit-inicio"]').value = dataInicio;
-
-                //     document.querySelector('input[name="edit-fim"]').value = dataFim;
-                // },
-                abrirModalEditarPeriodo(event) {
-                    const button = event.target;
-                    this.periodoEditando = {
-                        id: button.dataset.periodoId,
-                        inicio: button.dataset.inicio,
-                        fim: button.dataset.fim,
-                        dias: button.dataset.dias,
-                        url: button.dataset.url,
-                        title: button.dataset.title,
-                        justificativa: button.dataset.justificativa
-                    };
-                    this.modalEditarAberto = true;
-                },
-
-                fecharModalEditar() {
-                    this.modalEditarAberto = false;
-                    this.periodoEditando = {
+                    // Novos estados para edição/exclusão
+                    modalEditarAberto: false,
+                    modalConfirmacaoAberto: false,
+                    periodoEditando: {
                         id: null,
                         inicio: '',
                         fim: '',
                         dias: 0,
-                        url: '',
-                        title: '',
                         justificativa: ''
-                    };
-                },
+                    },
+                    itemParaExcluir: null,
+                    tipoExclusao: '', // 'periodo' ou 'ferias'
+                    mensagemConfirmacao: '',
+                    mensagemSucesso: '',
+                    mensagemErro: '',
 
-                async salvarPeriodo() {
-                    try {
-                        const response = await fetch(
-                            `/api/periodos-ferias/${this.periodoEditando.id}`, {
-                                method: 'PUT',
+                    diasCalculadosTexto: '',
+
+                    init() {
+                        console.log('Ferias Manager inicializado');
+                    },
+
+                    // ADICIONE ESTE MÉTODO
+                    async verificarRelatorio() {
+                        const ano_exercicio = document.getElementById('ano_exercicio')?.value || '';
+                        const ano = document.getElementById('ano')?.value || '';
+                        const mes = document.getElementById('mes')?.value || '';
+
+                        try {
+                            const response = await fetch(
+                                `/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`
+                            );
+                            const data = await response.json();
+
+                            if (data.tem_dados) {
+                                const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
+                                    `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
+                                window.open(url, '_blank');
+                            } else {
+                                this.mostrarMensagemErro(
+                                    'Nenhum dado encontrado para os filtros selecionados.');
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro('Erro ao verificar os dados.');
+                            console.error('Erro:', error);
+                        }
+                    },
+
+
+                    // Método para abrir o modal com múltiplos períodos
+                    abrirModalRemarcacao(periodoId, periodoData) {
+                        this.modalAberto = true;
+                        this.periodoSelecionado = periodoId;
+                        this.filhos = periodoData;
+
+                        // Inicializar com um período vazio
+                        this.periodosRemarcacao = [{
+                            inicio: '',
+                            fim: '',
+                            dias: 0,
+                            titulo: '',
+                            linkDiof: '',
+                            observacoes: ''
+                        }];
+
+                        this.justificativaGeral = '';
+                        this.totalDiasDistribuidos = 0;
+                    },
+
+                    // Adicionar novo período
+                    adicionarPeriodo() {
+                        if (this.totalDiasDistribuidos >= this.filhos.dias) {
+                            alert('Todos os dias já foram distribuídos!');
+                            return;
+                        }
+
+                        this.periodosRemarcacao.push({
+                            inicio: '',
+                            fim: '',
+                            dias: 0,
+                            titulo: '',
+                            linkDiof: '',
+                            observacoes: ''
+                        });
+                    },
+
+                    // Remover período
+                    removerPeriodo(index) {
+                        if (this.periodosRemarcacao.length > 1) {
+                            const diasRemovidos = this.periodosRemarcacao[index].dias || 0;
+                            this.periodosRemarcacao.splice(index, 1);
+                            this.totalDiasDistribuidos -= diasRemovidos;
+                        }
+                    },
+
+                    // Calcular dias de um período específico
+                    calcularDiasPeriodo(index) {
+                        const periodo = this.periodosRemarcacao[index];
+                        if (periodo.inicio && periodo.fim) {
+                            const inicio = new Date(periodo.inicio);
+                            const fim = new Date(periodo.fim);
+
+                            if (fim >= inicio) {
+                                const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+                                const diasAnteriores = periodo.dias || 0;
+
+                                periodo.dias = diff;
+                                this.totalDiasDistribuidos += (diff - diasAnteriores);
+                            } else {
+                                periodo.dias = 0;
+                                alert('⚠️ A data final não pode ser anterior à data inicial.');
+                            }
+                        }
+                    },
+
+                    // Atualizar data fim baseado nos dias
+                    atualizarFimPorDias(index) {
+                        const periodo = this.periodosRemarcacao[index];
+                        if (periodo.inicio && periodo.dias > 0) {
+                            const inicio = new Date(periodo.inicio);
+                            const fim = new Date(inicio);
+                            fim.setDate(fim.getDate() + periodo.dias - 1);
+                            periodo.fim = fim.toISOString().split('T')[0];
+
+                            this.calcularTotalDiasDistribuidos();
+                        }
+                    },
+
+                    // Calcular total de dias distribuídos
+                    calcularTotalDiasDistribuidos() {
+                        this.totalDiasDistribuidos = this.periodosRemarcacao.reduce((total, periodo) => {
+                            return total + (parseInt(periodo.dias) || 0);
+                        }, 0);
+                    },
+
+                    // Validar datas do período
+                    validarDatasPeriodo(index) {
+                        const periodo = this.periodosRemarcacao[index];
+                        if (periodo.inicio && periodo.fim) {
+                            const inicio = new Date(periodo.inicio);
+                            const fim = new Date(periodo.fim);
+
+                            if (fim < inicio) {
+                                alert('⚠️ A data final não pode ser anterior à data inicial.');
+                                periodo.fim = '';
+                                periodo.dias = 0;
+                            }
+                        }
+                    },
+
+                    // Obter data mínima para um período
+                    obterMinDate(index) {
+                        if (index === 0) return '';
+
+                        // Para períodos subsequentes, a data início deve ser depois do fim do período anterior
+                        const periodoAnterior = this.periodosRemarcacao[index - 1];
+                        if (periodoAnterior && periodoAnterior.fim) {
+                            const minDate = new Date(periodoAnterior.fim);
+                            minDate.setDate(minDate.getDate() + 1);
+                            return minDate.toISOString().split('T')[0];
+                        }
+                        return '';
+                    },
+
+                    // Dias disponíveis para um período
+                    diasDisponiveis(index) {
+                        const diasUsados = this.periodosRemarcacao.reduce((total, periodo, i) => {
+                            return i !== index ? total + (parseInt(periodo.dias) || 0) : total;
+                        }, 0);
+
+                        return Math.max(0, this.filhos.dias - diasUsados);
+                    },
+
+                    // Formatar data para exibição
+                    formatarData(dataString) {
+                        if (!dataString) return '';
+                        const data = new Date(dataString + 'T00:00:00');
+                        return data.toLocaleDateString('pt-BR');
+                    },
+
+                    // Fechar modal de remarcação
+                    fecharModalRemarcacao() {
+                        this.modalAberto = false;
+                        this.periodosRemarcacao = [];
+                        this.justificativaGeral = '';
+                        this.totalDiasDistribuidos = 0;
+                    },
+
+                    // Verificar se pode confirmar a remarcação
+                    podeConfirmarRemarcacao() {
+                        return this.totalDiasDistribuidos === this.filhos.dias &&
+                            this.periodosRemarcacao.every(p => p.inicio && p.fim && p.dias > 0) &&
+                            this.justificativaGeral.trim() !== '';
+                    },
+
+                    // Confirmar remarcação com múltiplos períodos
+                    async confirmarRemarcacaoMultiplosPeriodos() {
+                        if (!this.podeConfirmarRemarcacao()) {
+                            alert('Preencha todos os períodos corretamente e a justificativa!');
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('ferias.remarcar.multiplus') }}', {
+                                method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
-                                body: JSON.stringify(this.periodoEditando)
+                                body: JSON.stringify({
+                                    periodo_id: this.periodoSelecionado,
+                                    periodos: this.periodosRemarcacao,
+                                    justificativa: this.justificativaGeral
+                                })
                             });
 
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso('Período atualizado com sucesso!');
-                            this.fecharModalEditar();
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao atualizar período');
-                        }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao atualizar período');
-                        console.error('Erro:', error);
-                    }
-                },
+                            const data = await response.json();
 
-                // Métodos para exclusão
-                confirmarExclusaoPeriodo(id, dataInicio, dataFim) {
-                    this.itemParaExcluir = id;
-                    this.tipoExclusao = 'periodo';
-                    this.mensagemConfirmacao =
-                        `Tem certeza que deseja excluir o período de ${dataInicio} a ${dataFim}?`;
-                    this.modalConfirmacaoAberto = true;
-                },
-
-                confirmarExclusaoFerias(id, nomeServidor, anoExercicio) {
-                    this.itemParaExcluir = id;
-                    this.tipoExclusao = 'ferias';
-                    this.mensagemConfirmacao =
-                        `Tem certeza que deseja excluir todas as férias de ${nomeServidor} para o ano ${anoExercicio}?`;
-                    this.modalConfirmacaoAberto = true;
-                },
-
-                fecharModalConfirmacao() {
-                    this.modalConfirmacaoAberto = false;
-                    this.itemParaExcluir = null;
-                    this.tipoExclusao = '';
-                },
-
-                async confirmarAcaoExclusao() {
-                    try {
-                        let url, message;
-
-                        if (this.tipoExclusao === 'periodo') {
-                            url = `/periodos-ferias/${this.itemParaExcluir}`;
-                            message = 'Período excluído com sucesso!';
-                        } else {
-                            url = `/api/ferias/${this.itemParaExcluir}`;
-                            message = 'Férias excluídas com sucesso!';
-                        }
-
-                        const response = await fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            if (response.ok) {
+                                this.mostrarMensagemSucesso(data.message ||
+                                    'Períodos remarcados com sucesso!');
+                                this.fecharModalRemarcacao();
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                throw new Error(data.message || 'Erro ao remarcar períodos');
                             }
+                        } catch (error) {
+                            this.mostrarMensagemErro(error.message);
+                            console.error('Erro:', error);
+                        }
+                    },
+
+
+
+                    // Métodos existentes
+                    calcularDias() {
+                        if (this.novaInicio) {
+                            const inicio = new Date(this.novaInicio);
+
+                            if (this.filhos?.dias) {
+                                const fim = new Date(inicio);
+                                fim.setDate(fim.getDate() + this.filhos.dias - 1);
+                                this.novaFim = fim.toISOString().split('T')[0];
+                            }
+
+                            if (this.novaFim) {
+                                const fim = new Date(this.novaFim);
+                                if (fim >= inicio) {
+                                    const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+                                    this.diasCalculados = diff;
+                                } else {
+                                    this.diasCalculados = 0;
+                                    alert('⚠️ A data final não pode ser anterior à data inicial.');
+                                }
+                            }
+                        } else {
+                            this.diasCalculados = 0;
+                        }
+                    },
+
+                    // Métodos existentes
+                    // calcularDiasEdicao() {
+
+                    //     if (document.querySelector('input[name="edit-inicio"]').value === '') {
+
+                    //         document.querySelector('input[name="edit-fim"]').value = '';
+                    //         document.querySelector('input[name="edit-inicio"]').focus();
+                    //         alert('⚠️ A data inicial nao pode ser vazia');
+                    //     }
+
+                    //     const inicio = new Date(this.periodoEditando.inicio);
+                    //     const fim = new Date(inicio);
+                    //     fim.setDate(fim.getDate() + this.periodoEditando.dias -
+                    //         1);
+                    //     this.periodoEditando.fim = fim.toISOString().split('T')[0];
+
+
+                    //     console.log('fim', this.periodoEditando.fim);
+                    // },
+                    // Método para calcular dias quando editar o campo numérico
+                    atualizarFimPorDiasEdicao() {
+                        if (this.periodoEditando.inicio && this.periodoEditando.dias > 0) {
+                            const inicio = new Date(this.periodoEditando.inicio);
+                            const fim = new Date(inicio);
+                            fim.setDate(fim.getDate() + parseInt(this.periodoEditando.dias) - 1);
+                            this.periodoEditando.fim = fim.toISOString().split('T')[0];
+                            this.diasCalculadosTexto =
+                                `${this.periodoEditando.dias} dia${this.periodoEditando.dias !== 1 ? 's' : ''} definido${this.periodoEditando.dias !== 1 ? 's' : ''}`;
+                        }
+                    },
+
+                    calcularDiasEdicao() {
+                        if (this.periodoEditando.inicio && this.periodoEditando.fim) {
+                            const inicio = new Date(this.periodoEditando.inicio);
+                            const fim = new Date(this.periodoEditando.fim);
+
+                            if (fim >= inicio) {
+                                const diff = Math.floor((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+                                this.periodoEditando.dias = diff;
+                                this.diasCalculadosTexto =
+                                    `${diff} dia${diff !== 1 ? 's' : ''} calculado${diff !== 1 ? 's' : ''} automaticamente`;
+                            } else {
+                                this.periodoEditando.dias = 0;
+                                this.diasCalculadosTexto =
+                                    '⚠️ Data final não pode ser anterior à data inicial';
+                            }
+                        }
+                    },
+
+
+
+                    // Novos métodos para edição
+                    // abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
+                    //     this.periodoEditando = {
+                    //         id: id,
+                    //         inicio: dataInicio,
+                    //         fim: dataFim,
+                    //         dias: dias,
+                    //         justificativa: justificativa || ''
+                    //     };
+                    //     this.modalEditarAberto = true;
+                    //     document.querySelector('input[name="edit-inicio"]').value = dataInicio;
+
+                    //     document.querySelector('input[name="edit-fim"]').value = dataFim;
+                    // },
+                    abrirModalEditarPeriodo(event) {
+                        const button = event.target;
+                        console.log('Dados do botão:', {
+                            inicio: button.dataset.inicio,
+                            fim: button.dataset.fim,
+                            dias: button.dataset.dias
                         });
 
-                        if (response.ok) {
-                            console.log(response);
-                            this.mostrarMensagemSucesso(message);
-                            this.fecharModalConfirmacao();
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao excluir');
+                        this.periodoEditando = {
+                            id: button.dataset.periodoId,
+                            inicio: button.dataset.inicio,
+                            fim: button.dataset.fim,
+                            dias: button.dataset.dias,
+                            url: button.dataset.url,
+                            title: button.dataset.title,
+                            justificativa: button.dataset.justificativa
+                        };
+                        this.modalEditarAberto = true;
+
+                        console.log('Período editando:', this.periodoEditando);
+                    },
+                    fecharModalEditar() {
+                        this.modalEditarAberto = false;
+                        this.periodoEditando = {
+                            id: null,
+                            inicio: '',
+                            fim: '',
+                            dias: 0,
+                            url: '',
+                            title: '',
+                            justificativa: ''
+                        };
+                    },
+
+                    async salvarPeriodo() {
+                        try {
+                            const response = await fetch(
+                                `/api/periodos-ferias/${this.periodoEditando.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify(this.periodoEditando)
+                                });
+
+                            if (response.ok) {
+                                this.mostrarMensagemSucesso('Período atualizado com sucesso!');
+                                this.fecharModalEditar();
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                throw new Error('Erro ao atualizar período');
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro('Erro ao atualizar período');
+                            console.error('Erro:', error);
                         }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao excluir');
-                        console.error('Erro:', error);
-                    }
-                },
+                    },
 
-                // Utilitários
-                mostrarMensagemSucesso(mensagem) {
-                    this.mensagemSucesso = mensagem;
-                    this.mensagemErro = '';
-                    setTimeout(() => this.mensagemSucesso = '', 5000);
-                },
+                    // Métodos para exclusão
+                    confirmarExclusaoPeriodo(id, dataInicio, dataFim) {
+                        this.itemParaExcluir = id;
+                        this.tipoExclusao = 'periodo';
+                        this.mensagemConfirmacao =
+                            `Tem certeza que deseja excluir o período de ${dataInicio} a ${dataFim}?`;
+                        this.modalConfirmacaoAberto = true;
+                    },
 
-                mostrarMensagemErro(mensagem) {
-                    this.mensagemErro = mensagem;
-                    this.mensagemSucesso = '';
-                    setTimeout(() => this.mensagemErro = '', 5000);
-                },
-                // feriasManager
-                // Adicionar estes métodos no seu feriasManager()
-                async marcarComoUsufruido(periodoId) {
-                    try {
-                        const response = await fetch(
-                            `/api/periodos-ferias/${periodoId}/usufruir`, {
-                                method: 'POST',
+                    confirmarExclusaoFerias(id, nomeServidor, anoExercicio) {
+                        this.itemParaExcluir = id;
+                        this.tipoExclusao = 'ferias';
+                        this.mensagemConfirmacao =
+                            `Tem certeza que deseja excluir todas as férias de ${nomeServidor} para o ano ${anoExercicio}?`;
+                        this.modalConfirmacaoAberto = true;
+                    },
+
+                    fecharModalConfirmacao() {
+                        this.modalConfirmacaoAberto = false;
+                        this.itemParaExcluir = null;
+                        this.tipoExclusao = '';
+                    },
+
+                    async confirmarAcaoExclusao() {
+                        try {
+                            let url, message;
+
+                            if (this.tipoExclusao === 'periodo') {
+                                url = `/periodos-ferias/${this.itemParaExcluir}`;
+                                message = 'Período excluído com sucesso!';
+                            } else {
+                                url = `/api/ferias/${this.itemParaExcluir}`;
+                                message = 'Férias excluídas com sucesso!';
+                            }
+
+                            const response = await fetch(url, {
+                                method: 'DELETE',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
@@ -1084,47 +1087,87 @@
                                 }
                             });
 
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso('Período marcado como usufruído!');
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao marcar como usufruído');
+                            if (response.ok) {
+                                console.log(response);
+                                this.mostrarMensagemSucesso(message);
+                                this.fecharModalConfirmacao();
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                throw new Error('Erro ao excluir');
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro('Erro ao excluir');
+                            console.error('Erro:', error);
                         }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao marcar como usufruído');
-                        console.error('Erro:', error);
-                    }
-                },
+                    },
 
-                async desmarcarUsufruto(periodoId) {
-                    if (!confirm(
-                            'Tem certeza que deseja desmarcar o usufruto deste período?')) {
-                        return;
-                    }
+                    // Utilitários
+                    mostrarMensagemSucesso(mensagem) {
+                        this.mensagemSucesso = mensagem;
+                        this.mensagemErro = '';
+                        setTimeout(() => this.mensagemSucesso = '', 5000);
+                    },
 
-                    try {
-                        const response = await fetch(
-                            `/api/periodos-ferias/${periodoId}/desusufruir`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            });
+                    mostrarMensagemErro(mensagem) {
+                        this.mensagemErro = mensagem;
+                        this.mensagemSucesso = '';
+                        setTimeout(() => this.mensagemErro = '', 5000);
+                    },
+                    // feriasManager
+                    // Adicionar estes métodos no seu feriasManager()
+                    async marcarComoUsufruido(periodoId) {
+                        try {
+                            const response = await fetch(
+                                `/api/periodos-ferias/${periodoId}/usufruir`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
 
-                        if (response.ok) {
-                            this.mostrarMensagemSucesso('Usufruto desmarcado com sucesso!');
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            throw new Error('Erro ao desmarcar usufruto');
+                            if (response.ok) {
+                                this.mostrarMensagemSucesso('Período marcado como usufruído!');
+                                // setTimeout(() => location.reload(), 1000);
+                            } else {
+                                throw new Error('Erro ao marcar como usufruído');
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro('Erro ao marcar como usufruído');
+                            console.error('Erro:', error);
                         }
-                    } catch (error) {
-                        this.mostrarMensagemErro('Erro ao desmarcar usufruto');
-                        console.error('Erro:', error);
+                    },
+
+                    async desmarcarUsufruto(periodoId) {
+                        if (!confirm(
+                                'Tem certeza que deseja desmarcar o usufruto deste período?')) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(
+                                `/api/periodos-ferias/${periodoId}/desusufruir`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+
+                            if (response.ok) {
+                                this.mostrarMensagemSucesso('Usufruto desmarcado com sucesso!');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                throw new Error('Erro ao desmarcar usufruto');
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro('Erro ao desmarcar usufruto');
+                            console.error('Erro:', error);
+                        }
                     }
-                }
-            }));
-        });
-    </script>
+                }));
+            });
+        </script>
 </x-app-layout>

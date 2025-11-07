@@ -27,5 +27,10 @@ class Servidor extends Model
         return $this->hasMany(VinculoFuncional::class);
     }
 
+    public function vinculoAtual()
+    {
+        return $this->hasOne(VinculoFuncional::class)->latestOfMany();
+    }
+
 
 }

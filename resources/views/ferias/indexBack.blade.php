@@ -5,63 +5,72 @@
         </h2>
     </x-slot>
 
-    <div class="p-6 mx-auto max-w-7xl" x-data="feriasManager()" x-init="init()">
+    <div class="p-4 mx-auto max-w-7xl sm:p-6" x-data="feriasManager()" x-init="init()">
 
-        <h2 class="mb-6 text-2xl font-bold">📅 Férias dos Servidores</h2>
+        <h2 class="mb-4 text-xl font-bold sm:text-2xl">📅 Férias dos Servidores</h2>
 
-        <button @click="filtroAberto = !filtroAberto"
-            class="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700">
-            🔍 Filtros
-        </button>
-
-        <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
-            class="flex flex-wrap items-center gap-2">
-            <select name="ano_exercicio" class="px-2 py-1 border rounded" id="ano_exercicio">
-                <option value="">Todos os exercícios</option>
-                @for ($y = 2020; $y <= now()->year + 1; $y++)
-                    <option value="{{ $y }}">{{ $y }}</option>
-                @endfor
-            </select>
-
-            <select name="ano" class="px-2 py-1 border rounded" id="ano">
-                <option value="">Todos os anos de início</option>
-                @for ($y = 2020; $y <= now()->year + 1; $y++)
-                    <option value="{{ $y }}">{{ $y }}</option>
-                @endfor
-            </select>
-
-            <select name="mes" class="px-2 py-1 border rounded" id="mes">
-                <option value="">Todos os meses</option>
-                @foreach ($meses as $m => $mes)
-                    <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
-                        {{ $mes }}
-                    </option>
-                @endforeach
-            </select>
-
-            <button type="button" onclick="verificarRelatorio()"
-                class="px-3 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700">
-                🖨️ Gerar PDF
+        <!-- Botão Filtros Mobile -->
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+            <button @click="filtroAberto = !filtroAberto"
+                class="flex items-center px-3 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 sm:px-4">
+                <span class="mr-1">🔍</span>
+                <span class="text-sm sm:text-base">Filtros</span>
             </button>
-        </form>
+
+            <!-- Gerar PDF Mobile -->
+            <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
+                class="flex flex-col w-full gap-2 mt-2 sm:flex-row sm:items-center sm:w-auto">
+                <select name="ano_exercicio" id="ano_exercicio"
+                    class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                    <option value="">Todos os exercícios</option>
+                    @for ($y = 2020; $y <= now()->year + 1; $y++)
+                        <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
+                </select>
+
+                <select name="ano" id="ano" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                    <option value="">Todos os anos</option>
+                    @for ($y = 2020; $y <= now()->year + 1; $y++)
+                        <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
+                </select>
+
+                <select name="mes" id="mes" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                    <option value="">Todos os meses</option>
+                    @foreach ($meses as $m => $mes)
+                        <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
+                            {{ $mes }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <button type="button" @click="verificarRelatorio()"
+                    class="flex items-center justify-center px-3 py-2 text-sm text-white bg-indigo-600 rounded hover:bg-indigo-700 sm:px-3">
+                    <span class="mr-1">🖨️</span>
+                    PDF
+                </button>
+            </form>
+        </div>
 
         <!-- Mensagens do Sistema -->
         <div class="mb-4 bg-transparent">
-            <div id="mensagem" class="hidden px-4 py-2 mt-4 mb-2 font-semibold text-red-600 bg-red-200 rounded-lg">
+            <div id="mensagem"
+                class="hidden px-3 py-2 mt-2 mb-2 text-sm font-semibold text-red-600 bg-red-200 rounded-lg">
             </div>
             <div x-show="mensagemSucesso" x-text="mensagemSucesso"
-                class="p-4 mt-4 text-green-700 bg-green-100 rounded-lg" x-transition></div>
-            <div x-show="mensagemErro" x-text="mensagemErro" class="p-4 mt-4 text-red-700 bg-red-100 rounded-lg"
+                class="p-3 mt-2 text-sm text-green-700 bg-green-100 rounded-lg" x-transition></div>
+            <div x-show="mensagemErro" x-text="mensagemErro" class="p-3 mt-2 text-sm text-red-700 bg-red-100 rounded-lg"
                 x-transition></div>
         </div>
 
-        <!-- Filtros -->
-        <div x-show="filtroAberto" class="p-4 mt-4 bg-white rounded shadow">
-            <form method="GET" action="{{ route('ferias.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <!-- Filtros - Mobile Optimized -->
+        <div x-show="filtroAberto" class="p-3 mt-2 bg-white rounded shadow sm:p-4">
+            <form method="GET" action="{{ route('ferias.index') }}"
+                class="space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 sm:space-y-0">
                 {{-- Ano --}}
                 <div>
                     <label class="block text-sm font-medium">Ano</label>
-                    <select name="ano_exercicio" class="block w-full mt-1 border-gray-300 rounded">
+                    <select name="ano_exercicio" class="block w-full mt-1 text-sm border-gray-300 rounded">
                         <option value="">Todos</option>
                         @foreach (range(date('Y') + 1, date('Y') - 4) as $ano)
                             <option value="{{ $ano }}"
@@ -75,7 +84,7 @@
                 {{-- Mês --}}
                 <div>
                     <label class="block text-sm font-medium">Mês de Início</label>
-                    <select name="mes" class="block w-full mt-1 border-gray-300 rounded">
+                    <select name="mes" class="block w-full mt-1 text-sm border-gray-300 rounded">
                         <option value="">Todos</option>
                         @foreach ($meses as $m => $mes)
                             <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
@@ -86,38 +95,39 @@
                 </div>
 
                 {{-- Busca por nome, CPF ou matrícula --}}
-                <div>
+                <div class="sm:col-span-2">
                     <label class="block text-sm font-medium">Servidor</label>
                     <input type="text" name="busca" value="{{ request('busca') }}"
-                        placeholder="Nome, CPF ou matrícula" class="block w-full mt-1 border-gray-300 rounded">
+                        placeholder="Nome, CPF ou matrícula" class="block w-full mt-1 text-sm border-gray-300 rounded">
                 </div>
 
                 {{-- Botão --}}
-                <div class="flex items-end">
+                <div class="sm:col-span-2 lg:col-span-1">
                     <button type="submit" @click="filtroAberto = true"
-                        class="w-full px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                        class="w-full px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">
                         Aplicar Filtros
                     </button>
                 </div>
             </form>
         </div>
 
-        {{-- Listagem de ferias --}}
+        {{-- Listagem de ferias - Mobile Optimized --}}
         @foreach ($ferias as $registro)
-            <div class="p-6 mb-8 bg-white rounded shadow">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="mb-2 text-xl font-bold text-gray-800">🗓️ Ano: {{ $registro->ano_exercicio }}</h3>
-                        <h3 class="text-lg font-semibold">{{ $registro->servidor->nome }} - Matrícula:
-                            {{ $registro->servidor->matricula }}</h3>
-                        <p class="text-sm text-gray-600">Situação:
+            <div class="p-4 mb-6 bg-white rounded shadow sm:p-6">
+                <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <h3 class="mb-1 text-lg font-bold text-gray-800 sm:text-xl">🗓️ Ano:
+                            {{ $registro->ano_exercicio }}</h3>
+                        <h3 class="text-base font-semibold sm:text-lg">{{ $registro->servidor->nome }}</h3>
+                        <p class="text-xs text-gray-600 sm:text-sm">Matrícula: {{ $registro->servidor->matricula }}</p>
+                        <p class="text-xs text-gray-600 sm:text-sm">Situação:
                             <span
                                 class="{{ $registro->situacao === 'Ativo' ? 'text-green-600' : ($registro->situacao === 'Pendente' ? 'text-yellow-600' : 'text-red-600') }}">
                                 {{ $registro->situacao }}
                             </span>
                         </p>
 
-                        <!-- NOVO: Resumo de usufruto -->
+                        <!-- Resumo de usufruto Mobile -->
                         @php
                             $totalDias = $registro->periodos->where('ativo', true)->sum('dias');
                             $diasUsufruidos = $registro->periodos
@@ -127,240 +137,248 @@
                             $diasPendentes = $totalDias - $diasUsufruidos;
                         @endphp
 
-                        <div class="flex gap-4 mt-2 text-xs">
-                            <span class="px-2 py-1 font-semibold text-green-800 bg-green-200 rounded">
-                                ✅ {{ $diasUsufruidos }} dias usufruídos
+                        <div class="flex flex-wrap gap-1 mt-2 text-xs">
+                            <span class="px-2 py-1 font-semibold text-green-800 bg-green-200 rounded shadow-xl">
+                                ✅ {{ $diasUsufruidos }}d usuf.
                             </span>
-                            <span class="px-2 py-1 font-semibold text-yellow-800 bg-yellow-200 rounded">
-                                ⏳ {{ $diasPendentes }} dias pendentes
+                            <span class="px-2 py-1 font-semibold text-yellow-800 bg-yellow-200 rounded shadow-xl">
+                                ⏳ {{ $diasPendentes }}d pend.
                             </span>
-                            <span class="px-2 py-1 font-semibold text-blue-800 bg-blue-200 rounded">
-                                📊 {{ $totalDias }} dias totais
+                            <span class="px-2 py-1 font-semibold text-blue-800 bg-blue-200 rounded shadow-xl">
+                                📊 {{ $totalDias }}d total
                             </span>
                         </div>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 mt-2 sm:mt-0">
                         <!-- Botões existentes -->
                         <a href="{{ route('ferias.pdf', $registro->servidor->id) }}" target="_blank"
-                            class="px-3 py-1 text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-50">
-                            🖨️ PDF
+                            class="flex items-center px-2 py-1 text-xs text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-50 sm:px-3 sm:text-sm">
+                            <span class="mr-1">🖨️</span>
+                            PDF
                         </a>
                         <button
                             @click="confirmarExclusaoFerias({{ $registro->id }}, '{{ $registro->servidor->nome }}', {{ $registro->ano_exercicio }})"
-                            class="px-3 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50">
-                            🗑️ Excluir
+                            class="flex items-center px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50 sm:px-3 sm:text-sm">
+                            <span class="mr-1">🗑️</span>
+                            Excluir
                         </button>
                     </div>
                 </div>
 
+
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
-                    <div class="mb-2 space-y-4" x-data="{
-                        aberto: true,
+                    <div class="mb-3 space-y-3" x-data="{
+                        aberto: false,
                         periodoInicio: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}',
                         periodoFim: '{{ date('Y-m-d', strtotime($periodo->fim)) }}',
                     }">
 
-                        <!-- Período original - ATUALIZADO -->
+                        <!-- Período original - Mobile Optimized -->
                         <div
-                            class="flex items-start gap-3 px-3 py-2 rounded-md {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : ($periodo->usufruido ? 'bg-green-100 border-l-4 border-green-500' : 'bg-blue-50') }}">
-                            <div class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
-                                {{ $periodo->usufruido ? '✅' : '📌' }}
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-700">
-                                    @if ($periodo->tipo !== 'Abono')
-                                        {{ $periodo->ordem }}º Período
-                                    @endif
-                                    {{ $periodo->tipo == 'Abono' ? 'Abono' : 'de Férias' }}
-                                    @if ($periodo->usufruido)
-                                        <span
-                                            class="px-2 py-1 ml-2 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
-                                            ✅ USUFRUÍDO
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-2 py-1 ml-2 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
-                                            ⏳ PENDENTE
-                                        </span>
-                                    @endif
-                                </p>
-
-                                <!-- link da Portaria -->
-                                @if ($periodo->title)
-                                    <p class="text-sm text-gray-600">
-                                        <a href="{{ $periodo->url }}" target="_blank"
-                                            class="text-blue-600 hover:underline">
-                                            {{ $periodo->title }}
-                                        </a>
-                                    </p>
-                                @endif
-
-                                {{-- @if ($periodo->ativo) --}}
-                                <p class="text-sm text-gray-600">
-                                    {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
-                                    {{ date('d/m/Y', strtotime($periodo->fim)) }}
-                                    {{ $periodo->dias }} dias
-                                </p>
-                                {{-- @endif --}}
-
-                                <p class="text-xs text-gray-500">
-                                    Situação: {{ $periodo->situacao }}
-                                    @if ($periodo->usufruido && $periodo->data_usufruto)
-                                        • Usufruído em: {{ date('d/m/Y', strtotime($periodo->data_usufruto)) }}
-                                    @endif
-                                </p>
-
-                                <div class="flex gap-2 mt-2">
-
-                                    <button @click="aberto = !aberto" class="text-xs text-blue-600 hover:underline">
-                                        <span x-text="aberto ? 'Ocultar detalhes' : 'Ver detalhes'"></span>
-                                    </button>
-
-
-                                    @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
-                                        <button
-                                            @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
-                                            class="text-xs text-green-600 hover:underline">
-                                            ✏️ Editar
-                                        </button>
-                                        @role('super admin')
-                                            <button
-                                                @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
-                                                class="text-xs text-red-600 hover:underline">
-                                                🗑️ Excluir
-                                            </button>
-                                        @endrole
-
-
-                                        <!-- NOVO: Botão para marcar como usufruído -->
-                                        <button @click="marcarComoUsufruido({{ $periodo->id }})"
-                                            class="text-xs text-purple-600 hover:underline">
-                                            ✅ Marcar como Usufruído
-                                        </button>
-                                    @endif
-                                    @if ($periodo->situacao !== 'Usufruido' || $periodo->tipo == 'Abono')
-                                        @if ($periodo->usufruido)
-                                            <button @click="desmarcarUsufruto({{ $periodo->id }})"
-                                                class="text-xs text-orange-600 hover:underline">
-                                                ↩️ Desmarcar Usufruto
-                                            </button>
+                            class="flex flex-col gap-2 p-3 rounded-md sm:flex-row sm:items-start {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : ($periodo->usufruido ? 'bg-green-100 border-l-4 border-green-500' : 'bg-blue-50') }}">
+                            <div class="flex items-start gap-2">
+                                <div class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
+                                    {{ $periodo->usufruido ? '✅' : '📌' }}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-700 sm:text-base">
+                                        @if ($periodo->tipo !== 'Abono')
+                                            {{ $periodo->ordem }}º Período
                                         @endif
+                                        {{ $periodo->tipo == 'Abono' ? 'Abono' : 'de Férias' }}
+                                        @if ($periodo->usufruido)
+                                            <span
+                                                class="px-1 py-0.5 ml-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+                                                ✅ USUFRUÍDO
+                                            </span>
+                                        @else
+                                            <span
+                                                class="px-1 py-0.5 ml-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                                                ⏳ PENDENTE
+                                            </span>
+                                        @endif
+                                    </p>
+
+                                    <!-- link da Portaria -->
+                                    @if ($periodo->title)
+                                        <p class="text-xs text-gray-600 sm:text-sm">
+                                            <a href="{{ $periodo->url }}" target="_blank"
+                                                class="text-blue-600 break-all hover:underline">
+                                                {{ $periodo->title }}
+                                            </a>
+                                        </p>
                                     @endif
-                                </div>
 
-                                <!-- Resto do código permanece igual -->
-                                {{-- Formulário de interrupção --}}
-                                <div x-show="periodoId === {{ $periodo->id }}"
-                                    class="mt-4 space-y-4 transition duration-300 transform"
-                                    x-transition:enter="transition ease-out duration-300"
-                                    x-transition:enter="transform opacity-0 scale-95"
-                                    x-transition:enter-start="transform opacity-0 scale-95"
-                                    x-transition:enter-end="transform opacity-100 scale-100"
-                                    x-transition:leave="transform opacity-100 scale-100"
-                                    x-transition:leave-start="transform opacity-100 scale-100"
-                                    x-transition:leave-end="transform opacity-0 scale-95">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Data da
-                                            Interrupção</label>
-                                        <input type="date" x-model="dataInterrupcao" :min="periodoInicio"
-                                            :max="periodoFim" class="block w-full mt-1 border-gray-300 rounded">
-                                    </div>
-                                    <!--Link do Diof -->
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Titulo</label>
-                                        <input type="text" x-model="tituloDiof" name="titulo_diof"
-                                            placeholder="Portaria de férias nº 005 de 02 de Junho de 2023."
-                                            class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
-                                        <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
-                                        <input type="url" x-model="linkDiof" name="link_diof"
-                                            placeholder="https://exemplo.com/diof"
-                                            class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
-                                    </div>
+                                    <p class="text-xs text-gray-600 sm:text-sm">
+                                        {{ date('d/m/Y', strtotime($periodo->inicio)) }} a
+                                        {{ date('d/m/Y', strtotime($periodo->fim)) }}
+                                        {{ $periodo->dias }} dias
+                                    </p>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Motivo</label>
-                                        <textarea x-model="motivo" rows="3" class="block w-full mt-1 border-gray-300 rounded"></textarea>
-                                    </div>
+                                    <p class="text-xs text-gray-500">
+                                        Situação: {{ $periodo->situacao }}
+                                        @if ($periodo->usufruido && $periodo->data_usufruto)
+                                            • Usufruído em: {{ date('d/m/Y', strtotime($periodo->data_usufruto)) }}
+                                        @endif
+                                    </p>
 
-                                    <button
-                                        @click="fetch('{{ route('ferias.interromper') }}', {
-                                                method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Accept': 'application/json',
-                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                },
-                                                body: JSON.stringify({
-                                                    periodo_id: periodoId,
-                                                    data: dataInterrupcao,
-                                                    motivo: motivo,
-                                                    linkDiof: linkDiof,
-                                                    tituloDiof: tituloDiof,
-                                                })
-                                            })
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                alert(data.message);
-                                                periodoId = null;
-                                                dataInterrupcao = '';
-                                                motivo = '';
-                                                linkDiof = '';
-                                                tituloDiof = '';
-                                                location.reload();
-                                            })
-                                            .catch(err => {
-                                                console.error(err);
-                                                alert('Erro ao interromper período');
-                                            })"
-                                        class="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700">
-                                        ✅ Confirmar Interrupção
-                                    </button>
-                                    <button
-                                        @click="setTimeout(() => {
-                                                periodoId = null;
-                                                motivo = '';
-                                                dataInterrupcao = '';
-                                                tituloDiof = '';
-                                                linkDiof = '';
-                                                novaInicio = '';
-                                                novaFim = '';
-                                            }, 10);"
-                                        class="px-3 py-1 text-white bg-gray-600 rounded hover:bg-gray-700">
-                                        ❌ Cancelar
-                                    </button>
+                                    <div
+                                        class="flex flex-col items-start gap-2 mt-2 sm:flex-col lg:flex-row lg:w-full">
+
+                                        <!-- gridi com 3 colunas  e 1 coluna para mobile -->
+                                        <div class="grid justify-between grid-cols-2 gap-2 lg:gap-5 lg:grid-cols-3">
+
+
+                                            <button @click="aberto = !aberto"
+                                                class="w-full px-2 py-2 text-xs text-blue-600 bg-blue-200 rounded shadow-lg hover:bg-blue-500 hover:text-blue-100">
+                                                <span x-text="aberto ? 'Ocultar' : 'Detalhes'"></span>
+                                            </button>
+
+                                            @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                                {{-- <button
+                                                    @click="abrirModalEditarPeriodo({{ $periodo->id }}, '{{ $periodo->inicio }}', '{{ $periodo->fim }}', {{ $periodo->dias }}, '{{ $periodo->justificativa }}')"
+                                                    class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap">
+                                                    ✏️ Editar
+                                                </button> --}}
+                                                <button
+                                                    class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap"
+                                                    data-periodo-id="{{ $periodo->id }}"
+                                                    data-inicio="{{ $periodo->inicio_formatado }}"
+                                                    data-url="{{ $periodo->url }}"
+                                                    data-title="{{ $periodo->title }}"
+                                                    data-fim="{{ $periodo->fim_formatado }}"
+                                                    data-dias="{{ $periodo->dias }}"
+                                                    data-justificativa="{{ $periodo->justificativa }}"
+                                                    @click="abrirModalEditarPeriodo($event)">
+                                                    ✏️ Editar
+                                                </button>
+                                                @role('super admin')
+                                                    <button
+                                                        @click="confirmarExclusaoPeriodo({{ $periodo->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
+                                                        class="w-full px-2 py-2 text-xs text-red-600 bg-red-200 rounded shadow-lg hover:bg-red-500 hover:text-red-100 text-nowrap">
+                                                        🗑️ Excluir
+                                                    </button>
+                                                @endrole
+
+                                                <button @click="marcarComoUsufruido({{ $periodo->id }})"
+                                                    class="w-full px-2 py-2 text-xs text-purple-600 bg-purple-200 rounded shadow-lg flex-inline text-nowrap hover:bg-purple-500 hover:text-purple-100">
+                                                    ✅ Usufruído
+                                                </button>
+                                            @endif
+
+                                            @if ($periodo->usufruido && $periodo->ativo)
+                                                <button @click="desmarcarUsufruto({{ $periodo->id }})"
+                                                    class="w-full px-2 py-2 text-xs text-orange-600 bg-orange-200 rounded shadow-lg hover:bg-orange-500 hover:text-orange-100 text-nowrap">
+                                                    ↩️ Desmarcar Usufruto
+                                                </button>
+                                            @endif
+
+
+                                            @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                                <button
+                                                    @click="abrirModalRemarcacao({{ $periodo->id }}, {{ json_encode($periodo) }})"
+                                                    class="w-full px-2 py-2 text-xs text-indigo-600 bg-indigo-200 rounded shadow-lg hover:bg-indigo-500 hover:text-indigo-100 text-nowrap">
+                                                    🔁 Remarcar
+                                                </button>
+                                                @if ($periodo->situacao !== 'Interrompido')
+                                                    <button @click="periodoId = {{ $periodo->id }}"
+                                                        class="w-full px-2 py-2 text-xs rounded shadow-lg text-lime-600 hover:bg-lime-500 hover:text-lime-100 bg-lime-200 text-nowrap">
+                                                        ✋ Interromper
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="" x-transition:enter="transition ease-out duration-300"
-                                x-transition:enter-start="opacity-0 transform scale-95"
-                                x-transition:enter-end="opacity-100 transform scale-100"
-                                x-transition:leave="transition ease-in duration-200"
-                                x-transition:leave-start="opacity-100 transform scale-100"
-                                x-transition:leave-end="opacity-0 transform scale-95">
+                        <!-- Formulário de interrupção Mobile -->
+                        <div x-show="periodoId === {{ $periodo->id }}"
+                            class="p-3 mt-2 space-y-3 transition duration-300 transform rounded bg-gray-50"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transform opacity-100 scale-100"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Data da Interrupção</label>
+                                <input type="date" x-model="dataInterrupcao" :min="periodoInicio"
+                                    :max="periodoFim" class="block w-full mt-1 text-sm border-gray-300 rounded">
+                            </div>
 
-                                @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
-                                    {{-- <button
-                                        @click="modalAberto = true; periodoSelecionado = {{ $periodo->id }}; filhos = {{ json_encode($periodo) }}"
-                                        class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
-                                        🔁 Remarcar
-                                    </button> --}}
-                                    <button
-                                        @click="abrirModalRemarcacao({{ $periodo->id }}, {{ json_encode($periodo) }})"
-                                        class="px-3 py-1 mt-3 text-white bg-blue-600 rounded hover:bg-blue-700">
-                                        🔁 Remarcar
-                                    </button>
-                                    @if ($periodo->situacao !== 'Interrompido')
-                                        <button @click="periodoId = {{ $periodo->id }}"
-                                            class="px-3 py-1 mt-3 text-white bg-red-600 rounded hover:bg-red-700">
-                                            ✋ Interromper
-                                        </button>
-                                    @endif
-                                @endif
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Título</label>
+                                <input type="text" x-model="tituloDiof" name="titulo_diof"
+                                    placeholder="Portaria de férias..."
+                                    class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
+                                <input type="url" x-model="linkDiof" name="link_diof"
+                                    placeholder="https://exemplo.com/diof"
+                                    class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Motivo</label>
+                                <textarea x-model="motivo" rows="2" class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button
+                                    @click="fetch('{{ route('ferias.interromper') }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({
+                                                periodo_id: periodoId,
+                                                data: dataInterrupcao,
+                                                motivo: motivo,
+                                                linkDiof: linkDiof,
+                                                tituloDiof: tituloDiof,
+                                            })
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            alert(data.message);
+                                            periodoId = null;
+                                            dataInterrupcao = '';
+                                            motivo = '';
+                                            linkDiof = '';
+                                            tituloDiof = '';
+                                            location.reload();
+                                        })
+                                        .catch(err => {
+                                            console.error(err);
+                                            alert('Erro ao interromper período');
+                                        })"
+                                    class="flex-1 px-3 py-2 text-sm text-white bg-red-600 rounded hover:bg-red-700">
+                                    ✅ Confirmar
+                                </button>
+                                <button
+                                    @click="setTimeout(() => {
+                                            periodoId = null;
+                                            motivo = '';
+                                            dataInterrupcao = '';
+                                            tituloDiof = '';
+                                            linkDiof = '';
+                                            novaInicio = '';
+                                            novaFim = '';
+                                        }, 10);"
+                                    class="flex-1 px-3 py-2 text-sm text-white bg-gray-600 rounded hover:bg-gray-700">
+                                    ❌ Cancelar
+                                </button>
                             </div>
                         </div>
 
                         <!-- Filhos: interrupções e remarcações -->
-                        <div x-show="aberto" class="mt-2 text-sm text-gray-500"
+                        <div x-show="aberto" class="text-sm text-gray-500"
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 transform scale-95"
                             x-transition:enter-end="opacity-100 transform scale-100"
@@ -368,211 +386,117 @@
                             x-transition:leave-start="opacity-100 transform scale-100"
                             x-transition:leave-end="opacity-0 transform scale-95">
                             <x-periodo :periodo="$periodo" />
+
                         </div>
                     </div>
                 @endforeach
             </div>
         @endforeach
 
-        {{ $ferias->links() }}
+        {{ $ferias->withQueryString()->onEachSide(3)->links('pagination::tailwind') }}
 
-        <!-- Modal Remarcar -->
-        {{-- <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="w-full max-w-md p-6 bg-white rounded shadow-lg" @click.away="modalAberto = false">
-
-                <h3 class="mb-4 text-lg font-bold">Remarcar Férias de <span x-text="filhos.dias"
-                        class="font-semibold text-blue-600"></span>
-                    Dias
-                </h3>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nova Data Início</label>
-                        <input type="date" x-model="novaInicio" name="nova_inicio" @change="calcularDias"
-                            class="block w-full mt-1 border-gray-300 rounded">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nova Data Fim</label>
-                        <input type="date" x-model="novaFim" name="nova_fim" @change="calcularDias"
-                            class="block w-full mt-1 border-gray-300 rounded">
-                    </div>
-                    <div x-show="diasCalculados > 0" x-transition
-                        class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded">
-                        <p class="text-yellow-600">
-                            Período de <strong><span x-text="diasCalculados"></span></strong> dias
-                        </p>
-                    </div>
-                    <!--Link do Diof -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Titulo</label>
-                        <input type="text" x-model="tituloDiof" name="titulo_diof"
-                            placeholder="Portaria de férias nº 005 de 02 de Junho de 2023."
-                            class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
-                        <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
-                        <input type="url" x-model="linkDiof" name="link_diof"
-                            placeholder="https://exemplo.com/diof"
-                            class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Justificativa</label>
-                        <textarea x-model="justificativa" rows="3" class="block w-full mt-1 border-gray-300 rounded"></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-2 mt-4">
-                        <button
-                            @click="
-                            modalAberto = false;
-                            novaInicio = '';
-                            novaFim = '';
-                            tituloDiof = '';
-                            linkDiof = '';
-                            justificativa = '';
-                            diasCalculados = 0;
-                            "
-                            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
-
-                        <button
-                            @click="fetch('{{ route('ferias.remarcar') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                periodo_id: periodoSelecionado,
-                                nova_inicio: novaInicio,
-                                nova_fim: novaFim,
-                                justificativa: justificativa,
-                                linkDiof: linkDiof,
-                                tituloDiof: tituloDiof
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            alert(data.message);
-                            modalAberto = false;
-                            novaInicio = '';
-                            novaFim = '';
-                            tituloDiof = '';
-                            linkDiof = '';
-                            justificativa = '';
-                            location.reload();
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            alert('Erro ao remarcar férias');
-                        })"
-                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                            ✅ Confirmar Remarcação
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-
-        <!-- Modal Remarcar com Múltiplos Períodos -->
-        <div x-show="modalAberto" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        <!-- Modal Remarcar com Múltiplos Períodos - Mobile Optimized -->
+        <div x-show="modalAberto"
+            class="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-            <div class="w-full max-w-4xl p-6 bg-white rounded shadow-lg max-h-[90vh] overflow-y-auto"
+            <div class="w-full max-w-4xl p-4 bg-white rounded shadow-lg max-h-[95vh] overflow-y-auto sm:p-6"
                 @click.away="modalAberto = false">
-                <h3 class="mb-4 text-lg font-bold">Remarcar Férias - <span x-text="filhos.dias"
-                        class="font-semibold text-blue-600"></span> Dias Disponíveis</h3>
+                <h3 class="mb-4 text-lg font-bold sm:text-xl">Remarcar Férias - <span x-text="filhos.dias"
+                        class="font-semibold text-blue-600"></span> Dias</h3>
 
-                <!-- Resumo de Dias -->
-                <div class="p-4 mb-4 rounded-lg bg-blue-50">
-                    <div class="flex items-center justify-between">
-                        <div>
+                <!-- Resumo de Dias Mobile -->
+                <div class="p-3 mb-4 rounded-lg bg-blue-50 sm:p-4">
+                    <div class="space-y-2 sm:flex sm:items-center sm:justify-between sm:space-y-0">
+                        <div class="text-sm">
                             <span class="font-semibold">Dias totais:</span>
-                            <span x-text="filhos.dias" class="ml-2 text-blue-700"></span>
+                            <span x-text="filhos.dias" class="ml-1 text-blue-700"></span>
                         </div>
-                        <div>
-                            <span class="font-semibold">Dias distribuídos:</span>
-                            <span x-text="totalDiasDistribuidos" class="ml-2"
+                        <div class="text-sm">
+                            <span class="font-semibold">Distribuídos:</span>
+                            <span x-text="totalDiasDistribuidos" class="ml-1"
                                 :class="totalDiasDistribuidos > filhos.dias ? 'text-red-600' : 'text-green-600'"></span>
                         </div>
-                        <div x-show="totalDiasDistribuidos !== filhos.dias" class="text-sm text-orange-600">
-                            ⚠️ Restam <span x-text="filhos.dias - totalDiasDistribuidos"></span> dias para distribuir
-                        </div>
-                        <div x-show="totalDiasDistribuidos === filhos.dias" class="text-sm text-green-600">
-                            ✅ Todos os dias foram distribuídos
-                        </div>
+                    </div>
+                    <div x-show="totalDiasDistribuidos !== filhos.dias"
+                        class="mt-2 text-xs text-orange-600 sm:text-sm">
+                        ⚠️ Restam <span x-text="filhos.dias - totalDiasDistribuidos"></span> dias
+                    </div>
+                    <div x-show="totalDiasDistribuidos === filhos.dias"
+                        class="mt-2 text-xs text-green-600 sm:text-sm">
+                        ✅ Todos os dias distribuídos
                     </div>
                 </div>
 
-                <!-- Lista de Períodos -->
-                <div class="space-y-4">
+                <!-- Lista de Períodos Mobile -->
+                <div class="space-y-3">
                     <template x-for="(periodo, index) in periodosRemarcacao" :key="index">
-                        <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="p-3 border border-gray-200 rounded-lg sm:p-4">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-semibold text-gray-700">Período <span x-text="index + 1"></span></h4>
+                                <h4 class="text-sm font-semibold text-gray-700 sm:text-base">Período <span
+                                        x-text="index + 1"></span></h4>
                                 <button type="button" @click="removerPeriodo(index)"
-                                    x-show="periodosRemarcacao.length > 1" class="text-red-600 hover:text-red-800">
+                                    x-show="periodosRemarcacao.length > 1"
+                                    class="text-sm text-red-600 hover:text-red-800">
                                     <i class="fas fa-times"></i> Remover
                                 </button>
                             </div>
 
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div class="space-y-3 sm:grid sm:grid-cols-3 sm:gap-3 sm:space-y-0">
                                 <!-- Data Início -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Data Início</label>
+                                    <label class="block text-xs font-medium text-gray-700 sm:text-sm">Data
+                                        Início</label>
                                     <input type="date" x-model="periodo.inicio"
                                         @change="validarDatasPeriodo(index)" :min="obterMinDate(index)"
-                                        class="block w-full mt-1 border-gray-300 rounded">
+                                        class="block w-full mt-1 text-sm border-gray-300 rounded">
                                 </div>
 
                                 <!-- Data Fim -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Data Fim</label>
+                                    <label class="block text-xs font-medium text-gray-700 sm:text-sm">Data Fim</label>
                                     <input type="date" x-model="periodo.fim"
                                         @change="validarDatasPeriodo(index); calcularDiasPeriodo(index)"
-                                        :min="periodo.inicio || ''" class="block w-full mt-1 border-gray-300 rounded">
+                                        :min="periodo.inicio || ''"
+                                        class="block w-full mt-1 text-sm border-gray-300 rounded">
                                 </div>
 
                                 <!-- Dias -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Dias</label>
+                                    <label class="block text-xs font-medium text-gray-700 sm:text-sm">Dias</label>
                                     <input type="number" x-model="periodo.dias" @input="atualizarFimPorDias(index)"
                                         min="1" :max="diasDisponiveis(index)"
-                                        class="block w-full mt-1 border-gray-300 rounded">
+                                        class="block w-full mt-1 text-sm border-gray-300 rounded">
                                     <p class="mt-1 text-xs text-gray-500" x-text="'Máx: ' + diasDisponiveis(index)">
                                     </p>
                                 </div>
                             </div>
 
-                            <!-- Link do DIOF por período -->
-                            <div class="grid grid-cols-1 gap-4 mt-3 md:grid-cols-2">
+                            <!-- Link do DIOF Mobile -->
+                            <div class="mt-3 space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Título do Período</label>
-                                    <input type="text" x-model="periodo.titulo"
-                                        placeholder="Ex: 1º período de férias 2024"
-                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
+                                    <label class="block text-xs font-medium text-gray-700 sm:text-sm">Título</label>
+                                    <input type="text" x-model="periodo.titulo" placeholder="Ex: 1º período 2024"
+                                        class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Link do DIOF</label>
-                                    <input type="url" x-model="periodo.linkDiof"
-                                        placeholder="https://exemplo.com/diof"
-                                        class="block w-full px-3 py-2 mt-1 border-gray-300 rounded">
+                                    <label class="block text-xs font-medium text-gray-700 sm:text-sm">Link DIOF</label>
+                                    <input type="url" x-model="periodo.linkDiof" placeholder="https://..."
+                                        class="block w-full px-2 py-1 mt-1 text-sm border-gray-300 rounded">
                                 </div>
                             </div>
 
-                            <!-- Observações -->
+                            <!-- Observações Mobile -->
                             <div class="mt-3">
-                                <label class="block text-sm font-medium text-gray-700">Observações</label>
-                                <textarea x-model="periodo.observacoes" rows="2" placeholder="Observações específicas deste período..."
-                                    class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                                <label class="block text-xs font-medium text-gray-700 sm:text-sm">Observações</label>
+                                <textarea x-model="periodo.observacoes" rows="2" placeholder="Observações..."
+                                    class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
                             </div>
 
-                            <!-- Resumo do período -->
-                            <div x-show="periodo.dias > 0" class="p-2 mt-2 text-sm rounded bg-gray-50">
+                            <!-- Resumo do período Mobile -->
+                            <div x-show="periodo.dias > 0" class="p-2 mt-2 text-xs rounded bg-gray-50 sm:text-sm">
                                 <span class="font-medium" x-text="periodo.dias"></span> dias -
                                 <span x-text="periodo.inicio ? formatarData(periodo.inicio) : '...'"></span>
                                 a
@@ -582,65 +506,68 @@
                     </template>
                 </div>
 
-                <!-- Botão Adicionar Período -->
-                <div class="mt-4">
+                <!-- Botões Mobile -->
+                <div class="flex flex-col gap-2 mt-4 sm:flex-row sm:items-center">
                     <button type="button" @click="adicionarPeriodo()"
                         :disabled="totalDiasDistribuidos >= filhos.dias"
                         :class="totalDiasDistribuidos >= filhos.dias ?
                             'bg-gray-400 cursor-not-allowed' :
                             'bg-blue-600 hover:bg-blue-700'"
-                        class="px-4 py-2 text-white rounded">
-                        <i class="fas fa-plus"></i> Adicionar Outro Período
+                        class="px-4 py-2 text-sm text-white rounded sm:text-base">
+                        <i class="fas fa-plus"></i> Adicionar Período
                     </button>
                 </div>
 
-                <!-- Justificativa Geral -->
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700">Justificativa Geral da Remarcação</label>
-                    <textarea x-model="justificativaGeral" rows="3"
-                        placeholder="Justificativa para a remarcação de todos os períodos..."
-                        class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                <!-- Justificativa Geral Mobile -->
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Justificativa</label>
+                    <textarea x-model="justificativaGeral" rows="3" placeholder="Justificativa para a remarcação..."
+                        class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
                 </div>
 
-                <!-- Botões de Ação -->
-                <div class="flex justify-end gap-2 mt-6">
+                <!-- Botões de Ação Mobile -->
+                <div class="flex flex-col gap-2 mt-4 sm:flex-row sm:justify-end sm:gap-2">
                     <button @click="fecharModalRemarcacao()"
-                        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+                        class="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400 sm:text-base">Cancelar</button>
 
                     <button @click="confirmarRemarcacaoMultiplosPeriodos()" :disabled="!podeConfirmarRemarcacao()"
                         :class="podeConfirmarRemarcacao() ?
                             'bg-green-600 hover:bg-green-700' :
                             'bg-gray-400 cursor-not-allowed'"
-                        class="px-4 py-2 text-white rounded">
-                        ✅ Confirmar Remarcação
+                        class="px-4 py-2 text-sm text-white rounded sm:text-base">
+                        ✅ Confirmar
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Editar Período -->
+        <!-- Modal Editar Período Mobile -->
         <div x-show="modalEditarAberto"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            class="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-            <div class="w-full max-w-md p-6 bg-white rounded shadow-lg" @click.away="fecharModalEditar">
+            <div class="w-full max-w-md p-4 bg-white rounded shadow-lg sm:p-6" @click.away="fecharModalEditar">
                 <h3 class="mb-4 text-lg font-bold">Editar Período</h3>
 
                 <form @submit.prevent="salvarPeriodo()" class="space-y-4">
                     <input type="hidden" x-model="periodoEditando.id">
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Data Início</label>
-                        <input type="date" x-model="periodoEditando.inicio" name="edit-inicio"
-                            @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-ounded" required>
-                    </div>
+                    <div class="space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Data Início</label>
+                            <input type="date" x-model="formatarData(periodoEditando.inicio)" name="edit-inicio"
+                                @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded"
+                                required>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Data Fim</label>
-                        <input type="date" x-model="periodoEditando.fim" name="edit-fim"
-                            @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded" required>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Data Fim</label>
+                            <input type="date" x-model="formatarData(periodoEditando.fim)" name="edit-fim"
+                                @change="calcularDiasEdicao" class="block w-full mt-1 border-gray-300 rounded"
+                                required>
+                        </div>
                     </div>
 
                     <div>
@@ -648,13 +575,27 @@
                         <input type="number" x-model="periodoEditando.dias"
                             class="block w-full mt-1 border-gray-300 rounded" required>
                     </div>
+                    <!-- input Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Título da Portaria</label>
+                        <input type="text" x-model="periodoEditando.title" name="edit-title"
+                            class="block w-full mt-1 border-gray-300 rounded">
+                    </div>
+
+                    <!-- input url -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">URL</label>
+                        <input type="url" x-model="periodoEditando.url" name="edit-url"
+                            class="block w-full mt-1 border-gray-300 rounded">
+                    </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Observação</label>
-                        <textarea x-model="periodoEditando.justificativa" rows="3" class="block w-full mt-1 border-gray-300 rounded"></textarea>
+                        <textarea x-model="periodoEditando.justificativa" rows="3"
+                            class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
                     </div>
 
-                    <div class="flex justify-end gap-2 mt-4">
+                    <div class="flex flex-col gap-2 mt-4 sm:flex-row sm:justify-end sm:gap-2">
                         <button type="button" @click="fecharModalEditar"
                             class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
                         <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
@@ -665,23 +606,23 @@
             </div>
         </div>
 
-        <!-- Modal Confirmação Exclusão -->
+        <!-- Modal Confirmação Exclusão Mobile -->
         <div x-show="modalConfirmacaoAberto" x-cloak x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 bg-black bg-opacity-50">
+            class="fixed inset-0 z-50 flex items-center justify-center p-2 transition-all duration-300 bg-black bg-opacity-50">
 
-            <div class="w-full max-w-md p-6 bg-white rounded shadow-lg">
+            <div class="w-full max-w-md p-4 bg-white rounded shadow-lg sm:p-6">
                 <h3 class="mb-4 text-lg font-bold text-red-600">Confirmar Exclusão</h3>
-                <p class="mb-4" x-text="mensagemConfirmacao"></p>
+                <p class="mb-4 text-sm" x-text="mensagemConfirmacao"></p>
 
-                <div class="flex justify-end gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
                     <button @click="fecharModalConfirmacao"
                         class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
                     <button @click="confirmarAcaoExclusao"
                         class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
-                        Confirmar Exclusão
+                        Confirmar
                     </button>
                 </div>
             </div>
@@ -689,35 +630,35 @@
     </div>
 
     <script>
-        function verificarRelatorio() {
-            const ano_exercicio = document.getElementById('ano_exercicio').value;
-            const ano = document.getElementById('ano').value;
-            const mes = document.getElementById('mes').value;
+        // function verificarRelatorio() {
+        //     const ano_exercicio = document.getElementById('ano_exercicio').value;
+        //     const ano = document.getElementById('ano').value;
+        //     const mes = document.getElementById('mes').value;
 
-            fetch(`/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.tem_dados) {
-                        const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
-                            `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
-                        window.open(url, '_blank');
-                    } else {
-                        const mensagem = document.getElementById('mensagem');
-                        mensagem.innerText = 'Nenhum dado encontrado para os filtros selecionados.';
-                        mensagem.style.opacity = 1;
-                        mensagem.style.transition = 'opacity 0.5s ease-in-out';
-                        mensagem.classList.remove('hidden');
+        //     fetch(`/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`)
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.tem_dados) {
+        //                 const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
+        //                     `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
+        //                 // window.open(url, '_blank');
+        //             } else {
+        //                 const mensagem = document.getElementById('mensagem');
+        //                 mensagem.innerText = 'Nenhum dado encontrado para os filtros selecionados.';
+        //                 mensagem.style.opacity = 1;
+        //                 mensagem.style.transition = 'opacity 0.5s ease-in-out';
+        //                 mensagem.classList.remove('hidden');
 
-                        setTimeout(() => {
-                            mensagem.style.transition = 'opacity 1s';
-                            mensagem.style.opacity = 0;
-                        }, 5000);
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
-                });
-        }
+        //                 setTimeout(() => {
+        //                     mensagem.style.transition = 'opacity 1s';
+        //                     mensagem.style.opacity = 0;
+        //                 }, 5000);
+        //             }
+        //         })
+        //         .catch(() => {
+        //             document.getElementById('mensagem').innerText = 'Erro ao verificar os dados.';
+        //         });
+        // }
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('feriasManager', () => ({
@@ -761,6 +702,33 @@
                 init() {
                     console.log('Ferias Manager inicializado');
                 },
+
+                // ADICIONE ESTE MÉTODO
+                async verificarRelatorio() {
+                    const ano_exercicio = document.getElementById('ano_exercicio')?.value || '';
+                    const ano = document.getElementById('ano')?.value || '';
+                    const mes = document.getElementById('mes')?.value || '';
+
+                    try {
+                        const response = await fetch(
+                            `/verificar-ferias?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`
+                        );
+                        const data = await response.json();
+
+                        if (data.tem_dados) {
+                            const url = "{{ route('relatorio.ferias.ativas.pdf') }}" +
+                                `?ano_exercicio=${ano_exercicio}&ano=${ano}&mes=${mes}`;
+                            window.open(url, '_blank');
+                        } else {
+                            this.mostrarMensagemErro(
+                                'Nenhum dado encontrado para os filtros selecionados.');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagemErro('Erro ao verificar os dados.');
+                        console.error('Erro:', error);
+                    }
+                },
+
 
                 // Método para abrir o modal com múltiplos períodos
                 abrirModalRemarcacao(periodoId, periodoData) {
@@ -997,18 +965,31 @@
 
 
                 // Novos métodos para edição
-                abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
+                // abrirModalEditarPeriodo(id, dataInicio, dataFim, dias, justificativa) {
+                //     this.periodoEditando = {
+                //         id: id,
+                //         inicio: dataInicio,
+                //         fim: dataFim,
+                //         dias: dias,
+                //         justificativa: justificativa || ''
+                //     };
+                //     this.modalEditarAberto = true;
+                //     document.querySelector('input[name="edit-inicio"]').value = dataInicio;
+
+                //     document.querySelector('input[name="edit-fim"]').value = dataFim;
+                // },
+                abrirModalEditarPeriodo(event) {
+                    const button = event.target;
                     this.periodoEditando = {
-                        id: id,
-                        inicio: dataInicio,
-                        fim: dataFim,
-                        dias: dias,
-                        justificativa: justificativa || ''
+                        id: button.dataset.periodoId,
+                        inicio: button.dataset.inicio,
+                        fim: button.dataset.fim,
+                        dias: button.dataset.dias,
+                        url: button.dataset.url,
+                        title: button.dataset.title,
+                        justificativa: button.dataset.justificativa
                     };
                     this.modalEditarAberto = true;
-                    document.querySelector('input[name="edit-inicio"]').value = dataInicio;
-
-                    document.querySelector('input[name="edit-fim"]').value = dataFim;
                 },
 
                 fecharModalEditar() {
@@ -1018,6 +999,8 @@
                         inicio: '',
                         fim: '',
                         dias: 0,
+                        url: '',
+                        title: '',
                         justificativa: ''
                     };
                 },
@@ -1134,7 +1117,7 @@
 
                         if (response.ok) {
                             this.mostrarMensagemSucesso('Período marcado como usufruído!');
-                            setTimeout(() => location.reload(), 1000);
+                            // setTimeout(() => location.reload(), 1000);
                         } else {
                             throw new Error('Erro ao marcar como usufruído');
                         }

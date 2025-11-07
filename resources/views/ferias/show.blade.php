@@ -27,7 +27,7 @@
 
                     <!-- Botões de Ação -->
                     <div class="flex flex-col gap-2 mt-6 sm:flex-row">
-                        <a href="{{ route('ferias.index') }}"
+                        <a href="{{ url()->previous() }}"
                             class="px-4 py-2 text-center text-gray-600 bg-gray-200 rounded hover:bg-gray-300">
                             ← Voltar para a Lista
                         </a>

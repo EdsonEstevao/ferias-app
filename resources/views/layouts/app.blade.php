@@ -84,11 +84,44 @@
                     class="block px-4 py-2 rounded {{ request()->routeIs('dashboard') ? ' bg-gray-600 text-amber-100' : '' }}">🏠
                     Dashboard</a>
                 <!-- icon servidores -->
-
-                <a href="{{ route('servidores.index') }}"
-                    class="block px-4 py-2 rounded {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100' : '' }} ">
-                    <i class="text-blue-400 fa-solid fa-users"></i>
-                    Servidores</a>
+                <div x-data="{ open: false }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.por-departamento') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.show') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.exoneracao.index') ? ' bg-gray-600 text-gray-50' : '' }} focus:outline-none">
+                        <span><i class="text-blue-400 fa-solid fa-users"></i> Servidores</span>
+                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                        <a href="{{ route('servidores.index') }}"
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">Listar</a>
+                        <a href="{{ route('servidores.por-departamento') }}"
+                            class="flex items-center px-4 py-2  text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200 {{ request()->routeIs('servidores.por-departamento') ? ' bg-gray-600 text-indigo-100  hover:bg-gray-100 hover:text-gray-900' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            Por Departamento
+                        </a>
+                        <a href="{{ route('servidores.nomeados.index') }}"
+                            class="flex items-center px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.nomeados.index') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 12H4m12 6l6-6-6-6M4 18l6-6-6-6" />
+                            </svg>
+                            Servidores Nomeados
+                        </a>
+                        <a href="{{ route('servidores.exoneracao.index') }}"
+                            class="flex items-center px-4 py-2 text-nowrap transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.exoneracao.restaurar') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 12H4m12 6l6-6-6-6M4 18l6-6-6-6" />
+                            </svg>
+                            Servidores Exonerados
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Menu com submenu -->
                 <div x-data="{ open: false }" class="space-y-1">
@@ -120,9 +153,8 @@
                 <!-- Menu com submenu Férias -->
                 <div x-data="{ open: false }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('ferias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.import') ? ' bg-gray-600 text-amber-100' : '' }}">
+                        class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('ferias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.import') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.filtro') ? ' bg-gray-600 text-amber-100' : '' }}">
                         <!-- icon ferias -->
-
                         <span><i class="text-red-400 fas fa-calendar"></i> Ferias</span>
                         <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
                             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -137,6 +169,12 @@
                             class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">📅
                             Importar
                             Ferias (.Csv)</a>
+
+                        <a href="{{ route('ferias.filtro') }}"
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">
+                            🔍 Filtro de Férias
+                        </a>
+
                     </div>
                 </div>
 
@@ -205,6 +243,14 @@
 
                         </div>
                     </div>
+                    <a href="{{ route('servidores.import.form') }}"
+                        class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        </svg>
+                        Importar Servidores
+                    </a>
                 @endrole
                 <!-- Menu com submenu Perfil -->
                 <div x-data="{ open: false }" class="space-y-1">

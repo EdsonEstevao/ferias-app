@@ -11,112 +11,46 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    //
     public function index()
     {
-        // dd(getOnlineUsersCount());
-        // Últimos lançamentos de férias (ordenados por data de criação)
-        $ultimosLancamentos = Ferias::with('servidor', 'periodos')
-        ->orderByDesc('created_at')
-        ->take(10)
-        ->paginate()
-        ->withQueryString();
+        // Últimos lançamentos de férias
+        $ultimos = $this->getUltimosLancamentos();
 
-
-        $meses = collect(range(1, 12))->map(function ($mes) {
-            return Carbon::create()->month($mes)->translatedFormat('F');
-        });
-
-        // dd($meses);
-
-        $dadosPorMes = collect(range(1, 12))->map(function ($mes) {
-            return FeriasPeriodos::whereMonth('inicio', $mes)->count();
-        });
+        // Dados para os gráficos
+        $meses = $this->getMeses();
+        $dadosGrafico = $this->getFeriasPorMes();
 
         // Estatísticas principais
         $totalComFerias = $this->getTotalServidoresComFerias();
         $totalInterrompidas = $this->getTotalFeriasInterrompidas();
         $totalRemarcacoes = $this->getTotalRemarcacoesPendentes();
-
-
-        // Dados para o gráfico
-        // $dadosPorMes = $this->getFeriasPorMes();
-        // $meses = $this->getMeses();
-        // Dados para o gráfico - CORRIGIDO
-        $dadosGrafico = $this->getFeriasPorMes();
-        $meses = $this->getMeses();
-
-         // Últimos lançamentos
-        $ultimos = $this->getUltimosLancamentos();
         $totalFeriasPlanejadas = $this->getTotalPlanejadas();
 
+        // Dados iniciais para o calendário
+        $calendarioInicial = $this->getCalendarioInicial();
+
         $data = [
-            'ultimos' => $ultimos, // $ultimosLancamentos,
+            'ultimos' => $ultimos,
             'meses' => $meses,
             'dadosGrafico' => $dadosGrafico,
             'totalComFerias' => $totalComFerias,
             'totalInterrompidas' => $totalInterrompidas,
             'totalRemarcacoes' => $totalRemarcacoes,
-            'totalFeriasPlanejadas' => $totalFeriasPlanejadas
+            'totalFeriasPlanejadas' => $totalFeriasPlanejadas,
+            'calendarioInicial' => $calendarioInicial
         ];
 
         return view('dashboard', $data);
-        // return view('dashboard');
     }
-
-    // public function index()
-    // {
-    //     // Estatísticas principais
-    //     $totalComFerias = $this->getTotalServidoresComFerias();
-    //     $totalInterrompidas = $this->getTotalFeriasInterrompidas();
-    //     $totalRemarcacoes = $this->getTotalRemarcacoesPendentes();
-
-    //     // Dados para o gráfico
-    //     $dadosPorMes = $this->getFeriasPorMes();
-    //     $meses = $this->getMeses();
-
-    //     // Últimos lançamentos
-    //     $ultimos = $this->getUltimosLancamentos();
-
-    //     return view('dashboard', compact(
-    //         'totalComFerias',
-    //         'totalInterrompidas',
-    //         'totalRemarcacoes',
-    //         'dadosPorMes',
-    //         'meses',
-    //         'ultimos'
-    //     ));
-    // }
 
     /**
      * Total de servidores com férias lançadas no ano atual
      */
-    private function getTotalPlanejadas()
-    {
-
-
-        $ferias = FeriasPeriodos::whereNull('periodo_origem_id')
-            ->where('situacao', 'Planejado')
-            ->where('ativo', true)
-            ->count();
-
-        // dd($ferias);
-
-        return $ferias;
-
-        // Alternativa: contar servidores únicos com férias em qualquer ano
-        // return Servidor::has('ferias')->count();
-    }
     private function getTotalServidoresComFerias()
     {
-        $ferias = Ferias::with('periodos')->where('ano_exercicio', date('Y'))
+        return Ferias::where('ano_exercicio', date('Y'))
             ->distinct('servidor_id')
             ->count('servidor_id');
-
-        return $ferias;
-
-        // Alternativa: contar servidores únicos com férias em qualquer ano
-        // return Servidor::has('ferias')->count();
     }
 
     /**
@@ -134,14 +68,19 @@ class DashboardController extends Controller
      */
     private function getTotalRemarcacoesPendentes()
     {
-        // return FeriasPeriodos::whereHas('periodoOrigem')
-        //     ->where('situacao', 'Planejado')
-        //     ->where('ativo', true)
-        //     ->count();
-
-        // Alternativa: contar períodos que são remarcações
         return FeriasPeriodos::whereNotNull('periodo_origem_id')
             ->where('situacao', 'Remarcado')
+            ->where('ativo', true)
+            ->count();
+    }
+
+    /**
+     * Total de férias planejadas
+     */
+    private function getTotalPlanejadas()
+    {
+        return FeriasPeriodos::whereNull('periodo_origem_id')
+            ->where('situacao', 'Planejado')
             ->where('ativo', true)
             ->count();
     }
@@ -163,7 +102,6 @@ class DashboardController extends Controller
             ->orderBy('mes')
             ->pluck('total', 'mes')
             ->toArray();
-        // dd($dados);
 
         // Preencher todos os meses com 0 onde não há dados
         $dadosCompletos = [];
@@ -192,14 +130,184 @@ class DashboardController extends Controller
     {
         return Ferias::with(['servidor', 'periodos' => function($query) {
                 $query->where('ativo', true)
-                      ->orderBy('inicio');
+                    ->orderBy('inicio');
             }])
             ->whereHas('periodos', function($query) {
                 $query->where('ativo', true);
             })
             ->orderBy('created_at', 'desc')
             ->limit(10)
-            ->paginate()->withQueryString();
+            ->paginate(10)->withQueryString();
+    }
+
+    /**
+     * Dados iniciais para o calendário
+     */
+    private function getCalendarioInicial()
+    {
+        $anoAtual = date('Y');
+        $mesAtual = date('n');
+
+        return [
+            'ano' => $anoAtual,
+            'mes' => $mesAtual,
+            'mes_nome' => $this->getMeses()[$mesAtual - 1],
+            'periodos' => $this->getPeriodosMes($mesAtual, $anoAtual)
+        ];
+    }
+
+    /**
+     * Busca períodos para um mês específico
+     */
+    private function getPeriodosMes($mes, $ano)
+    {
+        return FeriasPeriodos::with(['ferias.servidor'])
+            ->whereYear('inicio', $ano)
+            ->whereMonth('inicio', $mes)
+            ->where('ativo', true)
+            ->get()
+            ->map(function($periodo) {
+                // Passe a situação como segundo parâmetro
+                $corConfig = $this->getCorPeriodo($periodo->tipo, $periodo->situacao);
+
+                return [
+                    'id' => $periodo->id,
+                    'servidor' => $periodo->ferias->servidor->nome,
+                    'matricula' => $periodo->ferias->servidor->matricula,
+                    'inicio' => $periodo->inicio,
+                    'fim' => $periodo->fim,
+                    'dias' => $periodo->dias,
+                    'tipo' => $periodo->tipo,
+                    'situacao' => $periodo->situacao,
+                    'cor' => $corConfig,
+                    'descricao' => $this->getDescricaoPeriodo($periodo)
+                ];
+            })->toArray();
+    }
+
+    /**
+     * API para dados do calendário (usada pelo Alpine.js)
+     */
+    public function calendarioData(Request $request)
+    {
+        try {
+            $mes = $request->get('mes', date('m'));
+            $ano = $request->get('ano', date('Y'));
+
+            // Validar mês e ano
+            if (!is_numeric($mes) || $mes < 1 || $mes > 12) {
+                $mes = date('m');
+            }
+            if (!is_numeric($ano) || $ano < 2020 || $ano > 2030) {
+                $ano = date('Y');
+            }
+
+            $periodos = FeriasPeriodos::with(['ferias.servidor'])
+                ->whereYear('inicio', $ano)
+                ->whereMonth('inicio', $mes)
+                ->where('ativo', true)
+                ->get()
+                ->map(function($periodo) {
+                    $corConfig = $this->getCorPeriodo($periodo->tipo, $periodo->situacao);
+
+                    return [
+                        'id' => $periodo->id,
+                        'servidor' => $periodo->ferias->servidor->nome,
+                        'matricula' => $periodo->ferias->servidor->matricula,
+                        'inicio' => date('Y-m-d', strtotime($periodo->inicio)),  //$periodo->inicio->format('Y-m-d'),
+                        'fim' => date('Y-m-d', strtotime($periodo->fim)),        //$periodo->fim->format('Y-m-d'),
+                        'dias' => $periodo->dias,
+                        'tipo' => $periodo->tipo,
+                        'situacao' => $periodo->situacao,
+                        'cor' => $corConfig,
+                        'descricao' => $this->getDescricaoPeriodo($periodo)
+                    ];
+                })->toArray();
+
+            // return response()->json([
+            //     'success' => true,
+            //     'periodos' => $periodos,
+            //     'mes_nome' => Carbon::create()->month($mes)->translatedFormat('F'),
+            //     'ano' => (int)$ano,
+            //     'mes' => (int)$mes
+            // ]);
+
+            return response()->json(
+                $periodos,
+            );
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao carregar dados do calendário: ' . $e->getMessage(),
+                'periodos' => [],
+                'mes_nome' => Carbon::create()->month($request->get('mes', date('m')))->translatedFormat('F'),
+                'ano' => (int)$request->get('ano', date('Y')),
+                'mes' => (int)$request->get('mes', date('m'))
+            ], 500);
+        }
+    }
+
+    /**
+     * Define cor para cada tipo de período
+     */
+    /**
+     * Define cor para cada tipo de período baseado na situação
+     */
+    private function getCorPeriodo($tipo, $situacao)
+    {
+        // Se for interrompido, sempre usa vermelho independente do tipo
+        if ($situacao === 'Interrompido') {
+            return [
+                'bg' => 'bg-red-100 dark:bg-red-900',
+                'border' => 'border-l-red-500',
+                'text' => 'text-red-800 dark:text-red-200',
+                'badge' => 'bg-red-500'
+            ];
+        }
+
+        // Cores normais por tipo
+        $cores = [
+            'Férias' => [
+                'bg' => 'bg-green-100 dark:bg-green-900',
+                'border' => 'border-l-green-500',
+                'text' => 'text-green-800 dark:text-green-200',
+                'badge' => 'bg-green-500'
+            ],
+            'Abono' => [
+                'bg' => 'bg-blue-100 dark:bg-blue-900',
+                'border' => 'border-l-blue-500',
+                'text' => 'text-blue-800 dark:text-blue-200',
+                'badge' => 'bg-blue-500'
+            ],
+            'Licença' => [
+                'bg' => 'bg-purple-100 dark:bg-purple-900',
+                'border' => 'border-l-purple-500',
+                'text' => 'text-purple-800 dark:text-purple-200',
+                'badge' => 'bg-purple-500'
+            ]
+        ];
+
+        return $cores[$tipo] ?? [
+            'bg' => 'bg-gray-100 dark:bg-gray-900',
+            'border' => 'border-l-gray-500',
+            'text' => 'text-gray-800 dark:text-gray-200',
+            'badge' => 'bg-gray-500'
+        ];
+    }
+
+    /**
+     * Gera descrição para o período
+     */
+    private function getDescricaoPeriodo($periodo)
+    {
+        $tipos = [
+            'Férias' => 'Período de Férias',
+            'Abono' => 'Abono Pecuniário',
+            'Interrompido' => 'Férias Interrompidas'
+        ];
+
+        return ($tipos[$periodo->tipo] ?? $periodo->tipo) . ' - ' . $periodo->situacao;
     }
 
     /**
@@ -242,5 +350,47 @@ class DashboardController extends Controller
             'situacoes' => $situacoes,
             'feriasPorAno' => $feriasPorAno
         ]);
+    }
+
+    /**
+     * Buscar períodos por servidor (para filtros futuros)
+     */
+    public function periodosPorServidor($servidorId)
+    {
+        try {
+            $periodos = FeriasPeriodos::with(['ferias.servidor'])
+                ->whereHas('ferias', function($query) use ($servidorId) {
+                    $query->where('servidor_id', $servidorId);
+                })
+                ->where('ativo', true)
+                ->orderBy('inicio')
+                ->get()
+                ->map(function($periodo) {
+                    $corConfig = $this->getCorPeriodo($periodo->tipo, $periodo->situacao);
+
+                    return [
+                        'id' => $periodo->id,
+                        'servidor' => $periodo->ferias->servidor->nome,
+                        'matricula' => $periodo->ferias->servidor->matricula,
+                        'inicio' => date('Y-m-d', strtotime($periodo->inicio)),  //$periodo->inicio->format('Y-m-d'),
+                        'fim' => date('Y-m-d', strtotime($periodo->fim)),        //$periodo->fim->format('Y-m-d'),
+                        'dias' => $periodo->dias,
+                        'tipo' => $periodo->tipo,
+                        'situacao' => $periodo->situacao,
+                        'cor' => $corConfig
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'periodos' => $periodos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao buscar períodos: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

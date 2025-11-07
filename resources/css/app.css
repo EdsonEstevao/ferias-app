@@ -27,3 +27,105 @@
 .pagination-links span {
     @apply text-blue-600 border-blue-500 bg-blue-50 dark:bg-blue-900 dark:text-blue-300;
 }
+
+    .calendario-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: #e5e7eb;
+        }
+
+        .dia-semana {
+            background-color: #f9fafb;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #4b5563;
+        }
+
+        .dia {
+            background-color: white;
+            padding: 6px 4px;
+            min-height: 80px;
+            position: relative;
+            font-size: 0.875rem;
+        }
+
+        .dia.ferias-1 {
+            background-color: #d1fae5;
+            border-left: 3px solid #10b981;
+        }
+
+        .dia.ferias-2 {
+            background-color: #dbeafe;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .dia.abono {
+            background-color: #fef3c7;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .dia-numero {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .evento {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .evento-ferias-1 {
+            background-color: #a7f3d0;
+            color: #065f46;
+        }
+
+        .evento-ferias-2 {
+            background-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .evento-abono {
+            background-color: #fde68a;
+            color: #92400e;
+        }
+
+        .outro-mes {
+            color: #9ca3af;
+            background-color: #f9fafb;
+        }
+
+        .hoje {
+            background-color: #eff6ff;
+            border: 1px solid #3b82f6;
+        }
+
+        .legenda-cor {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .legenda-ferias-1 {
+            background-color: #d1fae5;
+            border-left: 3px solid #10b981;
+        }
+
+        .legenda-ferias-2 {
+            background-color: #dbeafe;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .legenda-abono {
+            background-color: #fef3c7;
+            border-left: 3px solid #f59e0b;
+        }

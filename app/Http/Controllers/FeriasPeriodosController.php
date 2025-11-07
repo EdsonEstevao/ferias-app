@@ -6,6 +6,7 @@ use App\Models\FeriasEvento;
 use App\Models\FeriasPeriodos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class FeriasPeriodosController extends Controller
 {
@@ -47,13 +48,20 @@ class FeriasPeriodosController extends Controller
         $request->validate([
             'inicio' => 'required|date',
             'fim' => 'required|date|after_or_equal:inicio',
-            'dias' => 'required|integer|min:1',
             'justificativa' => 'nullable|string|max:500'
         ]);
+
+        $dias = Carbon::parse($request->inicio)->diffInDays($request->fim) + 1;
+
+        $request['dias'] = $dias;
 
         try {
             $periodo = FeriasPeriodos::findOrFail($id);
             $periodo->update($request->all());
+
+
+
+            flash()->success('Período atualizado com sucesso!');
 
             return response()->json([
                 'message' => 'Período atualizado com sucesso!',
@@ -103,7 +111,11 @@ class FeriasPeriodosController extends Controller
             return response()->json(['error' => 'Período já está marcado como usufruído'], 422);
         }
 
+
         $periodo->marcarComoUsufruido();
+
+
+        // dd($periodo);
 
 
 
@@ -111,16 +123,14 @@ class FeriasPeriodosController extends Controller
                                     ->where('ordem', $periodo->ordem)
                                 ->get();
 
-        // dd($ferias);
+        // dd($periodo, $ferias);
 
         $ferias->each(function ($feria) {
             $feria->marcarComoUsufruido();
         });
 
-        // $ferias->marcarComoUsufruido();
-
         flash()->success('Período marcado como usufruído com sucesso!');
-        return response()->json(['message' => 'Período marcado como usufruído com sucesso!']);
+        return response()->json(['success' => true]);
     }
 
     public function desmarcarUsufruto( $id)
@@ -143,7 +153,7 @@ class FeriasPeriodosController extends Controller
         });
 
         flash()->success('Usufruto desmarcado com sucesso!');
-        return response()->json(['message' => 'Usufruto desmarcado com sucesso!']);
+        return response()->json(['success' => true]);
     }
 
     // public function marcarComoUsufruido(Request $request, $id)

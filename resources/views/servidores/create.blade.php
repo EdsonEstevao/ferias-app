@@ -321,7 +321,7 @@
                     <div class="flex items-center justify-between pt-8 mt-8 border-t border-gray-200">
                         <!-- Botão Voltar -->
                         <div>
-                            <a href="{{ route('servidores.index') }}"
+                            <a href="{{ url()->previous() }}"
                                 class="inline-flex items-center px-6 py-3 font-medium text-gray-700 transition-colors duration-200 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

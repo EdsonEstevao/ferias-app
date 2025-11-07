@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
 
 class VinculoFuncional extends Model
@@ -19,6 +20,7 @@ class VinculoFuncional extends Model
         'processo_disposicao',
         'numero_memorando',
         'tipo_movimentacao',
+        'status',
         'data_movimentacao',
         'ato_normativo',
         'observacao',
@@ -49,8 +51,19 @@ class VinculoFuncional extends Model
 
     ];
 
+    protected $casts = [
+        'tipo_servidor' => 'array',
+    ];
+
     public function servidor()
     {
         return $this->belongsTo(Servidor::class);
+    }
+
+    public function scopeAtivos($query)
+    {
+        // return $query->where('status', 'Ativo');
+        return $query->whereNull('data_saida')
+                        ->orWhere('data_saida', '>', now());
     }
 }

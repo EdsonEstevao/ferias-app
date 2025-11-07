@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cargo;
 use App\Models\CargoSecretariaSimbologia;
+use App\Models\Secretaria;
 use Illuminate\Http\Request;
 
 class CargoController extends Controller
@@ -20,6 +21,8 @@ class CargoController extends Controller
         //     ->pluck('cargo')
         //     ->unique('id')
         //     ->values();
+        $secretariaId = Secretaria::where('sigla', $secretariaId)->first()->id;
+
         $cargos = CargoSecretariaSimbologia::with(['cargo', 'simbologia'])
             ->where('secretaria_id', $secretariaId)
             ->get()

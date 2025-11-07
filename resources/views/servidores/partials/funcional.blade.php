@@ -1,5 +1,3 @@
-{{-- @dd($servidor, $vinculo, $secretarias->first(), $cargos) --}}
-{{-- @dd($servidor, $vinculo->secretaria->id, $secretarias, $cargos) --}}
 <div class="space-y-8" x-data="vinculoFuncional()">
     <!-- Header com Título -->
     <div class="pb-4 border-b border-gray-200">
@@ -33,8 +31,8 @@
                         required>
                         <option value="" class="text-gray-400">Selecione uma secretaria</option>
                         @foreach ($secretarias as $s)
-                            <option value="{{ $s->id }}"
-                                {{ $vinculo?->secretaria->id == $s->id ? 'selected' : '' }}>
+                            <option value="{{ $s->sigla }}"
+                                {{ $vinculo->secretaria == $s->sigla ? 'selected' : '' }}>
                                 {{ $s->sigla ?? '' }}
                             </option>
                         @endforeach
@@ -73,7 +71,7 @@
                             x-text="!secretariaSelecionada ? 'Selecione primeiro a secretaria'  : (cargos.length === 0 ? 'Nenhum cargo disponível' : 'Selecione um cargo')">
                         </option>
                         <template x-for="cargo in cargos" :key="cargo.id">
-                            <option :value="cargo.id" x-text="cargo.nome"
+                            <option :value="cargo.nome" x-text="cargo.nome"
                                 x-bind:="cargoSelecionado == cargo.nome ? 'selected' : ''" class="py-2 text-gray-700">
                             </option>
                         </template>
@@ -84,7 +82,7 @@
                     </span>
                     <div x-show="cargoSelecionado" class="mt-2 text-sm text-purple-600">
                         <span class="font-medium">Simbologia:</span>
-                        <span x-text="cargos.find(c => c.id == cargoSelecionado)?.simbologia || '—'"></span>
+                        <span x-text="cargos.find(c => c.nome == cargoSelecionado)?.simbologia || '—'"></span>
                     </div>
 
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
@@ -115,7 +113,7 @@
 
         <!-- Coluna 2 - Dados do Servidor -->
         <div class="space-y-6">
-            <!-- Tipo de Servidor -->
+            <!-- Tipo de Servidor (Múltipla Seleção) -->
             <div class="group">
                 <label for="tipo_servidor"
                     class="flex items-center gap-1 mb-2 text-sm font-medium text-gray-700 transition-colors duration-200 group-hover:text-gray-900">
@@ -125,25 +123,41 @@
                     </svg>
                     Tipo de Servidor
                 </label>
-                <div class="relative">
-                    <select name="tipo_servidor" id="tipo_servidor"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 shadow-sm hover:border-gray-400 bg-white appearance-none cursor-pointer pr-10">
-                        <option value="" class="text-gray-400">Selecione o tipo</option>
-                        @foreach (['Federal', 'Cedido', 'Disponibilizado', 'Interno', 'Regional'] as $tipo)
-                            <option value="{{ $tipo }}"
-                                {{ (isset($vinculo) && $vinculo->tipo_servidor == $tipo ? 'selected' : old('tipo_servidor') == $tipo) ? 'selected' : '' }}
-                                class="py-2 text-gray-700">
+                <div class="space-y-2">
+                    @php
+                        // Converte os tipos para array (se for string com vírgulas ou JSON)
+                        $tiposSelecionados = [];
+                        if (isset($vinculo->tipo_servidor)) {
+                            if (is_string($vinculo->tipo_servidor)) {
+                                // Tenta decodificar como JSON primeiro
+                                $jsonDecoded = json_decode($vinculo->tipo_servidor, true);
+                                if (json_last_error() === JSON_ERROR_NONE) {
+                                    $tiposSelecionados = $jsonDecoded;
+                                } else {
+                                    // Se não for JSON, assume que é separado por vírgulas
+                                    $tiposSelecionados = array_map('trim', explode(',', $vinculo->tipo_servidor));
+                                }
+                            } elseif (is_array($vinculo->tipo_servidor)) {
+                                $tiposSelecionados = $vinculo->tipo_servidor;
+                            }
+                        }
+                        // Para old values
+                        $oldTipos = old('tipo_servidor', $tiposSelecionados);
+                    @endphp
+
+                    @foreach (['federal', 'cedido', 'interno', 'disponibilizado', 'regional'] as $tipo)
+                        <label class="flex items-center gap-2 cursor-pointer group/checkbox">
+                            <input type="checkbox" name="tipo_servidor[]" value="{{ $tipo }}"
+                                {{ in_array($tipo, (array) $oldTipos) ? 'checked' : '' }}
+                                class="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500">
+                            <span
+                                class="text-sm text-gray-700 capitalize transition-colors group-hover/checkbox:text-gray-900">
                                 {{ $tipo }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
+                            </span>
+                        </label>
+                    @endforeach
                 </div>
+                <p class="mt-1 text-xs text-gray-500">Selecione um ou mais tipos</p>
             </div>
 
             <!-- Sexo -->
@@ -189,14 +203,14 @@
                 </label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 cursor-pointer group/radio">
-                        <input type="radio" name="is_diretor" value="Sim"
+                        <input type="radio" name="is_diretor" value="1"
                             {{ old('is_diretor', $vinculo->is_diretor ?? 0) == 1 ? 'checked' : '' }}
                             class="w-4 h-4 text-yellow-500 border-gray-300 focus:ring-yellow-500">
                         <span
                             class="text-sm text-gray-700 transition-colors group-hover/radio:text-gray-900">Sim</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer group/radio">
-                        <input type="radio" name="is_diretor" value="Não"
+                        <input type="radio" name="is_diretor" value="0"
                             {{ old('is_diretor', $vinculo->is_diretor ?? 1) == 0 ? 'checked' : '' }}
                             class="w-4 h-4 text-yellow-500 border-gray-300 focus:ring-yellow-500 ">
                         <span
@@ -244,17 +258,17 @@
 <script>
     function vinculoFuncional() {
         return {
-            secretariaSelecionada: '{{ isset($vinculo->secretaria) ? old('secretaria', $vinculo->secretaria->id) : '' }}',
-            cargoSelecionado: '{{ old('cargo', $vinculo->cargo->id ?? '') }}',
+            secretariaSelecionada: '{{ isset($vinculo->secretaria) ? old('secretaria', $vinculo->secretaria) : '' }}',
+            cargoSelecionado: '{{ old('cargo', $vinculo->cargo ?? '') }}',
 
             cargos: [],
             carregandoCargos: false,
             init() {
                 // Se já tem uma secretaria selecionada (no caso de old), carrega os cargos
-                this.cargoSelecionado = '{{ old('cargo', $vinculo->cargo->id ?? '') }}';
+                this.cargoSelecionado = '{{ old('cargo', $vinculo->cargo ?? '') }}';
                 if (this.secretariaSelecionada) {
                     this.carregarCargos().then(() => {
-                        this.cargoSelecionado = '{{ old('cargo', $vinculo->cargo->id ?? '') }}';
+                        this.cargoSelecionado = '{{ old('cargo', $vinculo->cargo ?? '') }}';
                     });
                 }
             },

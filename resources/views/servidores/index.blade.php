@@ -88,7 +88,7 @@
                                     Secretaria
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-xs font-semibold tracking-wider text-right text-gray-700 uppercase">
+                                    class="px-6 py-4 text-xs font-semibold tracking-wider text-center text-gray-700 uppercase">
                                     Ações
                                 </th>
                             </tr>
@@ -139,9 +139,24 @@
                                     <!-- Ações -->
                                     <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                                         <div class="flex items-center justify-end space-x-2">
+                                            <!-- Botão Visualizar -->
+                                            <a :href="`/servidores/${servidor.id}`"
+                                                class="inline-flex items-center p-2 text-blue-400 transition-colors duration-200 rounded-lg hover:text-blue-600 hover:bg-blue-50"
+                                                title="Ver detalhes do servidor">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+
                                             <!-- Botão Editar -->
                                             <a :href="`/servidores/${servidor.id}/edit`"
-                                                class="inline-flex items-center p-2 text-gray-400 transition-colors duration-200 rounded-lg hover:text-blue-600 hover:bg-blue-50"
+                                                class="inline-flex items-center p-2 text-orange-400 transition-colors duration-200 rounded-lg hover:text-orange-600 hover:bg-orange-50"
                                                 title="Editar servidor">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -154,7 +169,7 @@
 
                                             <!-- Botão Excluir -->
                                             <button @click="excluir(servidor.id)"
-                                                class="inline-flex items-center p-2 text-gray-400 transition-colors duration-200 rounded-lg hover:text-red-600 hover:bg-red-50"
+                                                class="inline-flex items-center p-2 text-red-800 transition-colors duration-200 rounded-lg hover:text-red-600 hover:bg-red-50"
                                                 title="Excluir servidor">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -167,13 +182,26 @@
 
                                             <!-- Botão Ver Férias -->
                                             <a :href="urlFerias(servidor.id)"
-                                                class="inline-flex items-center p-2 text-gray-400 transition-colors duration-200 rounded-lg hover:text-green-600 hover:bg-green-50"
-                                                title="Ver férias">
+                                                class="inline-flex items-center p-2 text-green-400 transition-colors duration-200 rounded-lg hover:text-green-600 hover:bg-green-50"
+                                                title="Lançar férias">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+
+                                            <!-- Botão de Exoneração -->
+                                            <a :href="urlExoneracao(servidor.id)"
+                                                class="inline-flex items-center p-2 text-red-400 transition-colors duration-200 rounded-lg hover:text-red-600 hover:bg-red-50"
+                                                title="Efetivar exoneração">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
                                                     </path>
                                                 </svg>
                                             </a>
@@ -215,7 +243,7 @@
                     <div x-show="carregando" class="py-12 text-center">
                         <div class="flex justify-center">
                             <div
-                                class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin">
+                                class="w-8 h-8 border-4 border-blue-600 rounded-full border-t-transparent animate-spin">
                             </div>
                         </div>
                         <p class="mt-2 text-gray-500">Carregando servidores...</p>
@@ -429,6 +457,10 @@
                 urlFerias(servidorId) {
                     return '{{ route('ferias.create', ['servidor' => ':id']) }}'.replace(':id',
                         servidorId);
+                },
+                urlExoneracao(servidorId) {
+                    return '{{ route('servidores.exoneracao.create', ['servidor' => ':id']) }}'
+                        .replace(':id', servidorId);
                 },
 
                 async excluir(id) {

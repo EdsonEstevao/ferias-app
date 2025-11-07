@@ -3,14 +3,17 @@
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExoneracaoController;
 use App\Http\Controllers\FeriasController;
 use App\Http\Controllers\FeriasImportController;
 use App\Http\Controllers\FeriasPeriodosController;
+use App\Http\Controllers\NomeacaoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecretariaController;
 use App\Http\Controllers\ServidorController;
+use App\Http\Controllers\ServidorImportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VinculoController;
 use App\Http\Controllers\VinculoFuncionalController;
@@ -19,12 +22,18 @@ use Illuminate\Support\Facades\Route;
 
 // Route::middleware('auth')->get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
 
+// Dashboard
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-Route::get('/api/dashboard/dados', [DashboardController::class, 'dadosDashboard']);
-Route::get('/api/dashboard/estatisticas', [DashboardController::class, 'estatisticasDetalhadas']);
+// APIs para o dashboard
+Route::get('/dashboard/calendario', [DashboardController::class, 'calendarioData'])->name('dashboard.calendario');
+Route::get('/dashboard/dados', [DashboardController::class, 'dadosDashboard'])->name('dashboard.dados');
+Route::get('/dashboard/estatisticas', [DashboardController::class, 'estatisticasDetalhadas'])->name('dashboard.estatisticas');
+Route::get('/dashboard/servidor/{servidorId}/periodos', [DashboardController::class, 'periodosPorServidor'])->name('dashboard.periodos-servidor');
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/online-users-count', function () {
@@ -41,17 +50,13 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-
-
-// Route::middleware(['permission:visualizar ferias'])->group(function () {
-//     Route::get('/ferias', [FeriasController::class, 'index'])->name('ferias.index');
-// });
-
+// Férias
 Route::middleware(['role:admin|gestor|super admin'])->group(function () {
     Route::prefix('/ferias')->group(function () {
         Route::get('/', [FeriasController::class, 'index'])->name('ferias.index');
 
         Route::get('/create/{servidor}', [FeriasController::class, 'create'])->name('ferias.create');
+        Route::get('/periodo/{id}/detalhes', [FeriasController::class, 'detalhes'])->name('ferias.detalhes');
         Route::get('/{id}/show', [FeriasController::class, 'show'])->name('ferias.show');
         Route::get('/{id}/edit', [FeriasController::class, 'edit'])->name('ferias.edit');
         Route::put('/{id}', [FeriasController::class, 'update'])->name('ferias.update');
@@ -73,21 +78,92 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
         // Importar Arquivo Csv
         Route::get('/import', [FeriasImportController::class, 'index'])->name('ferias.import');
         Route::post('/import', [FeriasImportController::class, 'importCsv'])->name('ferias.import.csv');
+
+
+
+        Route::get('/filtro', [FeriasController::class, 'filtro'])->name('ferias.filtro');
+        Route::get('/filtro-pdf', [FeriasController::class, 'filtroPdf'])->name('ferias.filtro.pdf');
+        Route::get('/filtro/excel', [FeriasController::class, 'filtroExcel'])->name('ferias.filtro.excel');
+        // Api para o filtro
+        Route::get('/filtro/dados', [FeriasController::class, 'filtroDados'])->name('ferias.filtro.dados');
     });
 
 });
 
-// Servidores
+
+ // routes/web.php
+Route::get('/servidores-nomeados', [NomeacaoController::class, 'index'])->name('servidores.nomeados.index');
+
+// Servidores - Todas as rotas organizadas
 Route::middleware(['role:admin|gestor|super admin'])->group(function () {
 
-    Route::prefix('/servidores')->group(function () {
-        Route::get('/', [ServidorController::class, 'index'])->name('servidores.index');
-        Route::get('/{servidor}/edit', [ServidorController::class, 'edit'])->name('servidores.edit');
-        Route::put('/{servidor}', [ServidorController::class, 'update'])->name('servidores.update');
-        Route::get('/create', [ServidorController::class, 'create'])->name('servidores.create');
-        Route::post('/', [ServidorController::class, 'store'])->name('servidores.store');
-        Route::get('/{servidor}', [ServidorController::class, 'show'])->name('servidores.show');
-        Route::delete('/{servidor}', [ServidorController::class, 'destroy'])->name('servidores.destroy');
+    Route::prefix('servidores')->name('servidores.')->group(function () {
+
+
+
+        // Nova rota para visualização por departamento
+        Route::get('/por-departamento', [ServidorController::class, 'porDepartamento'])
+             ->name('por-departamento');
+
+        // Rotas de nomeação
+        Route::get('/{servidor}/nomeacao/create', [NomeacaoController::class, 'create'])->name('nomeacao.create');
+        Route::post('/{servidor}/nomeacao', [NomeacaoController::class, 'store'])->name('nomeacao.store');
+
+
+        // Rotas de exoneração
+        Route::get('/exoneracao', [ExoneracaoController::class, 'index'])->name('exoneracao.index');
+        Route::get('/exoneracao/create/{servidor}', [ExoneracaoController::class, 'create'])->name('exoneracao.create');
+        Route::post('/exoneracao/{servidor}', [ExoneracaoController::class, 'store'])->name('exoneracao.store');
+        Route::put('/exoneracao/{vinculo}/restaurar', [ExoneracaoController::class, 'restaurar'])->name('exoneracao.restaurar');
+
+
+
+        // CRUD
+        Route::get('/', [ServidorController::class, 'index'])->name('index');
+        Route::get('/create', [ServidorController::class, 'create'])->name('create');
+        Route::post('/', [ServidorController::class, 'storeServidor'])->name('store');
+        // Route::post('/', [ServidorController::class, 'store'])->name('store');
+        Route::get('/{servidor}', [ServidorController::class, 'show'])->name('show');
+        Route::get('/{servidor}/edit', [ServidorController::class, 'edit'])->name('edit');
+        Route::put('/{servidor}', [ServidorController::class, 'update'])->name('update');
+        Route::delete('/{servidor}', [ServidorController::class, 'destroy'])->name('destroy');
+
+
+
+
+
+        /**
+         * inicio
+         */
+
+        // Route::middleware(['role:gestor|admin|super admin'])->group(function (){
+            // Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
+            // Route::get('/servidores/{servidor}/edit', [ServidorController::class, 'edit'])->name('servidores.edit');
+            // Route::put('/servidores/{servidor}', [ServidorController::class, 'update'])->name('servidores.update');
+            // Route::get('/servidores/create', [ServidorController::class, 'create'])->name('servidores.create');
+
+            // Route::get('/servidores/{servidor}', [ServidorController::class, 'show'])->name('servidores.show');
+            // Route::delete('/servidores/{servidor}', [ServidorController::class, 'destroy'])->name('servidores.destroy');
+        // });
+
+        /**
+         * Fim
+         */
+
+
+
+
+        // Importação
+        Route::get('/importar/interface', [ServidorImportController::class, 'showImportForm'])
+             ->name('import.form');
+        Route::post('/importar/preview', [ServidorImportController::class, 'preview'])
+             ->name('import.preview');
+        Route::post('/importar/processar', [ServidorImportController::class, 'process'])
+             ->name('import.process');
+        Route::get('/importar/template', [ServidorImportController::class, 'downloadJsonTemplate'])
+             ->name('import.template.json');
+
+
     });
 
 });
@@ -117,13 +193,7 @@ Route::delete('/secretarias/{secretaria}', [SecretariaController::class, 'destro
 
 
 // Cargos por Secretaria
-Route::get('api/cargos/{secretaria}', [CargoController::class, 'getCargosBySecretaria'])->name('api.cargos.by.secretaria');
-
-
-// Route::put('/secretarias/{id}', [SecretariaController::class, 'update'])->name('secretarias.update');
-// Route::delete('/secretarias/{id}', [SecretariaController::class, 'destroy'])->name('secretarias.destroy');
-
-
+Route::get('/api/cargos/{secretaria}', [CargoController::class, 'getCargosBySecretaria'])->name('api.cargos.by.secretaria');
 
 
 // Relatorios de ferias do sevidores ativos
@@ -148,39 +218,11 @@ Route::middleware(['role:admin|super admin'])->group(function () {
 });
 
 
-// Gestor
-// Route::middleware(['role:gestor|admin'])->group(function () {
-//     Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
 
-// });
-
-// Route::get('/gestor/ferias/{servidor}', FeriasPainel::class)
-//     ->middleware(['role:gestor|admin'])
-//     ->name('gestor.ferias.painel');
 Route::get('/gestor/ferias/{servidorId}', FeriasPainel::class)
     ->middleware(['role:gestor|admin|super admin'])
     ->name('gestor.ferias.painel');
 
-// Route::get('/gestor/servidores/{servidor}/ferias', GestorFeriasPainel::class)
-// ->middleware(['role:gestor|admin'])
-// ->name('gestor.ferias.painel');
-
-
-
-Route::middleware(['role:gestor|admin|super admin'])->group(function (){
-    Route::get('/servidores', [ServidorController::class, 'index'])->name('servidores.index');
-    Route::get('/servidores/{servidor}/edit', [ServidorController::class, 'edit'])->name('servidores.edit');
-    Route::put('/servidores/{servidor}', [ServidorController::class, 'update'])->name('servidores.update');
-    Route::get('/servidores/create', [ServidorController::class, 'create'])->name('servidores.create');
-    Route::post('/servidores', [ServidorController::class, 'store'])->name('servidores.store');
-    Route::get('/servidores/{servidor}', [ServidorController::class, 'show'])->name('servidores.show');
-    Route::delete('/servidores/{servidor}', [ServidorController::class, 'destroy'])->name('servidores.destroy');
-
-    // Route::get('gestor/servidores/{servidor}/ferias', GestorFeriasPainel::class)->name('gestor.ferias.painel');
-});
-// get('/servidores/{servidor}', function () {
-//     return view('servidores.perfil', compact('servidor'));
-// })->middleware(['auth'])->name('servidores.perfil');
 
 
 
@@ -192,10 +234,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-// Rotas para Férias
-// Route::get('/ferias', [FeriasController::class, 'index']);
-// Route::delete('/ferias/{id}', [FeriasController::class, 'destroy']);
 
 // Rotas para Períodos de Férias
 /*/api/periodos-ferias/${periodoId}/usufruir*/

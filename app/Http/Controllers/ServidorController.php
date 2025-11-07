@@ -74,7 +74,21 @@ class ServidorController extends Controller
         ];
 
         // dd($data);
-        return view('servidores.create', $data);
+        return view('servidores.cadastro-servidor', $data);
+        // return view('servidores.create', $data);
+    }
+    public function storeServidor(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'cpf' => ['nullable', 'regex:/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/']
+        ]);
+
+        $servidor = Servidor::create($request->only(['nome', 'cpf', 'email', 'matricula', 'telefone']));
+
+        flash()->success('Servidor cadastrado com sucesso!');
+
+        return redirect()->route('servidores.index');
     }
 
     public function store(Request $request)
@@ -110,6 +124,9 @@ class ServidorController extends Controller
 
         $request->merge(['servidor_id' => $servidor->id]);
 
+
+
+
         VinculoFuncional::create($request->except(['nome', 'email', 'matricula', 'telefone']));
 
         flash()->success('Servidor cadastrado com sucesso!');
@@ -122,14 +139,63 @@ class ServidorController extends Controller
         // Aqui você implementa a lógica para buscar os cargos baseado na secretaria
         // Exemplo básico:
         $cargos = Cargo::where('secretaria_sigla', $secretariaSigla)
-                       ->orWhereHas('secretaria', function($query) use ($secretariaSigla) {
-                           $query->where('sigla', $secretariaSigla);
-                       })
-                       ->get();
+            ->orWhereHas('secretaria', function($query) use ($secretariaSigla) {
+                $query->where('sigla', $secretariaSigla);
+            })->get();
 
         return response()->json([
             'cargos' => $cargos
         ]);
+    }
+
+     // No ServidorController
+    public function porDepartamento()
+    {
+
+        // Usar o relacionamento vinculoAtual para pegar apenas o vínculo atual de cada servidor
+    $servidoresComVinculoAtual = Servidor::with(['vinculoAtual' => function($query) {
+                                    $query->ativos();
+                                }])
+                                ->whereHas('vinculoAtual') // Apenas servidores com vínculo ativo
+                                ->get();
+
+    // Agrupar por departamento através do vínculo atual
+    $servidoresPorDepartamento = $servidoresComVinculoAtual
+        ->filter(function($servidor) {
+            return !is_null($servidor->vinculoAtual);
+        })
+        ->groupBy(function($servidor) {
+            return $servidor->vinculoAtual->departamento;
+        })
+        ->map(function($servidores) {
+            return $servidores->sortBy('nome');
+        })
+        ->sortBy(function($servidores, $departamento) {
+            return $departamento;
+        });
+
+        // Restante do código...
+        $departamentoMaisPopuloso = $servidoresPorDepartamento->sortByDesc(function ($servidores) {
+            return $servidores->count();
+        })->first();
+
+        $departamentosComUm = $servidoresPorDepartamento->filter(function ($servidores) {
+            return $servidores->count() === 1;
+        })->count();
+
+    // return view('servidores.por-departamento', [
+    //     'departamentoMaisPopuloso' => $departamentoMaisPopuloso,
+    //     'servidoresPorDepartamento' => $servidoresPorDepartamento,
+    //     'departamentosComUm' => $departamentosComUm
+    // ]);
+
+        $data = [
+            'departamentoMaisPopuloso' => $departamentoMaisPopuloso,
+            'servidoresPorDepartamento' => $servidoresPorDepartamento,
+            'departamentosComUm' => $departamentosComUm
+        ];
+
+        return view('servidores.por-departamento', $data);
     }
     public function edit(Request $request, $servidorId)
     {
@@ -138,16 +204,23 @@ class ServidorController extends Controller
         $data = [];
         $servidor = Servidor::with(['vinculos'])->findOrFail($servidorId);
 
+        $vinculo = $servidor->vinculoAtual()->first();
 
-        $secretarias = Secretaria::all();
+
+        // dd($servidor);
+
+
+        $secretarias = Secretaria::whereNull('secretaria_origem_id')->orderBy('sigla')->get();
         $cargos = Cargo::orderBy('nome')->get();
         $simbologias = Simbologia::all();
         $cargoSecretariaSimbologias = CargoSecretariaSimbologia::all();
 
-        foreach ($servidor->vinculos as $vinculo) {
-            $vinculo->secretaria = Secretaria::where('sigla', $vinculo->secretaria)->first();
-            $vinculo->cargo = Cargo::where('nome', $vinculo->cargo)->first();
-        }
+        // foreach ($servidor->vinculos as $vinculo) {
+        //     $vinculo->secretaria = Secretaria::where('sigla', $vinculo->secretaria)->first();
+        //     $vinculo->cargo = Cargo::where('nome', $vinculo->cargo)->first();
+        // }
+
+        // dd($servidor);
 
         // regex telefone vindo do banco de dados que esta no formato 9999999999
         $telefone = $servidor->telefone;
@@ -168,10 +241,11 @@ class ServidorController extends Controller
             'cargos' => $cargos,
             'simbologias' => $simbologias,
             'cargoSecretariaSimbologias' => $cargoSecretariaSimbologias,
-            'id' => $servidorId
+            'id' => $servidorId,
+            'vinculo' => $vinculo,
         ];
 
-        // dd($servidor->vinculos);
+        // dd($servidor, $vinculo);
 
         return view('servidores.edit', $data);
     }
@@ -228,43 +302,36 @@ class ServidorController extends Controller
         return redirect()->route('servidores.index');
     }
 
-    // public function store(Request $request)
-    // {
+    public function show(Servidor $servidor)
+    {
+        // servidor for null
+        if (!$servidor) {
+            flash()->error('Servidor não encontrado.');
+            return redirect()->route('servidores.index');
+        }
 
-    //     // $request->validate([
-    //     //     'cpf' => ['required', 'string', 'max:14', 'unique:servidores,cpf', new Cpf],
-    //     // ]);
-    //     $request->validate([
-    //         'nome' => 'required|string|max:255',
-    //         'cpf' => 'required|string|max:14|unique:servidores,cpf',
-    //         // 'cpf' => ['required', 'string', 'max:14', 'unique:servidores,cpf', new Cpf],
-    //         'matricula' => 'required|string|max:20|unique:servidores,matricula',
-    //         'cargo' => 'nullable|string|max:100',
-    //         'setor' => 'nullable|string|max:100',
-    //     ]);
 
-    //     $servidor = Servidor::create($request->all());
+        $servidor->load(['vinculos' => function($query) {
+            // $query->where('status', 'Ativo');
+            $query->latest();
+            // $query->latest()->with('secretaria', 'cargo');
+        }]);
 
-    //       $servidor->vinculos()->create([
-    //         'cargo' => $request->cargo,
-    //         'secretaria' => $request->secretaria,
-    //         'lotacao' => $request->lotacao,
-    //         'tipo_servidor' => $request->tipo_servidor,
-    //         'departamento' => $request->departamento,
-    //         'processo_implantacao' => $request->processo_implantacao,
-    //         'processo_disposicao' => $request->processo_disposicao,
-    //         'numero_memorando' => $request->numero_memorando,
-    //         'tipo_movimentacao' => $request->tipo_movimentacao,
-    //         'data_movimentacao' => $request->data_movimentacao,
-    //         'ato_normativo' => $request->ato_normativo,
-    //         'observacao' => $request->observacao
-    //     ]);
+        $vinculoAtual = $servidor->vinculos->first();
 
-    //     flash()->success('Servidor cadastrado com sucesso!');
+        // if ($vinculoAtual) {
+        //     $vinculoAtual->secretaria = Secretaria::where('sigla', $vinculoAtual->secretaria)->first();
+        //     $vinculoAtual->cargo = Cargo::where('nome', $vinculoAtual->cargo)->first();
+        // }
 
-    //     return redirect()->route('servidores.index'); //->with('success', 'Servidor cadastrado com sucesso!');
+        // dd($servidor);
 
-    // }
+
+
+        return view('servidores.show', compact('servidor', 'vinculoAtual'));
+    }
+
+
 
     public function destroy($id)
     {

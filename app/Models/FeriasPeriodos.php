@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class FeriasPeriodos extends Model
 {
@@ -27,8 +28,8 @@ class FeriasPeriodos extends Model
     ];
      protected $casts = [
         'usufruido' => 'boolean',
-        'inicio' => 'date',
-        'fim' => 'date',
+        'inicio' => 'date:Y-m-d',
+        'fim' => 'date:Y-m-d',
         'data_usufruto' => 'datetime',
     ];
 
@@ -129,6 +130,16 @@ class FeriasPeriodos extends Model
         return !$this->usufruido &&
                $this->ativo &&
                in_array($this->situacao, ['Planejado', 'Remarcado']);
+    }
+
+     public function getInicioFormatadoAttribute()
+    {
+        return $this->inicio ? Carbon::parse($this->inicio)->format('Y-m-d') : null;
+    }
+
+    public function getFimFormatadoAttribute()
+    {
+        return $this->fim ? Carbon::parse($this->fim)->format('Y-m-d') : null;
     }
 
 
