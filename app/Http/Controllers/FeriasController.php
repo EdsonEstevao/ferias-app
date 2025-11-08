@@ -646,6 +646,9 @@ class FeriasController extends Controller
 
         $periodos = $query->orderBy('inicio', 'desc')->paginate(20);
 
+        //customizado
+        // $periodos = $periodos->withPath(route('ferias.filtro'))->onEachSide(1);
+
         // CORREÇÃO DAS ESTATÍSTICAS
         $totalRegistros = $periodos->total();
 
@@ -661,7 +664,11 @@ class FeriasController extends Controller
         $totalDias = $query->sum('dias');
         $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
 
+
+
         $meses = $this->getMeses();
+
+
 
         $data = [
             'periodos' => $periodos,

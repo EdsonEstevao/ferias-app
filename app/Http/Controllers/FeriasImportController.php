@@ -4,14 +4,140 @@ namespace App\Http\Controllers;
 
 use App\Models\Ferias;
 use App\Models\Servidor;
+use App\Services\FeriasImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class FeriasImportController extends Controller
 {
+    private $feriasImportService;
     //
+    public function __construct(FeriasImportService $feriasImportService)
+    {
+        $this->feriasImportService = $feriasImportService;
+    }
+
     public function index(Request $request) {
         return view('ferias.importCsv');
+    }
+    public function indexJson(Request $request)
+    {
+
+        return view('ferias-import.index');
+
+
+    }
+
+    public function createJson(Request $request) {
+        return view('ferias-import.create');
+    }
+
+    public function storeJson(Request $request)
+    {
+
+          $request->validate([
+            'dados_json' => 'required|string',
+            'ano_exercicio' => 'required|integer|min:2020|max:2030',
+        ]);
+
+        try {
+            // Decodificar JSON
+            $dados = json_decode($request->dados_json, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'JSON inválido: ' . json_last_error_msg()
+                ], 422);
+            }
+
+            // Validar estrutura básica
+            if (!$this->validarEstruturaJson($dados)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Estrutura do JSON inválida. Verifique o formato.'
+                ], 422);
+            }
+
+            // Processar importação
+            $resultado = $this->feriasImportService->importarDeJson(
+                $dados,
+                $request->ano_exercicio
+            );
+
+            return response()->json($resultado);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro no processamento: ' . $e->getMessage()
+            ], 500);
+        }
+
+    }
+      /**
+     * Validar estrutura básica do JSON
+     */
+    private function validarEstruturaJson($dados)
+    {
+        if (!is_array($dados)) {
+            return false;
+        }
+
+        // Verificar se é uma lista de servidores
+        foreach ($dados as $item) {
+            if (!isset($item['nome']) || !isset($item['matricula'])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Template de JSON para ajudar os usuários
+     */
+    public function template()
+    {
+        $template = [
+            [
+                "nome" => "FULANO DE TAL SILVA",
+                "matricula" => "300023456",
+                "periodos_ferias" => [
+                    [
+                        "inicio" => "2024-01-10",
+                        "fim" => "2024-01-19",
+                        "dias" => 10
+                    ],
+                    [
+                        "inicio" => "2024-07-15",
+                        "fim" => "2024-07-24",
+                        "dias" => 10
+                    ]
+                ],
+                "periodos_abono" => [
+                    [
+                        "inicio" => "2024-02-01",
+                        "fim" => "2024-02-10",
+                        "dias" => 10
+                    ]
+                ]
+            ],
+            [
+                "nome" => "BELTRANA SANTOS OLIVEIRA",
+                "matricula" => "300023457",
+                "periodos_ferias" => [
+                    [
+                        "inicio" => "2024-03-01",
+                        "fim" => "2024-03-30",
+                        "dias" => 30
+                    ]
+                ],
+                "periodos_abono" => []
+            ]
+        ];
+
+        return response()->json($template, 200, [], JSON_PRETTY_PRINT);
     }
 
     public function importCsv(Request $request)

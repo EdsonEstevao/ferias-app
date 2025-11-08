@@ -12,6 +12,8 @@
 
     <!-- Icons Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
 
     <style>
         /* Estilos para o overlay do menu móvel */
@@ -169,6 +171,16 @@
                             class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">📅
                             Importar
                             Ferias (.Csv)</a>
+                        <!-- importar arquivo json -->
+                        <a href="{{ route('ferias-import.index') }}"
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
+                            <i class="fas fa-history mr-1"></i>
+                            Histórico
+                        </a>
+                        <a href="{{ route('ferias-import.create') }}"
+                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
+                            📅 Importar Ferias (.Json)
+                        </a>
 
                         <a href="{{ route('ferias.filtro') }}"
                             class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">
@@ -395,6 +407,8 @@
     <script src="https://kit.fontawesome.com/bf39cb216e.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

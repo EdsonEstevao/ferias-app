@@ -311,23 +311,25 @@
                                         resultados
                                     </div>
                                     <div class="flex space-x-1">
-                                        <button @click="mudarPagina(paginacao.current_page - 1)"
-                                            :disabled="paginacao.current_page === 1"
+                                        {{-- <button @click="mudarPagina(paginacao.current_page - 1)" --}}
+                                        <button @click="mudarPagina(1)" :disabled="paginacao.current_page === 1"
                                             class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            Anterior
+                                            Primeira
                                         </button>
                                         <template x-for="pagina in paginacao.links" :key="pagina.label">
-                                            <button @click="mudarPagina(pagina.label)"
+                                            <button
+                                                @click="mudarPagina(pagina.url ? pagina.url.split('?page=')[1] : pagina.label)"
                                                 :class="pagina.active ? 'bg-blue-600 text-white' :
                                                     'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-600'"
                                                 class="px-3 py-1 text-sm border border-gray-300 rounded-md dark:border-gray-600"
                                                 x-text="pagina.label" :disabled="!pagina.url || pagina.active">
                                             </button>
                                         </template>
-                                        <button @click="mudarPagina(paginacao.current_page + 1)"
+                                        {{-- <button @click="mudarPagina(paginacao.current_page + 1)" --}}
+                                        <button @click="mudarPagina(paginacao.last_page)"
                                             :disabled="paginacao.current_page === paginacao.last_page"
                                             class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            Próxima
+                                            Última
                                         </button>
                                     </div>
                                 </div>
@@ -409,6 +411,11 @@
                     if (this.filtrosAplicados) {
                         this.aplicarFiltros();
                     }
+
+                    // Filtrar apenas os links numéricos
+                    // this.paginacaoFiltrada = this.paginacao.links.filter(link => {
+                    //     return !['&laquo; Previous', 'Next &raquo;', '...'].includes(link.label);
+                    // });
                 },
 
                 carregarFiltrosDaURL() {

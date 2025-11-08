@@ -258,6 +258,19 @@ Route::delete('/api/ferias/{id}', [FeriasController::class, 'destroy']);
 
 
 
+// Rotas para importação de férias via JSON
+Route::middleware(['auth', 'role:super admin'])->group(function () {
+
+    Route::prefix('ferias-import')->name('ferias-import.')->group(function () {
+        Route::get('/', [FeriasImportController::class, 'indexJson'])->name('index');
+        Route::get('/create', [FeriasImportController::class, 'createJson'])->name('create');
+        Route::post('/', [FeriasImportController::class, 'storeJson'])->name('store');
+        Route::get('/template', [FeriasImportController::class, 'template'])->name('template');
+    });
+});
+
+
+
 
 Route::middleware(['auth', 'role:super admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
