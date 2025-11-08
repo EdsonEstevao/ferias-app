@@ -64,7 +64,7 @@
         </div>
 
         <!-- Filtros - Mobile Optimized -->
-        <div x-show="filtroAberto" class="p-3 mt-2 bg-white rounded shadow sm:p-4 space-y-2 mb-3" x-cloak="true"
+        <div x-show="filtroAberto" class="p-3 mt-2 mb-3 space-y-2 bg-white rounded shadow sm:p-4" x-cloak="true"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 transform scale-95"
             x-transition:enter-end="opacity-100 transform scale-100"
@@ -206,8 +206,11 @@
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
                     <div class="mb-3 space-y-3" x-data="{
                         aberto: false,
-                        periodoInicio: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}',
-                        periodoFim: '{{ date('Y-m-d', strtotime($periodo->fim)) }}',
+                        periodoInicioPai: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}',
+                        periodoFimPai: '{{ date('Y-m-d', strtotime($periodo->fim)) }}',
+                        periodoIdPai: '{{ $periodo->id }}',
+                        interrupcaoAberta: false
+                    
                     }">
 
                         <!-- Período original - Mobile Optimized -->
@@ -309,7 +312,7 @@
                                                     🔁 Remarcar
                                                 </button>
                                                 @if ($periodo->situacao !== 'Interrompido')
-                                                    <button @click="periodoId = {{ $periodo->id }}"
+                                                    <button @click="interrupcaoAberta = !interrupcaoAberta"
                                                         class="w-full px-2 py-2 text-xs rounded shadow-lg text-lime-600 hover:bg-lime-500 hover:text-lime-100 bg-lime-200 text-nowrap">
                                                         ✋ Interromper
                                                     </button>
@@ -322,9 +325,9 @@
                         </div>
 
                         <!-- Formulário de interrupção Mobile -->
-                        <div x-show="periodoId === {{ $periodo->id }}"
+                        <div x-show="interrupcaoAberta"
                             class="p-3 mt-2 space-y-3 transition duration-300 transform rounded bg-gray-50"
-                            x-transition:enter="transition ease-out duration-300"
+                            x-cloak="true" x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="transform opacity-0 scale-95"
                             x-transition:enter-end="transform opacity-100 scale-100"
                             x-transition:leave="transform opacity-100 scale-100"
@@ -332,8 +335,8 @@
                             x-transition:leave-end="transform opacity-0 scale-95">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Data da Interrupção</label>
-                                <input type="date" x-model="dataInterrupcao" :min="periodoInicio"
-                                    :max="periodoFim" class="block w-full mt-1 text-sm border-gray-300 rounded">
+                                <input type="date" x-model="dataInterrupcao" :min="periodoInicioPai"
+                                    :max="periodoFimPai" class="block w-full mt-1 text-sm border-gray-300 rounded">
                             </div>
 
                             <div>
@@ -365,7 +368,7 @@
                                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                             },
                                             body: JSON.stringify({
-                                                periodo_id: periodoId,
+                                                periodo_id: periodoIdPai,
                                                 data: dataInterrupcao,
                                                 motivo: motivo,
                                                 linkDiof: linkDiof,
@@ -375,7 +378,8 @@
                                         .then(res => res.json())
                                         .then(data => {
                                             alert(data.message);
-                                            periodoId = null;
+                                            interrupcaoAberta = false;
+                                            periodoIdPai = null;
                                             dataInterrupcao = '';
                                             motivo = '';
                                             linkDiof = '';
@@ -391,7 +395,8 @@
                                 </button>
                                 <button
                                     @click="setTimeout(() => {
-                                            periodoId = null;
+                                            interrupcaoAberta = false;
+                                            periodoIdPai = null;
                                             motivo = '';
                                             dataInterrupcao = '';
                                             tituloDiof = '';
@@ -677,6 +682,9 @@
                     mensagemSucesso: '',
                     mensagemErro: '',
                     diasCalculadosTexto: '',
+
+
+
 
                     init() {
                         console.log('Ferias Manager inicializado');

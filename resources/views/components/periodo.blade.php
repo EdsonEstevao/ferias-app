@@ -23,7 +23,13 @@
 
         @endphp
 
-        <div style="margin-left: {{ $nivel * 20 }}px;" class="p-3 {{ $classes }} rounded">
+        <div style="margin-left: {{ $nivel * 20 }}px;" class="p-3 {{ $classes }} rounded" x-data="{
+            interrupcaoAbertaFilho: false,
+            periodoInicioFilho: '{{ date('Y-m-d', strtotime($filho->inicio)) }}',
+            periodoFimFilho: '{{ date('Y-m-d', strtotime($filho->fim)) }}',
+            periodoIdFilho: '{{ $filho->id }}',
+        
+        }">
 
             <!-- Conteúdo do filho -->
             <div class="flex items-start justify-between">
@@ -135,7 +141,7 @@
                                 @endif
 
                                 @if ($filho->situacao !== 'Interrompido')
-                                    <button @click="periodoId = {{ $filho->id }}"
+                                    <button @click="interrupcaoAbertaFilho = !interrupcaoAbertaFilho"
                                         class="px-3 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700">
                                         ✋ Interromper este Período
                                     </button>
@@ -143,7 +149,7 @@
 
                             </div>
                             <!-- Formulário de interrupção Mobile -->
-                            <div x-show="periodoId === {{ $filho->id }}"
+                            <div x-show="interrupcaoAbertaFilho"
                                 class="p-3 mt-2 space-y-3 transition duration-300 transform rounded bg-gray-50"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="transform opacity-0 scale-95"
@@ -154,8 +160,8 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Data da
                                         Interrupção</label>
-                                    <input type="date" x-model="dataInterrupcao" :min="periodoInicio"
-                                        :max="periodoFim"
+                                    <input type="date" x-model="dataInterrupcao" :min="periodoInicioFilho"
+                                        :max="periodoFimFilho"
                                         class="block w-full mt-1 text-sm border-gray-300 rounded">
                                 </div>
 
@@ -188,7 +194,7 @@
                                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                             },
                                             body: JSON.stringify({
-                                                periodo_id: periodoId,
+                                                periodo_id: periodoIdFilho,
                                                 data: dataInterrupcao,
                                                 motivo: motivo,
                                                 linkDiof: linkDiof,
@@ -198,7 +204,7 @@
                                         .then(res => res.json())
                                         .then(data => {
                                             alert(data.message);
-                                            periodoId = null;
+                                            periodoIdFilho = null;
                                             dataInterrupcao = '';
                                             motivo = '';
                                             linkDiof = '';
@@ -214,7 +220,8 @@
                                     </button>
                                     <button
                                         @click="setTimeout(() => {
-                                            periodoId = null;
+                                            interrupcaoAbertaFilho = false;
+                                            periodoIdFilho = null;
                                             motivo = '';
                                             dataInterrupcao = '';
                                             tituloDiof = '';
