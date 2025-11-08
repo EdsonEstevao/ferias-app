@@ -47,6 +47,33 @@
             padding: 0.5rem;
         }
 
+        /* Cores harmoniosas para a interface */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary-color: #64748b;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        .dark {
+            --primary-color: #60a5fa;
+            --primary-hover: #3b82f6;
+            --secondary-color: #94a3b8;
+            --accent-color: #fbbf24;
+            --success-color: #34d399;
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+        }
+
         @media (max-width: 767px) {
             .hamburger-button {
                 display: block;
@@ -66,254 +93,356 @@
                 transform: translateX(0);
             }
         }
+
+        /* Estilos melhorados para paginação */
+        .pagination-btn {
+            @apply px-4 py-2 text-sm font-medium transition-all duration-200 ease-in-out border rounded-lg;
+        }
+
+        .pagination-btn-primary {
+            @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700;
+        }
+
+        .pagination-btn-secondary {
+            @apply bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700;
+        }
+
+        .pagination-btn-disabled {
+            @apply opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600;
+        }
+
+        .pagination-active {
+            @apply bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700;
+        }
     </style>
 </head>
 
-<body class="text-gray-800 bg-gray-100">
+<body class="bg-gray-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
     <div class="flex h-screen overflow-hidden">
 
         {{-- Menu lateral --}}
-        <aside class="w-64 bg-white shadow-md mobile-sidebar md:block">
-            <div class="flex items-center justify-between p-6 text-xl font-bold border-b">
-                <span>Painel</span>
-                <button id="close-menu" class="text-gray-500 md:hidden hover:text-gray-700">
+        <aside class="w-64 bg-white shadow-lg mobile-sidebar md:block dark:bg-slate-800">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+                <span class="text-xl font-bold text-slate-800 dark:text-slate-100">Painel</span>
+                <button id="close-menu" class="text-slate-500 md:hidden hover:text-slate-700 dark:hover:text-slate-300">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <nav class="p-4 space-y-2 text-sm">
+
+            <nav class="p-4 space-y-1 text-sm">
+                <!-- Dashboard -->
                 <a href="{{ route('dashboard') }}"
-                    class="block px-4 py-2 rounded {{ request()->routeIs('dashboard') ? ' bg-gray-600 text-amber-100' : '' }}">🏠
-                    Dashboard</a>
-                <!-- icon servidores -->
-                <div x-data="{ open: false }" class="space-y-1">
+                    class="flex items-center px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('dashboard')
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                        : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                    <i class="w-5 mr-3 text-blue-500 fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- Servidores -->
+                <div x-data="{ open: {{ request()->routeIs('servidores.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.por-departamento') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.show') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('servidores.exoneracao.index') ? ' bg-gray-600 text-gray-50' : '' }} focus:outline-none">
-                        <span><i class="text-blue-400 fa-solid fa-users"></i> Servidores</span>
-                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.*')
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                        <div class="flex items-center">
+                            <i class="w-5 mr-3 text-indigo-500 fas fa-users"></i>
+                            <span>Servidores</span>
+                        </div>
+                        <svg :class="{ 'transform rotate-90': open }"
+                            class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                    <div x-show="open" x-transition class="pl-8 space-y-1">
                         <a href="{{ route('servidores.index') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.index') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">Listar</a>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.index')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-list"></i>
+                            Listar
+                        </a>
                         <a href="{{ route('servidores.por-departamento') }}"
-                            class="flex items-center px-4 py-2  text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200 {{ request()->routeIs('servidores.por-departamento') ? ' bg-gray-600 text-indigo-100  hover:bg-gray-100 hover:text-gray-900' : '' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.por-departamento')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-building"></i>
                             Por Departamento
                         </a>
                         <a href="{{ route('servidores.nomeados.index') }}"
-                            class="flex items-center px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.nomeados.index') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20 12H4m12 6l6-6-6-6M4 18l6-6-6-6" />
-                            </svg>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.nomeados.*')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-user-tie"></i>
                             Servidores Nomeados
                         </a>
                         <a href="{{ route('servidores.exoneracao.index') }}"
-                            class="flex items-center px-4 py-2 text-nowrap transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 {{ request()->routeIs('servidores.exoneracao.restaurar') ? ' bg-gray-600 text-amber-100  hover:bg-gray-100 hover:text-gray-100' : '' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20 12H4m12 6l6-6-6-6M4 18l6-6-6-6" />
-                            </svg>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.exoneracao.*')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-user-slash"></i>
                             Servidores Exonerados
                         </a>
+                        @role('super admin')
+                            <!-- Importar Servidores -->
+                            <a href="{{ route('servidores.import.form') }}"
+                                class="flex items-center px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('servidores.import.*')
+                                    ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                                    : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                                <i class="w-5 mr-3 text-cyan-500 fas fa-file-import"></i>
+                                <span>Importar Servidores</span>
+                            </a>
+                        @endrole
                     </div>
                 </div>
 
-                <!-- Menu com submenu -->
-                <div x-data="{ open: false }" class="space-y-1">
+                <!-- Secretarias -->
+                <div x-data="{ open: {{ request()->routeIs('secretarias.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('secretarias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('secretarias.create') ? ' bg-gray-600 text-amber-100' : '' }} focus:outline-none">
-                        <!-- icon secretarias -->
-
-                        <span><i class="text-yellow-300 fa-brands fa-fort-awesome"></i> Secretarias</span>
-                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('secretarias.*')
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                        <div class="flex items-center">
+                            <i class="w-5 mr-3 text-amber-500 fas fa-landmark"></i>
+                            <span>Secretarias</span>
+                        </div>
+                        <svg :class="{ 'transform rotate-90': open }"
+                            class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                    <div x-show="open" x-transition class="pl-8 space-y-1">
                         <a href="{{ route('secretarias.index') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
-                                class="fa-solid fa-bars-staggered "></i> Listar Secretarias</a>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('secretarias.index')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-list"></i>
+                            Listar Secretarias
+                        </a>
                         <a href="{{ route('secretarias.create') }}"
-                            class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200"><i
-                                class="fa-solid fa-circle-plus "></i> Adicionar Secretaria</a>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('secretarias.create')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-plus-circle"></i>
+                            Adicionar Secretaria
+                        </a>
                     </div>
                 </div>
-                <!-- icon administrar cargos -->
-                <a href="{{ route('vinculo.cargos.secretarias') }}"
-                    class="block px-4 py-2 rounded {{ request()->routeIs('vinculo.cargos.secretarias') ? ' bg-gray-600 text-amber-100' : '' }} ">
-                    <i class="text-green-300 fas fa-users-cog"></i>
-                    Administrar Cargos</a>
 
-                <!-- Menu com submenu Férias -->
-                <div x-data="{ open: false }" class="space-y-1">
+                <!-- Administrar Cargos -->
+                <a href="{{ route('vinculo.cargos.secretarias') }}"
+                    class="flex items-center px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('vinculo.cargos.secretarias')
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                        : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                    <i class="w-5 mr-3 text-emerald-500 fas fa-users-cog"></i>
+                    <span>Administrar Cargos</span>
+                </a>
+
+                <!-- Férias -->
+                <div x-data="{ open: {{ request()->routeIs('ferias.*') || request()->routeIs('ferias-import.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('ferias.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.import') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('ferias.filtro') ? ' bg-gray-600 text-amber-100' : '' }}">
-                        <!-- icon ferias -->
-                        <span><i class="text-red-400 fas fa-calendar"></i> Ferias</span>
-                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias.*') || request()->routeIs('ferias-import.*')
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                        <div class="flex items-center">
+                            <i class="w-5 mr-3 text-red-400 fas fa-calendar-alt"></i>
+                            <span>Férias</span>
+                        </div>
+                        <svg :class="{ 'transform rotate-90': open }"
+                            class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
+                    <div x-show="open" x-transition class="pl-8 space-y-1">
                         <a href="{{ route('ferias.index') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
-                            📅 Listar Férias</a>
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias.index')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-list"></i>
+                            Listar Férias
+                        </a>
+                        <a href="{{ route('ferias.filtro') }}"
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias.filtro')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-search"></i>
+                            Filtro de Férias
+                        </a>
                         <a href="{{ route('ferias.import') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">📅
-                            Importar
-                            Ferias (.Csv)</a>
-                        <!-- importar arquivo json -->
-                        <a href="{{ route('ferias-import.index') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
-                            <i class="fas fa-history mr-1"></i>
-                            Histórico
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias.import')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-file-csv"></i>
+                            Importar CSV
                         </a>
                         <a href="{{ route('ferias-import.create') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300 hover:text-yellow-200">
-                            📅 Importar Ferias (.Json)
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias-import.create')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-file-import"></i>
+                            Importar JSON
+                        </a>
+                        <a href="{{ route('ferias-import.index') }}"
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('ferias-import.index')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-history"></i>
+                            Histórico
                         </a>
 
-                        <a href="{{ route('ferias.filtro') }}"
-                            class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200">
-                            🔍 Filtro de Férias
-                        </a>
 
                     </div>
                 </div>
 
-                <!-- Menu com submenu roles admin -->
-
-                <!-- permissão somente para administradores visualizar -->
+                <!-- Admin Section -->
                 @role('admin|super admin')
-                    <div x-data="{ open: false }" class="space-y-1">
+                    <!-- Usuários -->
+                    <div x-data="{ open: {{ request()->routeIs('admin.users.*') ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="open = !open"
-                            class="flex items-center justify-between w-full px-4 py-2 rounded focus:outline-none {{ request()->routeIs('admin.users.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('admin.users.create') ? ' bg-gray-600 text-amber-100' : '' }}">
-                            <!-- icon usuarios -->
-
-                            <span><i class="text-blue-600 fas fa-users"></i> Usuarios</span>
-                            <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
-                            <a href="{{ route('admin.users.index') }}"
-                                class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
-                                    class="fa-solid fa-bars-staggered "></i> Listar Usuarios</a>
-                            <a href="{{ route('admin.users.create') }}"
-                                class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-200"><i
-                                    class="fa-solid fa-user-plus"></i>
-                                Adicionar Usuario</a>
-                        </div>
-                    </div>
-                    <!-- Menu com submenu Role -->
-                    <div x-data="{ open: false }" class="space-y-1">
-                        <button @click="open = !open"
-                            class="flex items-center justify-between w-full px-4 py-2 rounded  focus:outline-none  {{ request()->routeIs('admin.roles.index') ? ' bg-gray-600 text-amber-100' : '' }} {{ request()->routeIs('admin.roles.create') ? ' bg-gray-600 text-amber-100' : '' }}">
-                            <!-- icon role -->
-                            <span><i class="text-red-400 fas fa-user-tag"></i> Role</span>
-                            <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
-                            <a href="{{ route('admin.roles.index') }}"
-                                class="block px-4 py-2 transition-all duration-300 ease-linear rounded hover:bg-gray-600 text-amber-300"><i
-                                    class="fa-solid fa-bars-staggered "></i> Listar Roles</a>
-                            <a href="{{ route('admin.roles.store') }}"
-                                class="block px-4 py-2 text-indigo-600 transition-all duration-300 ease-linear rounded hover:bg-gray-600 hover:text-indigo-300"><i
-                                    class="fa-solid fa-person-circle-plus"></i> Adicionar Role</a>
-                        </div>
-                    </div>
-                @endrole
-                <!-- permissão somente para super administradores visualizar -->
-                @role('super admin')
-                    <div x-data="{ open: false }" class="space-y-1">
-                        <button @click="open = !open"
-                            class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('admin.audit.index') ? ' bg-gray-600 text-amber-100' : '' }}  focus:outline-none">
-                            <!-- icon auditoria -->
-                            <span><i class="fa-duotone fa-solid fa-audio-description text-lime-700"></i> Auditoria</span>
-                            <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
-                            <a href="{{ route('admin.audit.index') }}"
-                                class="block px-4 py-2 rounded hover:bg-gray-200"><i
-                                    class="text-red-500 fa-duotone fa-solid fa-users-viewfinder"></i> Visualizar</a>
-
-                        </div>
-                    </div>
-                    <a href="{{ route('servidores.import.form') }}"
-                        class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                        </svg>
-                        Importar Servidores
-                    </a>
-                @endrole
-                <!-- Menu com submenu Perfil -->
-                <div x-data="{ open: false }" class="space-y-1">
-                    <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-4 py-2 rounded {{ request()->routeIs('profile.edit') ? ' bg-gray-600 text-amber-100' : '' }} focus:outline-none">
-                        <div class="flex items-center gap-2">
-                            {{-- <div class="w-2 h-2 bg-green-400 rounded-full">
-                            </div> --}}
-                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Você está online">
-
+                            class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users.*')
+                                ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                            <div class="flex items-center">
+                                <i class="w-5 mr-3 text-blue-600 fas fa-user-friends"></i>
+                                <span>Usuários</span>
                             </div>
-                            <span>{{ Auth::user()->name }}</span>
+                            <svg :class="{ 'transform rotate-90': open }"
+                                class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="pl-8 space-y-1">
+                            <a href="{{ route('admin.users.index') }}"
+                                class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users.index')
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                                <i class="w-4 mr-2 fas fa-list"></i>
+                                Listar Usuários
+                            </a>
+                            <a href="{{ route('admin.users.create') }}"
+                                class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users.create')
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                                <i class="w-4 mr-2 fas fa-user-plus"></i>
+                                Adicionar Usuário
+                            </a>
                         </div>
-                        <svg :class="{ 'transform rotate-90': open }" class="w-4 h-4 transition-transform"
-                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    </div>
+
+                    <!-- Roles -->
+                    <div x-data="{ open: {{ request()->routeIs('admin.roles.*') ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.roles.*')
+                                ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                            <div class="flex items-center">
+                                <i class="w-5 mr-3 text-purple-500 fas fa-user-tag"></i>
+                                <span>Roles</span>
+                            </div>
+                            <svg :class="{ 'transform rotate-90': open }"
+                                class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="pl-8 space-y-1">
+                            <a href="{{ route('admin.roles.index') }}"
+                                class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.roles.index')
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                                <i class="w-4 mr-2 fas fa-list"></i>
+                                Listar Roles
+                            </a>
+                            <a href="{{ route('admin.roles.store') }}"
+                                class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.roles.store')
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                                <i class="w-4 mr-2 fas fa-plus-circle"></i>
+                                Adicionar Role
+                            </a>
+                        </div>
+                    </div>
+                @endrole
+
+                @role('super admin')
+                    <!-- Auditoria -->
+                    <div x-data="{ open: {{ request()->routeIs('admin.audit.*') ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.audit.*')
+                                ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                            <div class="flex items-center">
+                                <i class="w-5 mr-3 text-lime-600 fas fa-shield-alt"></i>
+                                <span>Auditoria</span>
+                            </div>
+                            <svg :class="{ 'transform rotate-90': open }"
+                                class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="pl-8 space-y-1">
+                            <a href="{{ route('admin.audit.index') }}"
+                                class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('admin.audit.index')
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                                <i class="w-4 mr-2 fas fa-eye"></i>
+                                Visualizar Auditoria
+                            </a>
+                        </div>
+                    </div>
+                @endrole
+
+                <!-- Perfil -->
+                <div x-data="{ open: {{ request()->routeIs('profile.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('profile.*')
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                            : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700' }}">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 mr-3 bg-green-500 rounded-full animate-pulse" title="Online"></div>
+                            <span class="font-medium">{{ Auth::user()->name }}</span>
+                        </div>
+                        <svg :class="{ 'transform rotate-90': open }"
+                            class="w-4 h-4 transition-transform text-slate-500" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
-                    <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-700">
-
-                        <x-responsive-nav-link :href="route('profile.edit')">
+                    <div x-show="open" x-transition class="pl-8 space-y-1">
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 {{ request()->routeIs('profile.edit')
+                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-800/50 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50' }}">
+                            <i class="w-4 mr-2 fas fa-user-cog"></i>
                             Perfil
-                        </x-responsive-nav-link>
-                        <form method="POST" action="{{ route('logout') }}">
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="w-full">
                             @csrf
-
-                            <x-responsive-nav-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                                this.closest('form').submit();">
+                            <button type="submit"
+                                class="flex items-center w-full px-4 py-2 text-left rounded-lg text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-all duration-200">
+                                <i class="w-4 mr-2 fas fa-sign-out-alt"></i>
                                 Sair
-                            </x-responsive-nav-link>
+                            </button>
                         </form>
                     </div>
                 </div>
-
             </nav>
-            <!-- Contador seguro de usuários online -->
-            <!-- deixa o contador visivel no final do menu abaixo-->
-            @auth
-                {{-- <div class="flex items-center px-3 py-1 text-xs text-gray-600 border rounded-lg bg-gray-50 position-fixed bottom-2 right-2" --}}
-                <div class="absolute bottom-0 left-0 flex items-center w-full px-3 py-1 text-xs text-gray-600 border bg-gray-50"
-                    title="Usuários ativos nos últimos 5 minutos">
-                    <div class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Online: </span>
-                    <strong class="ml-1" id="onlineUsersCount">
-                        {{-- {{ getOnlineUsersCount() }} --}}
-                    </strong>
-                    {{-- teste --}}
 
-                </div>
-            @endauth
+            <!-- Contador de usuários online -->
+            <div
+                class="absolute bottom-0 left-0 flex items-center w-full p-4 text-xs border-t bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                <div class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-slate-600 dark:text-slate-400">Online:</span>
+                <strong class="ml-1 text-slate-800 dark:text-slate-200" id="onlineUsersCount">
+                    {{ \App\Models\User::online()->count() }}
+                </strong>
+            </div>
         </aside>
 
         {{-- Overlay para fechar o menu ao clicar fora --}}
@@ -321,33 +450,21 @@
 
         {{-- Conteúdo principal --}}
         <div class="flex flex-col flex-1 overflow-y-auto">
-
-            {{-- Cabeçalho fixo --}}
-            {{-- <header class="sticky top-0 z-10 bg-white shadow-md">
+            {{-- Cabeçalho --}}
+            <header class="sticky top-0 z-10 bg-white shadow-sm dark:bg-slate-800">
                 <div class="flex items-center justify-between px-6 py-4">
-                    <button id="hamburger-button" class="hamburger-button">
+                    <button id="hamburger-button" class="hamburger-button text-slate-600 dark:text-slate-300">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="text-lg font-semibold">Sistema de Gestão de Férias</h1>
-                    <div class="text-sm text-gray-600">Olá, {{ auth()->user()->name }}</div>
-                </div>
-
-            </header> --}}
-            {{-- Cabeçalho fixo --}}
-            {{-- Cabeçalho fixo --}}
-            <header class="sticky top-0 z-10 bg-white shadow-md">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <button id="hamburger-button" class="hamburger-button">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 class="text-lg font-semibold">Sistema de Gestão de Férias</h1>
+                    <h1 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Sistema de Gestão de Férias
+                    </h1>
 
                     <div class="flex items-center space-x-4">
                         <!-- Contador de usuários online com dropdown -->
                         <div x-data="{ showOnlineUsers: false }" class="relative">
                             <button @click="showOnlineUsers = !showOnlineUsers"
-                                class="flex items-center px-3 py-1 text-sm text-gray-600 transition-colors rounded-full bg-green-50 hover:bg-green-100">
-                                <div class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
+                                class="flex items-center px-3 py-2 text-sm transition-colors rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50">
+                                <div class="w-2 h-2 mr-2 bg-emerald-500 rounded-full animate-pulse"></div>
                                 <span>Online: </span>
                                 <strong class="ml-1" id="onlineUsersCount">
                                     {{ \App\Models\User::online()->count() }}
@@ -366,25 +483,30 @@
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="opacity-100 transform scale-100"
                                 x-transition:leave-end="opacity-0 transform scale-95"
-                                class="absolute right-0 z-50 w-64 mt-2 bg-white border rounded-lg shadow-lg">
-                                <div class="p-3 border-b">
-                                    <h3 class="font-semibold text-gray-900">Usuários Online</h3>
-                                    <p class="text-xs text-gray-500">Ativos nos últimos 5 minutos</p>
+                                class="absolute right-0 z-50 w-64 mt-2 bg-white border rounded-lg shadow-lg dark:bg-slate-800 dark:border-slate-700">
+                                <div class="p-3 border-b dark:border-slate-700">
+                                    <h3 class="font-semibold text-slate-900 dark:text-slate-100">Usuários Online</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Ativos nos últimos 5 minutos
+                                    </p>
                                 </div>
                                 <div class="overflow-y-auto max-h-60">
                                     @forelse(\App\Models\User::online()->get() as $user)
-                                        <div class="flex items-center px-3 py-2 hover:bg-gray-50">
-                                            <div class="w-2 h-2 mr-2 bg-green-500 rounded-full"></div>
+                                        <div
+                                            class="flex items-center px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                            <div class="w-2 h-2 mr-2 bg-emerald-500 rounded-full"></div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-medium text-gray-900 truncate">
+                                                <p
+                                                    class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                                                     {{ $user->name }}</p>
-                                                <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                    {{ $user->email }}</p>
                                             </div>
-                                            <span
-                                                class="ml-2 text-xs text-gray-400">{{ $user->last_activity_at->diffForHumans() }}</span>
+                                            <span class="ml-2 text-xs text-slate-400 dark:text-slate-500">
+                                                {{ $user->last_activity_at->diffForHumans() }}
+                                            </span>
                                         </div>
                                     @empty
-                                        <div class="px-3 py-4 text-center text-gray-500">
+                                        <div class="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                                             <p>Nenhum usuário online</p>
                                         </div>
                                     @endforelse
@@ -392,13 +514,13 @@
                             </div>
                         </div>
 
-                        <div class="text-sm text-gray-600">Olá, {{ auth()->user()->name }}</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-300">Olá, {{ auth()->user()->name }}</div>
                     </div>
                 </div>
             </header>
 
             {{-- Conteúdo dinâmico --}}
-            <main class="p-6">
+            <main class="flex-1 p-6">
                 {{ $slot }}
             </main>
         </div>
@@ -407,8 +529,6 @@
     <script src="https://kit.fontawesome.com/bf39cb216e.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -420,20 +540,19 @@
             function openMenu() {
                 sidebar.classList.add('active');
                 mobileMenuOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Previne scroll no body
+                document.body.style.overflow = 'hidden';
             }
 
             function closeMenu() {
                 sidebar.classList.remove('active');
                 mobileMenuOverlay.classList.remove('active');
-                document.body.style.overflow = ''; // Restaura scroll no body
+                document.body.style.overflow = '';
             }
 
             hamburgerButton.addEventListener('click', openMenu);
             closeMenuButton.addEventListener('click', closeMenu);
             mobileMenuOverlay.addEventListener('click', closeMenu);
 
-            // Fechar menu ao clicar em um link (para mobile)
             const menuLinks = document.querySelectorAll('.mobile-sidebar a');
             menuLinks.forEach(link => {
                 link.addEventListener('click', () => {
@@ -443,7 +562,6 @@
                 });
             });
 
-            // Fechar menu ao redimensionar a janela para desktop
             window.addEventListener('resize', function() {
                 if (window.innerWidth >= 768) {
                     closeMenu();
@@ -451,7 +569,6 @@
             });
         });
 
-
         // Atualização segura da contagem de usuários online
         function atualizarContagemOnline() {
             const userToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -474,29 +591,22 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data);
                     if (data.status === 'success') {
-                        const element = document.getElementById('onlineUsersCount');
-                        if (element) {
+                        const elements = document.querySelectorAll('#onlineUsersCount');
+                        elements.forEach(element => {
                             element.textContent = data.count ?? 0;
-                        }
+                        });
                     }
                 })
                 .catch(error => {
                     console.log('Erro ao atualizar contagem online:', error);
-                    // Não mostrar erro para o usuário, é uma funcionalidade não crítica
                 });
         }
 
-        // Atualizar de forma segura
         document.addEventListener('DOMContentLoaded', function() {
-            // Esperar 2 segundos após o carregamento
             setTimeout(atualizarContagemOnline, 2000);
-
-            // Atualizar a cada 45 segundos (não muito frequente)
             setInterval(atualizarContagemOnline, 45000);
 
-            // Atualizar quando a página ganha foco
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) {
                     setTimeout(atualizarContagemOnline, 1000);
@@ -504,58 +614,6 @@
             });
         });
     </script>
-    {{-- <script>
-        // Atualização segura da contagem de usuários online
-        function atualizarContagemOnline() {
-            const userToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
-            if (!userToken) return;
-
-            fetch('/online-users-count', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': userToken
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro na resposta da API');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        const element = document.getElementById('onlineUsersCount');
-                        if (element) {
-                            element.textContent = data.count;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.log('Erro ao atualizar contagem online:', error);
-                    // Não mostrar erro para o usuário, é uma funcionalidade não crítica
-                });
-        }
-
-        // Atualizar de forma segura
-        document.addEventListener('DOMContentLoaded', function() {
-            // Esperar 2 segundos após o carregamento
-            setTimeout(atualizarContagemOnline, 2000);
-
-            // Atualizar a cada 45 segundos (não muito frequente)
-            setInterval(atualizarContagemOnline, 45000);
-
-            // Atualizar quando a página ganha foco
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    setTimeout(atualizarContagemOnline, 1000);
-                }
-            });
-        });
-    </script> --}}
 </body>
 
 </html>

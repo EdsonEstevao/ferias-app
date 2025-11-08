@@ -644,29 +644,59 @@ class FeriasController extends Controller
             });
         }
 
-        $periodos = $query->orderBy('inicio', 'desc')->paginate(20);
+        // ORDENAÇÃO CORRIGIDA
+        $campoOrdenacao = $request->filled('ordenar') ? $request->ordenar : 'inicio';
+        $direcao = $request->filled('direcao') ? $request->direcao : 'desc';
 
-        //customizado
-        // $periodos = $periodos->withPath(route('ferias.filtro'))->onEachSide(1);
+        // Mapear campos do frontend para campos do banco
+        $camposOrdenacao = [
+            'servidor' => 'servidores.nome',
+            'exercicio' => 'ferias.ano_exercicio',
+            'inicio' => 'inicio',
+            'dias' => 'dias'
+        ];
+
+        $campoBanco = $camposOrdenacao[$campoOrdenacao] ?? 'inicio';
+
+          // Se for ordenação por servidor, precisa do join
+        if ($campoOrdenacao === 'servidor') {
+            $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+                ->join('servidores', 'ferias.servidor_id', '=', 'servidores.id')
+                ->select('ferias_periodos.*');
+        }
+
+        // Se for ordenação por exercício
+        if ($campoOrdenacao === 'exercicio') {
+            $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+                ->select('ferias_periodos.*')
+                ->orderBy('ferias.ano_exercicio', $direcao);
+        } else {
+            // Ordenação normal para outros campos
+            $query->orderBy($campoBanco, $direcao);
+        }
+
+
+
+
+        $periodos = $query->orderBy('inicio', $direcao)->paginate(20);
 
         // CORREÇÃO DAS ESTATÍSTICAS
         $totalRegistros = $periodos->total();
-
         // Correção para contar servidores únicos
         $servidoresIds = $query->get()->pluck('ferias.servidor_id')->unique()->count();
         $totalServidores = $servidoresIds;
+        $totalDias = $query->sum('dias');
+        $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
+        $meses = $this->getMeses();
 
         // Alternativa mais eficiente usando subquery
         // $totalServidores = Ferias::whereIn('id', $query->select('ferias_id')->get()->pluck('ferias_id'))
         //                         ->distinct('servidor_id')
         //                         ->count('servidor_id');
 
-        $totalDias = $query->sum('dias');
-        $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
 
 
 
-        $meses = $this->getMeses();
 
 
 
@@ -676,7 +706,8 @@ class FeriasController extends Controller
             'totalServidores' => $totalServidores,
             'totalDias' => $totalDias,
             'totalUsufruidos' => $totalUsufruidos,
-            'meses' => $meses
+            'meses' => $meses,
+            'direcao' => $direcao
         ];
 
         return view('ferias.filtro', $data);
@@ -818,15 +849,41 @@ class FeriasController extends Controller
     }
 
     // Ordenação
-    $ordenacao = $request->get('ordenar', 'inicio');
-    $direcao = $request->get('direcao', 'desc');
-    $query->orderBy($ordenacao, $direcao);
+    $campoOrdenacao = $request->filled('ordenar') ? $request->ordenar : 'inicio';
+    $direcao = $request->filled('direcao') ? $request->direcao : 'desc';
+
+    $camposOrdenacao = [
+        'servidor' => 'servidores.nome',
+        'exercicio' => 'ferias.ano_exercicio',
+        'inicio' => 'inicio',
+        'dias' => 'dias'
+    ];
+
+    $campoBanco = $camposOrdenacao[$campoOrdenacao] ?? 'inicio';
+
+    if ($campoOrdenacao === 'servidor') {
+        $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+              ->join('servidores', 'ferias.servidor_id', '=', 'servidores.id')
+              ->select('ferias_periodos.*');
+    }
+
+    if ($campoOrdenacao === 'exercicio') {
+        $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+              ->select('ferias_periodos.*')
+              ->orderBy('ferias.ano_exercicio', $direcao);
+    } else {
+        $query->orderBy($campoBanco, $direcao);
+    }
+
+
+    // $query->orderBy($ordenacao, $direcao);
 
     $periodos = $query->paginate(20);
 
     // Estatísticas
     $totalRegistros = $periodos->total();
-    $totalServidores = $periodos->getCollection()->pluck('ferias.servidor_id')->unique()->count();
+    $totalServidoresIds = $periodos->getCollection()->pluck('ferias.servidor_id')->unique()->count();
+    $totalServidores = $totalServidoresIds;
     $totalDias = $query->sum('dias');
     $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
 

@@ -64,13 +64,7 @@
         </div>
 
         <!-- Filtros - Mobile Optimized -->
-        <div x-show="filtroAberto" class="p-3 mt-2 bg-white rounded shadow sm:p-4 space-y-2 mb-3" x-cloak="true"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 transform scale-100"
-            x-transition:leave-end="opacity-0 transform scale-95">
+        <div x-show="filtroAberto" class="p-3 mt-2 bg-white rounded shadow sm:p-4">
             <form method="GET" action="{{ route('ferias.index') }}"
                 class="space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 sm:space-y-0">
                 {{-- Ano --}}
@@ -117,37 +111,6 @@
             </form>
         </div>
 
-
-        <!-- Modal de Confirmação de Exclusão -->
-        <div x-show="modalConfirmacaoAberto"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                </div>
-                <h3 class="mb-4 text-lg font-medium text-center text-gray-900">Confirmar Exclusão</h3>
-                <p class="mb-6 text-sm text-center text-gray-600" x-text="mensagemConfirmacao"></p>
-                <div class="flex justify-center gap-4">
-                    <button @click="fecharModalConfirmacao()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
-                        Cancelar
-                    </button>
-                    <button @click="confirmarAcaoExclusao()"
-                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                        Confirmar Exclusão
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resto do seu código permanece igual até os botões de exclusão -->
-
         {{-- Listagem de ferias - Mobile Optimized --}}
         @foreach ($ferias as $registro)
             <div class="p-4 mb-6 bg-white rounded shadow sm:p-6">
@@ -156,8 +119,7 @@
                         <h3 class="mb-1 text-lg font-bold text-gray-800 sm:text-xl">🗓️ Ano:
                             {{ $registro->ano_exercicio }}</h3>
                         <h3 class="text-base font-semibold sm:text-lg">{{ $registro->servidor->nome }}</h3>
-                        <p class="text-xs text-gray-600 sm:text-sm">Matrícula: {{ $registro->servidor->matricula }}
-                        </p>
+                        <p class="text-xs text-gray-600 sm:text-sm">Matrícula: {{ $registro->servidor->matricula }}</p>
                         <p class="text-xs text-gray-600 sm:text-sm">Situação:
                             <span
                                 class="{{ $registro->situacao === 'Ativo' ? 'text-green-600' : ($registro->situacao === 'Pendente' ? 'text-yellow-600' : 'text-red-600') }}">
@@ -195,13 +157,14 @@
                             PDF
                         </a>
                         <button
-                            @click="confirmarExclusaoFerias({{ $registro->id }}, '{{ addslashes($registro->servidor->nome) }}', {{ $registro->ano_exercicio }})"
+                            @click="confirmarExclusaoFerias({{ $registro->id }}, '{{ $registro->servidor->nome }}', {{ $registro->ano_exercicio }})"
                             class="flex items-center px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50 sm:px-3 sm:text-sm">
                             <span class="mr-1">🗑️</span>
                             Excluir
                         </button>
                     </div>
                 </div>
+
 
                 @foreach ($registro->periodos->whereNull('periodo_origem_id') as $periodo)
                     <div class="mb-3 space-y-3" x-data="{
@@ -261,7 +224,11 @@
 
                                     <div
                                         class="flex flex-col items-start gap-2 mt-2 sm:flex-col lg:flex-row lg:w-full">
+
+                                        <!-- gridi com 3 colunas  e 1 coluna para mobile -->
                                         <div class="grid justify-between grid-cols-2 gap-2 lg:gap-5 lg:grid-cols-3">
+
+
                                             <button @click="aberto = !aberto"
                                                 class="w-full px-2 py-2 text-xs text-blue-600 bg-blue-200 rounded shadow-lg hover:bg-blue-500 hover:text-blue-100">
                                                 <span x-text="aberto ? 'Ocultar' : 'Detalhes'"></span>
@@ -289,6 +256,7 @@
                                                     </button>
                                                 @endrole
 
+
                                                 <button @click="marcarComoUsufruido({{ $periodo->id }})"
                                                     class="w-full px-2 py-2 text-xs text-purple-600 bg-purple-200 rounded shadow-lg flex-inline text-nowrap hover:bg-purple-500 hover:text-purple-100">
                                                     ✅ Usufruído
@@ -301,6 +269,7 @@
                                                     ↩️ Desmarcar Usufruto
                                                 </button>
                                             @endif
+
 
                                             @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
                                                 <button

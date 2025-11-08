@@ -91,6 +91,8 @@
                                     @click="abrirModalEditarPeriodo($event)">
                                     ✏️ Editar
                                 </button>
+
+
                                 @role('super admin')
                                     <button
                                         @click="confirmarExclusaoPeriodo({{ $filho->id }}, '{{ date('d/m/Y', strtotime($filho->inicio)) }}', '{{ date('d/m/Y', strtotime($filho->fim)) }}')"
@@ -98,6 +100,7 @@
                                         🗑️ Excluir
                                     </button>
                                 @endrole
+
 
                                 <button @click="marcarComoUsufruido({{ $filho->id }})"
                                     class="text-xs text-purple-600 hover:underline">
@@ -121,13 +124,15 @@
                                     class="px-3 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
                                     🔁 Remarcar
                                 </button>
-                                @role('super admin')
-                                    <button
-                                        @click="confirmarExclusaoPeriodo({{ $filho->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
-                                        class="px-2 py-2 text-xs text-red-600 bg-red-200 rounded shadow-lg hover:bg-red-500 hover:text-red-100 text-nowrap">
-                                        🗑️ Excluir
-                                    </button>
-                                @endrole
+                                @if ($filho->situacao === 'Interrompido')
+                                    @role('super admin')
+                                        <button
+                                            @click="confirmarExclusaoPeriodo({{ $filho->id }}, '{{ date('d/m/Y', strtotime($periodo->inicio)) }}', '{{ date('d/m/Y', strtotime($periodo->fim)) }}')"
+                                            class="px-2 py-2 text-xs text-red-600 bg-red-200 rounded shadow-lg hover:bg-red-500 hover:text-red-100 text-nowrap">
+                                            🗑️ Excluir
+                                        </button>
+                                    @endrole
+                                @endif
 
                                 @if ($filho->situacao !== 'Interrompido')
                                     <button @click="periodoId = {{ $filho->id }}"

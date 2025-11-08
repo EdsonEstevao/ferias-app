@@ -440,6 +440,13 @@
                     if (urlParams.has('direcao')) {
                         this.ordenacao.direcao = urlParams.get('direcao');
                     }
+                    if (urlParams.has('situacao') && urlParams.get('situacao') == 'Todos') {
+                        this.filtros.situacao = '';
+                    }
+                    if (urlParams.has('situacao')) {
+                        this.filtros.situacao = urlParams.get('situacao');
+                    }
+
 
                     this.filtrosAplicados = algumFiltro;
                 },
