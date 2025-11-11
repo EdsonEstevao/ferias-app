@@ -135,7 +135,7 @@
 
                     <!-- Ações -->
                     <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                        <a href="{{ route('servidores.show', $servidor) }}"
+                        <a href="{{ url()->previous() }}"
                             class="inline-flex items-center px-6 py-3 text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50">
                             ← Cancelar
                         </a>

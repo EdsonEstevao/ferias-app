@@ -114,6 +114,7 @@
                                                     class="px-2 py-0.5 text-xs text-white rounded-full"
                                                     :class="dia.periodos[0]?.cor?.badge || 'bg-gray-500'"
                                                     x-text="dia.periodos.length"></span>
+
                                             </div>
 
                                             <!-- Períodos de férias -->
@@ -131,11 +132,16 @@
                                                 </template>
 
                                                 <!-- Indicador de mais períodos -->
-                                                <div x-show="dia.periodos.length>
+                                                {{-- <div x -show="dia.periodos.length>
                                                         2"
                                                     class="p-1 text-xs text-center text-gray-500 bg-gray-100 rounded cursor-pointer dark:bg-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500"
+                                                    @ click="openDayModal(dia)"
+                                                    x -text="'+' + (dia.periodos.length - 2) + ' mais'"></div> --}}
+                                                <div x-show="dia.periodos.length > 2"
+                                                    class="p-1 text-xs text-center text-gray-500 transition-colors bg-gray-100 rounded cursor-pointer dark:bg-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500"
                                                     @click="openDayModal(dia)"
-                                                    x-text="'+' + (dia.periodos.length - 2) + ' mais'"></div>
+                                                    x-text="'+' + (dia.periodos.length - 2) + ' mais'">
+                                                </div>
                                             </div>
                                         </div>
                                     </template>
@@ -240,6 +246,132 @@
                                         x-show="selectedPeriodo">
                                         Ver Detalhes
                                     </a>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Modal de Períodos do Dia - CORRIGIDO -->
+
+                        <div x-show="modalDayAberto" x-cloak x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-200"
+                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+                            @click="modalDayAberto = false"> <!-- CORREÇÃO: evento de clique direto -->
+
+                            <div class="w-full max-w-2xl bg-white rounded-lg shadow-xl dark:bg-gray-800 max-h-[90vh] overflow-hidden"
+                                @click.stop> <!-- CORREÇÃO: prevenir propagação do clique -->
+
+                                <!-- Cabeçalho do Modal -->
+                                <div
+                                    class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white"
+                                            x-text="`Períodos do dia ${modalDayData.formattedDate}`"></h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400"
+                                            x-text="`${modalDayData.periodos?.length || 0} período(s) encontrado(s)`">
+                                        </p>
+                                    </div>
+                                    <button @click="modalDayAberto = false"
+                                        class="p-2 text-gray-400 transition-colors rounded-lg hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Conteúdo do Modal -->
+                                <div class="p-6 overflow-y-auto max-h-[60vh]">
+                                    <template x-if="modalDayData.periodos && modalDayData.periodos.length > 0">
+                                        <div class="space-y-3">
+                                            <template x-for="periodo in modalDayData.periodos" :key="periodo.id">
+                                                <div class="p-4 transition-all duration-200 border rounded-lg cursor-pointer hover:shadow-md group"
+                                                    :class="periodo.cor.border + ' ' + periodo.cor.bg + ' hover:scale-[1.02]'"
+                                                    @click="openModal(periodo); modalDayAberto = false">
+                                                    <!-- CORREÇÃO: fecha modal ao clicar no período -->
+
+                                                    <!-- Cabeçalho do Período -->
+                                                    <div class="flex items-start justify-between mb-2">
+                                                        <div class="flex-1">
+                                                            <h4 class="font-semibold" :class="periodo.cor.text"
+                                                                x-text="periodo.servidor"></h4>
+                                                            <p class="text-sm opacity-80" :class="periodo.cor.text"
+                                                                x-text="periodo.matricula"></p>
+                                                        </div>
+                                                        <div class="flex flex-col items-end space-y-1">
+                                                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                                                :class="periodo.cor.badge"
+                                                                x-text="periodo.tipo"></span>
+                                                            <span
+                                                                class="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300"
+                                                                x-text="periodo.situacao"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Detalhes do Período -->
+                                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                                        <div>
+                                                            <p class="font-medium text-gray-700 dark:text-gray-300">
+                                                                Período</p>
+                                                            <p class="text-gray-600 dark:text-gray-400"
+                                                                x-text="`${formatDate(periodo.inicio)} a ${formatDate(periodo.fim)}`">
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="font-medium text-gray-700 dark:text-gray-300">
+                                                                Duração</p>
+                                                            <p class="text-gray-600 dark:text-gray-400"
+                                                                x-text="`${periodo.dias} dias`">
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Observações (se houver) -->
+                                                    <div x-show="periodo.observacoes" class="mt-2">
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400"
+                                                            x-text="periodo.observacoes">
+                                                        </p>
+                                                    </div>
+
+                                                    <!-- Ícone de clique -->
+                                                    <div class="flex justify-end mt-2">
+                                                        <span
+                                                            class="text-xs text-gray-400 transition-opacity opacity-0 group-hover:opacity-100">
+                                                            Clique para ver detalhes completos →
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Estado vazio -->
+                                    <template x-if="!modalDayData.periodos || modalDayData.periodos.length === 0">
+                                        <div class="py-8 text-center">
+                                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <h4 class="mb-2 text-lg font-medium text-gray-500 dark:text-gray-400">
+                                                Nenhum período encontrado
+                                            </h4>
+                                            <p class="text-gray-400 dark:text-gray-500">Não há períodos de férias para
+                                                esta data.</p>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Rodapé do Modal -->
+                                <div class="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+                                    <button @click="modalDayAberto = false"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                                        Fechar
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -364,6 +496,9 @@
         </div>
     </div>
 
+
+
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function dashboardCalendar() {
@@ -376,6 +511,16 @@
                 showModal: false,
                 selectedPeriodo: null,
                 loading: false,
+                modalDayAberto: false,
+                modalDayData: {
+                    date: null,
+                    formattedDate: '',
+                    periodos: []
+                },
+
+                closeDayModal() {
+                    this.modalDayAberto = false;
+                },
 
                 // Computed properties para estatísticas
                 get totalPeriodosMes() {
@@ -406,7 +551,7 @@
                             return response.json();
                         })
                         .then(data => {
-                            console.log('Dados recebidos:', data);
+                            // console.log('Dados recebidos:', data);
                             // CORREÇÃO: data.periodos em vez de data
                             this.periodos = data || [];
 
@@ -502,7 +647,7 @@
                             }
                         });
 
-                        console.log(`Dia ${day}:`, dayPeriodos.length, 'períodos');
+                        // console.log(`Dia ${day}:`, dayPeriodos.length, 'períodos');
 
                         days.push({
                             number: day,
@@ -526,7 +671,7 @@
                     }
 
                     this.calendarDays = days;
-                    console.log('Calendar days:', this.calendarDays); // Debug
+                    // console.log('Calendar days:', this.calendarDays); // Debug
                 },
 
                 previousMonth() {
@@ -554,17 +699,73 @@
                 openModal(periodo) {
                     this.selectedPeriodo = periodo;
                     this.showModal = true;
-                    console.log('Abrindo modal para:', periodo, this.selectedPeriodo);
+                    // console.log('Abrindo modal para:', periodo, this.selectedPeriodo);
                 },
 
+                // openDayModal(dia) {
+                //     if (dia.periodos.length > 0) {
+                //         const servidores = dia.periodos.map(p =>
+                //             `• ${p.servidor} - ${p.tipo} (${p.situacao})`
+                //         ).join('\n');
+
+                //         alert(`Períodos em ${this.formatDate(dia.date)}:\n\n${servidores}`);
+                //     }
+                // },
+                // Substitua a função openDayModal por esta:
                 openDayModal(dia) {
                     if (dia.periodos.length > 0) {
-                        const servidores = dia.periodos.map(p =>
-                            `• ${p.servidor} - ${p.tipo} (${p.situacao})`
-                        ).join('\n');
+                        // console.log('Abrindo modal do dia:', dia);
+                        // console.log('Função openDayModal chamada para o dia:', dia.number);
+                        // console.log('Períodos disponíveis:', dia.periodos.length);
 
-                        alert(`Períodos em ${this.formatDate(dia.date)}:\n\n${servidores}`);
+                        // Fechar o modal de período individual se estiver aberto
+                        this.showModal = false;
+                        this.selectedPeriodo = null;
+
+                        // Configurar os dados do modal do dia
+                        this.modalDayData = {
+                            date: dia.date,
+                            formattedDate: this.formatDate(dia.date),
+                            periodos: dia.periodos.map(periodo => ({
+                                ...periodo,
+                                cor: periodo.cor || this.getPeriodoColor(periodo)
+                            }))
+                        };
+
+                        // Abrir o modal do dia
+                        this.modalDayAberto = true;
+                        // console.log('Modal do dia aberto:', this.modalDayAberto);
                     }
+                },
+                // Função auxiliar para obter cores (se não existir)
+                getPeriodoColor(periodo) {
+                    const cores = {
+                        'Abono': {
+                            bg: 'bg-yellow-100 dark:bg-yellow-900/20',
+                            border: 'border-yellow-300 dark:border-yellow-600',
+                            text: 'text-yellow-800 dark:text-yellow-300',
+                            badge: 'bg-yellow-500 text-white'
+                        },
+                        'Férias': {
+                            bg: 'bg-blue-100 dark:bg-blue-900/20',
+                            border: 'border-blue-300 dark:border-blue-600',
+                            text: 'text-blue-800 dark:text-blue-300',
+                            badge: 'bg-blue-500 text-white'
+                        },
+                        'Usufruído': {
+                            bg: 'bg-green-100 dark:bg-green-900/20',
+                            border: 'border-green-300 dark:border-green-600',
+                            text: 'text-green-800 dark:text-green-300',
+                            badge: 'bg-green-500 text-white'
+                        }
+                    };
+
+                    return cores[periodo.tipo] || {
+                        bg: 'bg-gray-100 dark:bg-gray-700',
+                        border: 'border-gray-300 dark:border-gray-600',
+                        text: 'text-gray-800 dark:text-gray-300',
+                        badge: 'bg-gray-500 text-white'
+                    };
                 },
 
                 closeModal() {
@@ -599,7 +800,7 @@
 
         // Inicializar Alpine.js quando o DOM estiver pronto
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM carregado, Alpine.js deve estar funcionando');
+            // console.log('DOM carregado, Alpine.js deve estar funcionando');
 
             // Seus gráficos existentes...
             const ctxMes = document.getElementById('graficoFeriasPorMes');
@@ -675,6 +876,11 @@
     <style>
         [x-cloak] {
             display: none !important;
+        }
+
+        /* Garantir que o modal tenha z-index alto */
+        .fixed.inset-0.z-50 {
+            z-index: 9999;
         }
     </style>
 </x-app-layout>

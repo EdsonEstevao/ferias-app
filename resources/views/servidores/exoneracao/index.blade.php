@@ -33,6 +33,22 @@
                 <div class="font-medium text-gray-700">Nesta Lista</div>
             </div>
         </div>
+        @php
+            $meses = [
+                1 => 'Janeiro',
+                2 => 'Fevereiro',
+                3 => 'Março',
+                4 => 'Abril',
+                5 => 'Maio',
+                6 => 'Junho',
+                7 => 'Julho',
+                8 => 'Agosto',
+                9 => 'Setembro',
+                10 => 'Outubro',
+                11 => 'Novembro',
+                12 => 'Dezembro',
+            ];
+        @endphp
         <!-- Filtros -->
         <div class="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
             <div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -44,9 +60,9 @@
                     <select id="filterMonth"
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
                         <option value="">Todos os meses</option>
-                        @foreach (range(1, 12) as $month)
-                            <option value="{{ $month }}">
-                                {{ DateTime::createFromFormat('!m', $month)->format('F') }}</option>
+                        @foreach ($meses as $k => $month)
+                            <option value="{{ $k }}">
+                                {{ $month }}</option>
                         @endforeach
                     </select>
                     <select id="filterYear"
@@ -83,9 +99,15 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
                         @forelse($exonerados as $vinculo)
-                            <tr class="transition-colors hover:bg-gray-50">
+                            <tr class="transition-colors hover:bg-gray-50" data-row="main"
+                                data-nome="{{ strtolower($vinculo->servidor->nome) }}"
+                                data-cargo="{{ strtolower($vinculo->cargo) }}"
+                                data-matricula="{{ $vinculo->servidor->matricula }}"
+                                data-data-saida="{{ \Carbon\Carbon::parse($vinculo->data_saida)->format('d/m/Y') }}"
+                                data-mes="{{ \Carbon\Carbon::parse($vinculo->data_saida)->format('m') }}"
+                                data-ano="{{ \Carbon\Carbon::parse($vinculo->data_saida)->format('Y') }}">
                                 <!-- Servidor -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -146,7 +168,7 @@
                                             class="inline-flex items-center px-3 py-1 text-xs text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                                             👁️ Ver
                                         </a>
-                                        <button onclick="showDetails({{ $vinculo->id }})"
+                                        <button onclick="showDetails({{ $vinculo->servidor->id }})"
                                             class="inline-flex items-center px-3 py-1 text-xs text-white transition-colors bg-gray-600 rounded-lg hover:bg-gray-700">
                                             📋 Detalhes
                                         </button>
@@ -165,7 +187,8 @@
                             </tr>
 
                             <!-- Linha de detalhes (inicialmente oculta) -->
-                            <tr id="details-{{ $vinculo->id }}" class="hidden bg-gray-50">
+                            <tr id="details-{{ $vinculo->servidor->id }}"
+                                class="hidden transition-all duration-300 ease-in-out bg-gray-50" data-row="details">
                                 <td colspan="5" class="px-6 py-4">
                                     <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                                         <div>
@@ -225,45 +248,186 @@
             const searchInput = document.getElementById('searchInput');
             const filterMonth = document.getElementById('filterMonth');
             const filterYear = document.getElementById('filterYear');
-            const rows = document.querySelectorAll('tbody tr:not(.hidden)');
+            const tableBody = document.getElementById('tableBody');
 
             function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase();
+                const searchTerm = searchInput.value.toLowerCase().trim();
                 const month = filterMonth.value;
                 const year = filterYear.value;
 
-                rows.forEach(row => {
-                    if (row.id && row.id.startsWith('details-')) return;
+                console.log('Filtrando com:', {
+                    searchTerm,
+                    month,
+                    year
+                });
 
-                    const servidorNome = row.querySelector('td:first-child .text-sm.font-medium')
-                        .textContent.toLowerCase();
-                    const cargo = row.querySelector('td:nth-child(2) .text-sm.text-gray-900').textContent
-                        .toLowerCase();
-                    const dataSaida = row.querySelector('td:nth-child(3) .text-sm.font-medium').textContent;
+                // Seleciona apenas as linhas principais (não as de detalhes)
+                const mainRows = tableBody.querySelectorAll('tr[data-row="main"]');
 
-                    let matchesSearch = servidorNome.includes(searchTerm) || cargo.includes(searchTerm);
-                    let matchesDate = true;
+                let visibleCount = 0;
 
-                    if (month || year) {
-                        const [day, monthStr, yearStr] = dataSaida.split('/');
-                        const rowMonth = monthStr;
-                        const rowYear = yearStr;
+                mainRows.forEach(row => {
+                    // Obtém os dados dos atributos data-*
+                    const nome = row.getAttribute('data-nome');
+                    const cargo = row.getAttribute('data-cargo');
+                    const matricula = row.getAttribute('data-matricula');
+                    const mes = row.getAttribute('data-mes');
+                    const ano = row.getAttribute('data-ano');
 
-                        if (month && rowMonth !== month.padStart(2, '0')) {
-                            matchesDate = false;
-                        }
-                        if (year && rowYear !== year) {
-                            matchesDate = false;
-                        }
+                    console.log('Analisando linha:', {
+                        nome,
+                        cargo,
+                        mes,
+                        ano
+                    });
+
+                    // Filtro de busca
+                    let matchesSearch = true;
+                    if (searchTerm) {
+                        matchesSearch = nome.includes(searchTerm) ||
+                            cargo.includes(searchTerm) ||
+                            matricula.includes(searchTerm);
                     }
 
-                    row.style.display = (matchesSearch && matchesDate) ? '' : 'none';
+                    // Filtro de data - CORREÇÃO AQUI
+                    let matchesDate = true;
+                    if (month && month !== '') {
+                        console.log('Comparando mês:', mes, 'com filtro:', month);
+                        matchesDate = mes === month.padStart(2, '0');
+                    }
+
+                    if (year && year !== '') {
+                        console.log('Comparando ano:', ano, 'com filtro:', year);
+                        matchesDate = matchesDate && (ano === year);
+                    }
+
+                    console.log('Resultado:', {
+                        matchesSearch,
+                        matchesDate
+                    });
+
+                    // Mostra ou esconde a linha principal
+                    if (matchesSearch && matchesDate) {
+                        row.style.display = '';
+                        visibleCount++;
+
+                        // Mostra também a linha de detalhes se estiver visível
+                        const detailsRow = row.nextElementSibling;
+                        if (detailsRow && detailsRow.id.startsWith('details-') && !detailsRow.classList
+                            .contains('hidden')) {
+                            detailsRow.style.display = '';
+                        }
+                    } else {
+                        row.style.display = 'none';
+
+                        // Esconde também a linha de detalhes
+                        const detailsRow = row.nextElementSibling;
+                        if (detailsRow && detailsRow.id.startsWith('details-')) {
+                            detailsRow.style.display = 'none';
+                        }
+                    }
                 });
+
+                // Atualiza contador de resultados visíveis
+                updateResultCount(visibleCount);
+
+                // Mostra mensagem se não houver resultados
+                showNoResultsMessage(visibleCount === 0);
             }
 
+            function updateResultCount(count) {
+                console.log(`${count} resultados encontrados`);
+                // Você pode mostrar isso em algum lugar da UI se quiser
+                const countElement = document.getElementById('resultCount');
+                if (countElement) {
+                    countElement.textContent = `${count} resultado(s) encontrado(s)`;
+                }
+            }
+
+            function showNoResultsMessage(show) {
+                // Remove mensagem anterior se existir
+                const existingMessage = tableBody.querySelector('.no-results-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+
+                if (show) {
+                    const messageRow = document.createElement('tr');
+                    messageRow.className = 'no-results-message';
+                    messageRow.innerHTML = `
+                        <td colspan="5" class="px-6 py-8 text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 class="mb-2 text-lg font-medium text-gray-900">Nenhum resultado encontrado</h3>
+                            <p class="text-gray-600">Tente ajustar os filtros de busca.</p>
+                        </td>
+                    `;
+                    tableBody.appendChild(messageRow);
+                }
+            }
+
+            // Event listeners
             searchInput.addEventListener('input', filterTable);
             filterMonth.addEventListener('change', filterTable);
             filterYear.addEventListener('change', filterTable);
+
+            // Filtro inicial se houver parâmetros na URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search') || urlParams.has('month') || urlParams.has('year')) {
+                if (urlParams.has('search')) {
+                    searchInput.value = urlParams.get('search');
+                }
+                if (urlParams.has('month')) {
+                    filterMonth.value = urlParams.get('month');
+                }
+                if (urlParams.has('year')) {
+                    filterYear.value = urlParams.get('year');
+                }
+                // Aguarda um pouco para garantir que o DOM está totalmente carregado
+                setTimeout(filterTable, 100);
+            }
+
+            // Adiciona contador de resultados à UI (opcional)
+            const resultCounter = document.createElement('div');
+            resultCounter.id = 'resultCount';
+            resultCounter.className = 'text-sm text-gray-600 mb-4 text-center';
+            tableBody.parentNode.insertBefore(resultCounter, tableBody);
         });
+
+        // Função para limpar filtros
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterYear').value = '';
+
+            const event = new Event('input');
+            document.getElementById('searchInput').dispatchEvent(event);
+        }
     </script>
+
+    <style>
+        .hidden {
+            display: none !important;
+        }
+
+        /* Transição suave para mostrar/esconder detalhes */
+        tr[data-row="details"] {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Botão para limpar filtros (opcional) */
+        .clear-filters {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .clear-filters:hover {
+            background: #e5e7eb;
+        }
+    </style>
 </x-app-layout>

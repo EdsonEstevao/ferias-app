@@ -69,7 +69,7 @@ class NomeacaoController extends Controller
                 $query->orderBy('nome');
         }
 
-        $servidores = $query->paginate(15);
+        $servidores = $query->paginate(15)->withQueryString();
 
         // Estatísticas
         $totalServidores = Servidor::count();
@@ -93,6 +93,205 @@ class NomeacaoController extends Controller
             'semVinculo',
             'departamentos'
         ));
+    }
+    public function indexJson(Request $request)
+    {
+        $query = Servidor::with(['vinculoAtual']);
+
+        // Filtro de busca
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nome', 'like', "%{$search}%")
+                  ->orWhere('matricula', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por situação
+        if ($request->filled('status')) {
+            if ($request->status === 'ativo') {
+                $query->whereHas('vinculos', function($q) {
+                    $q->ativos();
+                });
+            } elseif ($request->status === 'inativo') {
+                $query->whereDoesntHave('vinculos', function($q) {
+                    $q->ativos();
+                });
+            }
+        }
+
+        // Filtro por departamento
+        if ($request->filled('departamento')) {
+            $query->whereHas('vinculos', function($q) use ($request) {
+                $q->where('departamento', $request->departamento);
+            });
+        }
+
+        // Ordenação
+        $sort = $request->get('sort', 'nome');
+        switch ($sort) {
+            case 'nome_desc':
+                $query->orderBy('nome', 'desc');
+                break;
+            case 'matricula':
+                $query->orderBy('matricula');
+                break;
+            case 'departamento':
+                $query->orderBy(
+                    VinculoFuncional::select('departamento')
+                        ->whereColumn('servidor_id', 'servidores.id')
+                        ->latest()
+                        ->limit(1)
+                );
+                break;
+            default:
+                $query->orderBy('nome');
+        }
+
+        $servidores = $query->paginate(15);
+
+        // Estatísticas
+        $totalServidores = Servidor::count();
+        $ativos = Servidor::whereHas('vinculos', function($q) {
+            $q->ativos();
+        })->count();
+        $inativos = $totalServidores - $ativos;
+        $semVinculo = Servidor::whereDoesntHave('vinculos')->count();
+
+        // Departamentos para filtro
+        $departamentos = VinculoFuncional::distinct()
+            ->whereNotNull('departamento')
+            ->pluck('departamento')
+            ->sort();
+
+        $estatisticas = [
+            'total' => $totalServidores,
+            'ativos' => $ativos,
+            'inativos' => $inativos,
+            'semVinculo' => $semVinculo
+        ];
+         $paginacao = [
+            'current_page' => $servidores->currentPage(),
+            'last_page' => $servidores->lastPage(),
+            'per_page' => $servidores->perPage(),
+            'total' => $servidores->total(),
+            'from' => $servidores->firstItem(),
+            'to' => $servidores->lastItem(),
+            'links' => $servidores->linkCollection()->toArray()
+         ];
+
+        return response()->json([
+            'servidores' => $servidores->items(),
+            'departamentos' => $departamentos,
+            'estatisticas' => $estatisticas,
+            'pagination' => $paginacao,
+        ]);
+    }
+
+
+    public function filtroDados(Request $request)
+    {
+        $query = Servidor::with(['vinculoAtual']);
+
+        // Filtro de busca
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nome', 'like', "%{$search}%")
+                  ->orWhere('matricula', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por situação
+        if ($request->filled('status')) {
+            if ($request->status === 'ativo') {
+                $query->whereHas('vinculos', function($q) {
+                    $q->ativos();
+                });
+            } elseif ($request->status === 'inativo') {
+                $query->whereDoesntHave('vinculos', function($q) {
+                    $q->ativos();
+                });
+            }
+        }
+
+        // Filtro por departamento
+        if ($request->filled('departamento')) {
+            $query->whereHas('vinculos', function($q) use ($request) {
+                $q->where('departamento', $request->departamento);
+            });
+        }
+
+        // Ordenação
+        $sort = $request->get('sort', 'nome');
+        switch ($sort) {
+            case 'nome_desc':
+                $query->orderBy('nome', 'desc');
+                break;
+            case 'matricula':
+                $query->orderBy('matricula');
+                break;
+            case 'departamento':
+                $query->orderBy(
+                    VinculoFuncional::select('departamento')
+                        ->whereColumn('servidor_id', 'servidores.id')
+                        ->latest()
+                        ->limit(1)
+                );
+                break;
+            default:
+                $query->orderBy('nome');
+        }
+
+        $servidores = $query->paginate(15)->withQueryString();
+
+        // Estatísticas
+        $totalServidores = Servidor::count();
+        $ativos = Servidor::whereHas('vinculos', function($q) {
+            $q->ativos();
+        })->count();
+        $inativos = $totalServidores - $ativos;
+        $semVinculo = Servidor::whereDoesntHave('vinculos')->count();
+
+        // Departamentos para filtro
+        $departamentos = VinculoFuncional::distinct()
+            ->whereNotNull('departamento')
+            ->pluck('departamento')
+            ->sort();
+
+         $estatisticas = [
+            'total' => $totalServidores,
+            'ativos' => $ativos,
+            'inativos' => $inativos,
+            'semVinculo' => $semVinculo
+        ];
+         $paginacao = [
+            'current_page' => $servidores->currentPage(),
+            'last_page' => $servidores->lastPage(),
+            'per_page' => $servidores->perPage(),
+            'total' => $servidores->total(),
+            'from' => $servidores->firstItem(),
+            'to' => $servidores->lastItem(),
+            'links' => $servidores->linkCollection()->toArray()
+         ];
+
+
+         return response()->json([
+        'servidores' => [
+            'data' => $servidores->items(),
+            'current_page' => $servidores->currentPage(),
+            'last_page' => $servidores->lastPage(),
+            'per_page' => $servidores->perPage(),
+            'total' => $servidores->total(),
+            'from' => $servidores->firstItem(),
+            'to' => $servidores->lastItem(),
+            'links' => $servidores->linkCollection()->toArray()
+        ],
+        'estatisticas' => $estatisticas,
+        'paginacao' => $paginacao,
+    ]);
     }
 
 

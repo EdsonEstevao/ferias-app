@@ -93,6 +93,9 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
 
  // routes/web.php
 Route::get('/servidores-nomeados', [NomeacaoController::class, 'index'])->name('servidores.nomeados.index');
+//Api de nomeação
+Route::get('/api/servidores-nomeados', [NomeacaoController::class, 'indexJson'])->name('api.servidores-nomeados.index');
+Route::get('/api/servidores-nomeados/filtro/dados', [NomeacaoController::class, 'dados'])->name('api.servidores-nomeados.filtro.dados');
 
 // Servidores - Todas as rotas organizadas
 Route::middleware(['role:admin|gestor|super admin'])->group(function () {
@@ -108,6 +111,9 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
         // Rotas de nomeação
         Route::get('/{servidor}/nomeacao/create', [NomeacaoController::class, 'create'])->name('nomeacao.create');
         Route::post('/{servidor}/nomeacao', [NomeacaoController::class, 'store'])->name('nomeacao.store');
+
+
+
 
 
         // Rotas de exoneração
@@ -127,6 +133,10 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
         Route::get('/{servidor}/edit', [ServidorController::class, 'edit'])->name('edit');
         Route::put('/{servidor}', [ServidorController::class, 'update'])->name('update');
         Route::delete('/{servidor}', [ServidorController::class, 'destroy'])->name('destroy');
+
+
+
+
 
 
 

@@ -156,34 +156,15 @@ class FeriasPeriodosController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // public function marcarComoUsufruido(Request $request, $id)
-    // {
-    //     dd($request->all(), $id);
-
-    //     $periodo = FeriasPeriodos::findOrFail($id);
-    //     if($periodo->podeSerUsufruido()){
-    //         $periodo->marcarComoUsufruido();
-    //         return response()->json([
-    //             'message' => 'Período atualizado com sucesso!',
-    //             'periodo' => $periodo
-    //         ]);
-    //     }else{
-    //         return response()->json([
-    //             'message' => 'Período não pode ser usufruido',
-    //             'periodo' => $periodo
-    //         ]);
-    //     }
-    // }
-
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request,  $periodo): JsonResponse
     {
-        $periodo = FeriasPeriodos::findOrFail($id);
+        $p = FeriasPeriodos::findOrFail($periodo);
 
-        if($periodo->usufruido){
+        if($p->usufruido){
             flash()->error('Período usufruido, impossível excluir');
             return response()->json(['error' => 'Período usufruido, impossível excluir'], 422);
         }
-        if($periodo->filhos()->count() > 0){
+        if($p->filhos()->count() > 0){
             flash()->error('Período possui filhos, impossível excluir');
             return response()->json(['error' => 'Período possui filhos, impossível excluir'], 422);
         }
@@ -191,17 +172,17 @@ class FeriasPeriodosController extends Controller
         try {
 
             // Excluir eventos primeiro
-            FeriasEvento::where('ferias_periodo_id', $periodo->periodo_origem_id)->delete();
+            FeriasEvento::where('ferias_periodo_id', $p->periodo_origem_id)->delete();
 
 
             // Marcar período Pai como ativo
-            if($periodo->periodo_origem_id > 0){
-                $periodo->origem()->update([
+            if($p->periodo_origem_id > 0){
+                $p->origem()->update([
                     'ativo' => true
                 ]);
             }
 
-            $periodo->delete();
+            $p->delete();
 
 
             flash()->success('Período excluído com sucesso!');
