@@ -101,4 +101,58 @@ class Ferias extends Model
                     ->sum('dias');
     }
 
+    /**
+     * Períodos convertidos para abono pecuniário
+     */
+
+    public function periodosConvertidosAbono()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')
+                    ->where('convertido_abono', true);
+    }
+
+    /**
+     * Períodos normais (não convertidos para abono pecuniário)
+     */
+    public function periodosNormais()
+    {
+        return $this->hasMany(FeriasPeriodos::class, 'ferias_id')
+                    ->where('convertido_abono', false);
+    }
+
+    /**
+     * Verificar se tem períodos convertidos para abono pecuniário
+     */
+
+    public function temPeriodosConvertidosAbono()
+    {
+        return $this->periodos()->where('convertido_abono', true)->exists();
+    }
+
+    /**
+     * Total de dias convertidos para abono pecuniário
+     */
+
+    public function getTotalDiasAbonoAttribute()
+    {
+        return $this->periodos()
+                    ->where('convertido_abono', true)
+                    ->sum('dias');
+    }
+
+    /**
+     * Total de dias de férias normais
+     *
+     */
+    public function getTotalDiasNormaisAttribute()
+    {
+        return $this->periodos()
+                    ->where('convertido_abono', false)
+                    ->where('usufruido', false)
+                    ->where('ativo', true)
+                    ->sum('dias');
+    }
+
+
+
 }

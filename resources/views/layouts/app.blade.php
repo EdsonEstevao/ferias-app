@@ -11,9 +11,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Icons Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- Highlight.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"> --}}
+
+    <!-- Icons Font Awesome -->
+    <link rel="stylesheet" href="{{ asset('css/awesome-all.min.css') }}">
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="{{ asset('css/highlight.min.css') }}">
 
     <style>
         /* Estilos para o overlay do menu móvel */
@@ -425,7 +430,7 @@
                         <form method="POST" action="{{ route('logout') }}" class="w-full">
                             @csrf
                             <button type="submit"
-                                class="flex items-center w-full px-4 py-2 text-left rounded-lg text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-all duration-200">
+                                class="flex items-center w-full px-4 py-2 text-left transition-all duration-200 rounded-lg text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50">
                                 <i class="w-4 mr-2 fas fa-sign-out-alt"></i>
                                 Sair
                             </button>
@@ -464,7 +469,7 @@
                         <div x-data="{ showOnlineUsers: false }" class="relative">
                             <button @click="showOnlineUsers = !showOnlineUsers"
                                 class="flex items-center px-3 py-2 text-sm transition-colors rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50">
-                                <div class="w-2 h-2 mr-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <div class="w-2 h-2 mr-2 rounded-full bg-emerald-500 animate-pulse"></div>
                                 <span>Online: </span>
                                 <strong class="ml-1" id="onlineUsersCount">
                                     {{ \App\Models\User::online()->count() }}
@@ -493,12 +498,12 @@
                                     @forelse(\App\Models\User::online()->get() as $user)
                                         <div
                                             class="flex items-center px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                            <div class="w-2 h-2 mr-2 bg-emerald-500 rounded-full"></div>
+                                            <div class="w-2 h-2 mr-2 rounded-full bg-emerald-500"></div>
                                             <div class="flex-1 min-w-0">
                                                 <p
-                                                    class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                                    class="text-sm font-medium truncate text-slate-900 dark:text-slate-100">
                                                     {{ $user->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                <p class="text-xs truncate text-slate-500 dark:text-slate-400">
                                                     {{ $user->email }}</p>
                                             </div>
                                             <span class="ml-2 text-xs text-slate-400 dark:text-slate-500">

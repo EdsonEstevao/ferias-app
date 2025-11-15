@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 
 // Férias
 Route::middleware(['role:admin|gestor|super admin'])->group(function () {
+
     Route::prefix('/ferias')->group(function () {
         Route::get('/', [FeriasController::class, 'index'])->name('ferias.index');
 
@@ -86,6 +87,25 @@ Route::middleware(['role:admin|gestor|super admin'])->group(function () {
         Route::get('/filtro/excel', [FeriasController::class, 'filtroExcel'])->name('ferias.filtro.excel');
         // Api para o filtro
         Route::get('/filtro/dados', [FeriasController::class, 'filtroDados'])->name('ferias.filtro.dados');
+
+
+         // Conversão para abono pecuniário
+        Route::get('/periodo/{periodoId}/converter-abono', [FeriasController::class, 'viewConverterAbono'])
+            ->name('ferias.converter-abono.view');
+        Route::post('/periodo/converter-abono', [FeriasController::class, 'converterParaAbono'])
+            ->name('ferias.converter-abono');
+
+        // Reversão de abono pecuniário
+        Route::get('/periodo/{periodoId}/reverter-abono', [FeriasController::class, 'viewReverterAbono'])
+            ->name('ferias.reverter-abono.view');
+        Route::post('/periodo/reverter-abono', [FeriasController::class, 'reverterAbono'])
+            ->name('ferias.reverter-abono');
+
+        // Lista de períodos convertidos
+        Route::get('/periodos-abono', [FeriasController::class, 'periodosAbono'])
+            ->name('ferias.periodos-abono');
+
+
     });
 
 });
@@ -253,6 +273,12 @@ Route::post('/api/periodos-ferias', [FeriasPeriodosController::class, 'store']);
 Route::post('/api/periodos-ferias/{id}/usufruir', [FeriasPeriodosController::class, 'marcarComoUsufruido']);
 Route::post('/api/periodos-ferias/{id}/desusufruir', [FeriasPeriodosController::class, 'desmarcarUsufruto']);
 Route::put('/api/periodos-ferias/{id}', [FeriasPeriodosController::class, 'update']);
+
+ // API para verificação
+Route::get('/api/periodo/{id}/pode-converter-abono', [FeriasPeriodosController::class, 'podeConverterAbono'])
+    ->name('ferias.periodo.pode-converter-abono');
+Route::get('api/periodo/{id}/info-conversao-abono', [FeriasPeriodosController::class, 'infoConversaoAbono'])
+    ->name('ferias.periodo.info-conversao-abono');
 
 
 Route::prefix('periodos-ferias')->group(function () {

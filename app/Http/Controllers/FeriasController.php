@@ -9,6 +9,7 @@ use App\Models\FeriasPeriodos;
 use App\Models\Servidor;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -117,7 +118,9 @@ class FeriasController extends Controller
     public function create(Request $request, $servidorId)
     {
         // dd($request->all(), $servidorId);
-        if (Auth::user()->hasRole('servidor')) {
+        if (Auth::user()->hasRole(['servidor']) ) {
+
+            flash()->error('Você não tem permissão para acessar essa página.');
             return redirect()->route('ferias.index');
         }
         // $servidorId = $request->servidorId;
@@ -175,7 +178,7 @@ class FeriasController extends Controller
         //
     }
 
-     public function edit($id)
+    public function edit($id)
     {
         $ferias = Ferias::with(['servidor', 'periodos'])->findOrFail($id);
         return view('ferias.edit', compact('ferias'));
@@ -186,35 +189,19 @@ class FeriasController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $ferias = Ferias::findOrFail($id);
 
         $request->validate([
             'ano_exercicio' => 'required|integer',
             'situacao' => 'required|string'
         ]);
 
+        $ferias = Ferias::findOrFail($id);
+
         $ferias->update($request->all());
 
         return redirect()->route('ferias.show', $ferias->id)
             ->with('success', 'Férias atualizadas com sucesso!');
     }
-
-
-    // public function interromperPeriodo($periodoId)
-    // {
-    //     $periodo = FeriasPeriodos::findOrFail($periodoId);
-    //     $periodo->situacao = 'Interrompido';
-    //     $periodo->ativo = false;
-    //     $periodo->save();
-
-    //     FeriasEvento::create([
-    //         'ferias_periodo_id' => $periodo->id,
-    //         'acao' => 'Interrupção',
-    //         'descricao' => 'Período interrompido por necessidade do serviço',
-    //         'data_acao' => now(),
-    //         'user_id' => Auth::id(), //auth()->id(),
-    //     ]);
-    // }
 
     public function interromper(Request $request)
     {
@@ -537,12 +524,13 @@ class FeriasController extends Controller
                 return response()->json(['message' => 'Cada período deve ter no mínimo 5 dias.'], 422);
             }
 
+            //'ordem' => $dias > 10 ? $index + 1 : $original->ordem,
             FeriasPeriodos::create([
                 'ferias_id' => $ferias->id,
                 'inicio' => $inicio,
                 'fim' => $fim,
                 'dias' => $dias,
-                'ordem' => $dias > 10 ? $index + 1 : $original->ordem,
+                'ordem' => $original->ordem,
                 'tipo' => 'Férias',
                 'periodo_origem_id' => $original->id,
                 'situacao' => 'Remarcado',
@@ -809,127 +797,315 @@ class FeriasController extends Controller
     }
 
     public function filtroDados(Request $request)
-{
-    $query = FeriasPeriodos::with(['ferias.servidor'])
-        ->where('ativo', true);
+    {
+        $query = FeriasPeriodos::with(['ferias.servidor'])
+            ->where('ativo', true);
 
-    // Aplicar filtros (mesma lógica do método filtro)
-    if ($request->filled('tipo')) {
-        if ($request->tipo == 'ferias') {
-            $query->where('tipo', '!=', 'Abono');
+        // Aplicar filtros (mesma lógica do método filtro)
+        if ($request->filled('tipo')) {
+            if ($request->tipo == 'ferias') {
+                $query->where('tipo', '!=', 'Abono');
+            } else {
+                $query->where('tipo', 'Abono');
+            }
+        }
+
+        if ($request->filled('ano_exercicio')) {
+            $query->whereHas('ferias', function($q) use ($request) {
+                $q->where('ano_exercicio', $request->ano_exercicio);
+            });
+        }
+
+        if ($request->filled('mes')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('inicio', $request->mes)
+                ->orWhereMonth('fim', $request->mes);
+            });
+        }
+
+        if ($request->filled('situacao')) {
+            $query->where('situacao', $request->situacao);
+        }
+
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+            $query->whereHas('ferias.servidor', function($q) use ($busca) {
+                $q->where('nome', 'like', "%{$busca}%")
+                ->orWhere('matricula', 'like', "%{$busca}%")
+                ->orWhere('cpf', 'like', "%{$busca}%");
+            });
+        }
+
+        // Ordenação
+        $campoOrdenacao = $request->filled('ordenar') ? $request->ordenar : 'inicio';
+        $direcao = $request->filled('direcao') ? $request->direcao : 'desc';
+
+        $camposOrdenacao = [
+            'servidor' => 'servidores.nome',
+            'exercicio' => 'ferias.ano_exercicio',
+            'inicio' => 'inicio',
+            'dias' => 'dias'
+        ];
+
+        $campoBanco = $camposOrdenacao[$campoOrdenacao] ?? 'inicio';
+
+        if ($campoOrdenacao === 'servidor') {
+            $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+                ->join('servidores', 'ferias.servidor_id', '=', 'servidores.id')
+                ->select('ferias_periodos.*');
+        }
+
+        if ($campoOrdenacao === 'exercicio') {
+            $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
+                ->select('ferias_periodos.*')
+                ->orderBy('ferias.ano_exercicio', $direcao);
         } else {
-            $query->where('tipo', 'Abono');
+            $query->orderBy($campoBanco, $direcao);
+        }
+
+
+        // $query->orderBy($ordenacao, $direcao);
+
+        $periodos = $query->paginate(20);
+
+        // Estatísticas
+        $totalRegistros = $periodos->total();
+        $totalServidoresIds = $periodos->getCollection()->pluck('ferias.servidor_id')->unique()->count();
+        $totalServidores = $totalServidoresIds;
+        $totalDias = $query->sum('dias');
+        $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
+
+        // Formatar dados para JSON
+        $periodosFormatados = $periodos->getCollection()->map(function($periodo) {
+            return [
+                'id' => $periodo->id,
+                'ferias_id' => $periodo->ferias_id,
+                'servidor_nome' => $periodo->ferias->servidor->nome,
+                'servidor_matricula' => $periodo->ferias->servidor->matricula,
+                'ano_exercicio' => $periodo->ferias->ano_exercicio,
+                'tipo' => $periodo->tipo,
+                'inicio' => $periodo->inicio->format('Y-m-d'), // Garantir formato ISO
+                'fim' => $periodo->fim->format('Y-m-d'), // Garantir formato ISO
+                'dias' => $periodo->dias,
+                'situacao' => $periodo->situacao,
+                'usufruido' => $periodo->usufruido
+            ];
+        });
+
+        return response()->json([
+            'periodos' => [
+                'data' => $periodosFormatados,
+                'current_page' => $periodos->currentPage(),
+                'last_page' => $periodos->lastPage(),
+                'per_page' => $periodos->perPage(),
+                'total' => $periodos->total(),
+                'from' => $periodos->firstItem(),
+                'to' => $periodos->lastItem(),
+                'links' => $periodos->linkCollection()->toArray()
+            ],
+            'estatisticas' => [
+                'totalRegistros' => $totalRegistros,
+                'totalServidores' => $totalServidores,
+                'totalDias' => $totalDias,
+                'totalUsufruidos' => $totalUsufruidos
+            ],
+            'paginacao' => [
+                'current_page' => $periodos->currentPage(),
+                'last_page' => $periodos->lastPage(),
+                'per_page' => $periodos->perPage(),
+                'total' => $periodos->total(),
+                'from' => $periodos->firstItem(),
+                'to' => $periodos->lastItem(),
+                'links' => $periodos->linkCollection()->toArray()
+            ]
+        ]);
+    }
+
+    /**
+     * Converter período para abono pecuniário
+     */
+
+    public function converterParaAbono(Request $request)
+    {
+
+        // dd($request->all());
+
+
+        $data = $request->validate([
+            'periodo_id' => 'required|exists:ferias_periodos,id',
+            'justificativa' => 'required|string|max:500',
+            'conversao_parcial' => 'nullable|boolean',
+            'dias_converter' => 'nullable|integer|min:1',
+        ]);
+
+        // dd('passou...');
+
+        try{
+            $periodo = FeriasPeriodos::findOrFail($data['periodo_id']);
+
+            //verificar se pode converter
+            if(!$periodo->podeSerConvertidoAbono()){
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Período não pode ser convertido'], 422);
+            }
+
+            // dd($periodo);
+
+            //Converter período completo ou parcial
+            if($request->filled('conversao_parcial') && $request->filled('dias_converter'))
+            {
+                // dd('dentro do if');
+                $sucesso = $periodo->converterAbonoParcialmenteAbono($request->dias_converter, $data['justificativa']);
+            }else {
+                // dd('dentro do else', $periodo->situacao);
+                $sucesso = $periodo->converterParaAbonoPecuniario($data['justificativa'], $periodo->situacao, $request->url_abono, $request->title_abono);
+            }
+
+            // dd($sucesso);
+
+
+            if($sucesso){
+                // return response()->json([
+                //     'success' => true,
+                //     'message' => 'Período convertido para abono pecuniário com sucesso!'
+                // ]);
+                flash()->success('Período convertido para abono pecuniário com sucesso!');
+                return redirect()->route('ferias.index');
+
+            }
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao converter período para Abono'], 500);
+
+        }catch(Exception $e){
+            Log::error('Error ao converter período para abono: '. $e->getMessage());
+            return response()->json([
+                'log' => $e->getMessage(),
+                'success' => false,
+                'error' => 'Erro interno ao processar conversão'], 500);
+        }
+
+    }
+
+    /**
+     * Reverter período de Abono pecuniário
+     */
+
+    public function reverterAbono(Request $request)
+    {
+        $data = $request->validate([
+            'periodo_id' => 'required|exists:ferias_periodos,id',
+            'justificativa' => 'required|string|max:500',
+        ]);
+
+        try{
+            $periodo = FeriasPeriodos::findOrFail($data['periodo_id']);
+
+            if(!$periodo->convertido_abono){
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Este período não está convertido para abono pecuniário'], 422);
+            }
+
+            $sucesso = $periodo->reverterAbonoPecuniario($data['justificativa']);
+            $evento_acao = FeriasEvento::where('ferias_periodo_id', $periodo->periodo_origem_id)->first()->acao;
+
+            $evento_acao = match ($evento_acao) {
+                                    'Interrupção' => 'Interrompido',
+                                    'Remarcação' => 'Remarcado',
+                                    default => $evento_acao,
+                                };
+
+            if($sucesso){
+
+                // return response()->json([
+                //     'success' => true,
+                //     'message' => 'Período revertido para abono pecuniário com sucesso!'
+                // ]);
+
+                flash()->success('Período revertido para '.$evento_acao.' com sucesso!');
+                return redirect()->route('ferias.index');
+            }
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro ao reverter abono pecuniário'], 500);
+
+        }catch(Exception $e){
+            Log::error('Error ao reverter abono pecuniário: '. $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro interno ao processar reversão'], 500);
         }
     }
 
-    if ($request->filled('ano_exercicio')) {
-        $query->whereHas('ferias', function($q) use ($request) {
-            $q->where('ano_exercicio', $request->ano_exercicio);
-        });
+    /**
+     * View para conversão de abono pecuniario
+     */
+
+    public function viewConverterAbono($periodoId)
+    {
+        // dd($periodoId);
+        $periodo = FeriasPeriodos::with(['ferias.servidor'])->findOrFail($periodoId);
+
+
+        // dd($periodo);
+
+        //verificar se pode converter
+        if(!$periodo->podeSerConvertidoAbono()){
+            flash()->error('Período não pode ser convertido para abono pecuniário.');
+            return redirect()->back();
+        }
+
+        return view('ferias.converter-abono', compact('periodo'));
     }
 
-    if ($request->filled('mes')) {
-        $query->where(function($q) use ($request) {
-            $q->whereMonth('inicio', $request->mes)
-              ->orWhereMonth('fim', $request->mes);
-        });
+    /**
+     * View para reversão de abono pecuniario
+     */
+    public function viewReverterAbono($periodoId)
+    {
+        $periodo = FeriasPeriodos::with(['ferias.servidor'])->findOrFail($periodoId);
+
+        //verificar se pode converter
+        if(!$periodo->convertido_abono){
+            flash()->error('Período não pode ser revertido para abono pecuniário.');
+            return redirect()->back();
+        }
+
+        return view('ferias.reverter-abono', compact('periodo'));
     }
 
-    if ($request->filled('situacao')) {
-        $query->where('situacao', $request->situacao);
-    }
+    /**
+     * Listar período convertido para abono
+     */
 
-    if ($request->filled('busca')) {
-        $busca = $request->busca;
-        $query->whereHas('ferias.servidor', function($q) use ($busca) {
-            $q->where('nome', 'like', "%{$busca}%")
-              ->orWhere('matricula', 'like', "%{$busca}%")
-              ->orWhere('cpf', 'like', "%{$busca}%");
-        });
-    }
+    public function periodosAbono(Request $request)
+    {
+        $query = FeriasPeriodos::with(['ferias.servidor'])
+                ->where('convertido_abono', true)
+                ->where('ativo', true);
 
-    // Ordenação
-    $campoOrdenacao = $request->filled('ordenar') ? $request->ordenar : 'inicio';
-    $direcao = $request->filled('direcao') ? $request->direcao : 'desc';
+        //Filtros
+        if($request->filled('ano_exercicio')) {
+            $query->whereHas('ferias', function($q) use ($request) {
+                $q->where('ano_exercicio', $request->ano_exercicio);
+            });
+        }
 
-    $camposOrdenacao = [
-        'servidor' => 'servidores.nome',
-        'exercicio' => 'ferias.ano_exercicio',
-        'inicio' => 'inicio',
-        'dias' => 'dias'
-    ];
+        if($request->filled('servidor'))
+        {
+            $query->whereHas('ferias.servidor', function($q) use ($request) {
+                $q->where('nome', 'like', "%{$request->servidor}%");
+            });
+        }
 
-    $campoBanco = $camposOrdenacao[$campoOrdenacao] ?? 'inicio';
+        $periodosAbono = $query->orderBy('data_conversao_abono', 'desc')->paginate(10)->withQueryString();
 
-    if ($campoOrdenacao === 'servidor') {
-        $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
-              ->join('servidores', 'ferias.servidor_id', '=', 'servidores.id')
-              ->select('ferias_periodos.*');
-    }
 
-    if ($campoOrdenacao === 'exercicio') {
-        $query->join('ferias', 'ferias_periodos.ferias_id', '=', 'ferias.id')
-              ->select('ferias_periodos.*')
-              ->orderBy('ferias.ano_exercicio', $direcao);
-    } else {
-        $query->orderBy($campoBanco, $direcao);
+        return view('ferias.periodos-abono', compact('periodosAbono'));
+
     }
 
 
-    // $query->orderBy($ordenacao, $direcao);
-
-    $periodos = $query->paginate(20);
-
-    // Estatísticas
-    $totalRegistros = $periodos->total();
-    $totalServidoresIds = $periodos->getCollection()->pluck('ferias.servidor_id')->unique()->count();
-    $totalServidores = $totalServidoresIds;
-    $totalDias = $query->sum('dias');
-    $totalUsufruidos = $query->clone()->where('usufruido', true)->sum('dias');
-
-    // Formatar dados para JSON
-    $periodosFormatados = $periodos->getCollection()->map(function($periodo) {
-        return [
-            'id' => $periodo->id,
-            'ferias_id' => $periodo->ferias_id,
-            'servidor_nome' => $periodo->ferias->servidor->nome,
-            'servidor_matricula' => $periodo->ferias->servidor->matricula,
-            'ano_exercicio' => $periodo->ferias->ano_exercicio,
-            'tipo' => $periodo->tipo,
-            'inicio' => $periodo->inicio->format('Y-m-d'), // Garantir formato ISO
-            'fim' => $periodo->fim->format('Y-m-d'), // Garantir formato ISO
-            'dias' => $periodo->dias,
-            'situacao' => $periodo->situacao,
-            'usufruido' => $periodo->usufruido
-        ];
-    });
-
-    return response()->json([
-        'periodos' => [
-            'data' => $periodosFormatados,
-            'current_page' => $periodos->currentPage(),
-            'last_page' => $periodos->lastPage(),
-            'per_page' => $periodos->perPage(),
-            'total' => $periodos->total(),
-            'from' => $periodos->firstItem(),
-            'to' => $periodos->lastItem(),
-            'links' => $periodos->linkCollection()->toArray()
-        ],
-        'estatisticas' => [
-            'totalRegistros' => $totalRegistros,
-            'totalServidores' => $totalServidores,
-            'totalDias' => $totalDias,
-            'totalUsufruidos' => $totalUsufruidos
-        ],
-        'paginacao' => [
-            'current_page' => $periodos->currentPage(),
-            'last_page' => $periodos->lastPage(),
-            'per_page' => $periodos->perPage(),
-            'total' => $periodos->total(),
-            'from' => $periodos->firstItem(),
-            'to' => $periodos->lastItem(),
-            'links' => $periodos->linkCollection()->toArray()
-        ]
-    ]);
-}
 }

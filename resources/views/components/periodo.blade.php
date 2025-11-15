@@ -13,6 +13,7 @@
 
             // Definir classes CSS baseadas na situação
             $classes = match (true) {
+                $filho->convertido_abono => 'bg-purple-50 border-l-4 border-purple-400',
                 $filho->situacao === 'Interrompido' => 'bg-orange-50 border-l-4 border-orange-400',
                 $filho->situacao === 'Remarcado' => 'bg-blue-50 border-l-4 border-blue-400',
                 $filho->usufruido => 'bg-green-100 border-l-4 border-green-500',
@@ -36,7 +37,8 @@
                 <div class="flex-1">
                     <p
                         class="font-semibold
-                        @if ($filho->situacao === 'Interrompido') text-orange-700'
+                        @if ($filho->convertido_abono) text-purple-700'
+                        @elseif ($filho->situacao === 'Interrompido') text-orange-700'
                         @elseif($filho->situacao === 'Remarcado') text-blue-700'
                         @elseif($filho->usufruido) text-green-700'
                         @else text-gray-700 @endif">
@@ -52,6 +54,11 @@
                         @if ($filho->usufruido)
                             <span class="px-2 py-1 ml-2 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
                                 ✅ USUFRUÍDO
+                            </span>
+                        @elseif ($filho->convertido_abono)
+                            <span
+                                class="px-2 py-1 ml-2 text-xs font-semibold text-purple-800 bg-purple-200 rounded-full">
+                                💵 Convertido em Abono
                             </span>
                         @else
                             <span
@@ -70,25 +77,43 @@
                         </p>
                     @endif
 
-                    {{-- @if ($filho->ativo) --}}
+
                     <p class="text-sm text-gray-600">
                         {{ date('d/m/Y', strtotime($filho->inicio)) }} a
                         {{ date('d/m/Y', strtotime($filho->fim)) }}
                         — {{ $filho->dias }} dias
                     </p>
-                    {{-- @endif --}}
+
 
                     <p class="text-xs text-gray-500">
                         Situação: {{ $filho->situacao }}
                         @if ($filho->usufruido && $filho->data_usufruto)
                             • Usufruído em: {{ date('d/m/Y', strtotime($filho->data_usufruto)) }}
                         @endif
+                        @if ($filho->convertido_abono && $filho->data_conversao_abono)
+                            • Convertido em abono em: {{ date('d/m/Y', strtotime($filho->data_conversao_abono)) }}
+                        @endif
                     </p>
 
                     <!-- Botões de Ação -->
                     <div class="mt-2">
                         <div class="flex flex-wrap gap-2">
-                            @if ($filho->ativo && $filho->situacao === 'Remarcado' && !$filho->usufruido)
+                            <!-- Botões para períodos convertidos em abono -->
+                            @if ($filho->convertido_abono)
+                                <div class="flex flex-col gap-2">
+                                    <a href="{{ $filho->url_abono }}" target="_blank"
+                                        class="text-blue-600 hover:underline">{{ $filho->title_abono }}</a>
+                                    <a href="{{ route('ferias.reverter-abono.view', $filho->id) }}"
+                                        class="px-3 py-1 text-xs text-orange-600 bg-orange-100 rounded hover:bg-orange-200">
+                                        ↩️ Reverter Abono
+                                    </a>
+                                </div>
+                            @elseif ($filho->ativo && $filho->situacao === 'Remarcado' && !$filho->usufruido && !$filho->convertido_abono)
+                                <!-- Botão para converter para abono -->
+                                <a href="{{ route('ferias.converter-abono.view', $filho->id) }}"
+                                    class="px-3 py-1 text-xs text-purple-600 bg-purple-100 rounded hover:bg-purple-200">
+                                    💰 Converter Abono
+                                </a>
                                 <button data-periodo-id="{{ $filho->id }}"
                                     data-inicio="{{ $filho->inicio_formatado }}"
                                     data-fim="{{ $filho->fim_formatado }}" data-title="{{ $filho->title }}"
@@ -114,8 +139,8 @@
                                 </button>
                             @endif
 
-                            @if ($filho->situacao !== 'Usufruido' || $filho->tipo == 'Abono')
-                                @if ($filho->usufruido && $filho->ativo)
+                            @if ($filho->situacao !== 'Usufruido' || ($filho->tipo == 'Abono' && !$filho->convertido_abono))
+                                @if ($filho->usufruido && $filho->ativo && !$filho->convertido_abono)
                                     <button @click="desmarcarUsufruto({{ $filho->id }})"
                                         class="text-xs text-orange-600 hover:underline">
                                         ↩️ Desmarcar Usufruto
@@ -124,7 +149,7 @@
                             @endif
                         </div>
 
-                        @if ($filho->ativo && $filho->situacao && !$filho->usufruido)
+                        @if ($filho->ativo && $filho->situacao && !$filho->usufruido && !$filho->convertido_abono)
                             <div class="flex flex-wrap gap-2 mt-2">
                                 <button @click="abrirModalRemarcacao({{ $filho->id }}, {{ json_encode($filho) }})"
                                     class="px-3 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
@@ -138,6 +163,11 @@
                                             🗑️ Excluir
                                         </button>
                                     @endrole
+                                    <!-- Botão para converter para abono -->
+                                    <a href="{{ route('ferias.converter-abono.view', $filho->id) }}"
+                                        class="px-3 py-1 text-xs text-purple-600 bg-purple-100 rounded hover:bg-purple-200">
+                                        💰 Converter Abono
+                                    </a>
                                 @endif
 
                                 @if ($filho->situacao !== 'Interrompido')
@@ -149,7 +179,7 @@
 
                             </div>
                             <!-- Formulário de interrupção Mobile -->
-                            <div x-show="interrupcaoAbertaFilho"
+                            <div x-show="interrupcaoAbertaFilho" x-cloak="true"
                                 class="p-3 mt-2 space-y-3 transition duration-300 transform rounded bg-gray-50"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="transform opacity-0 scale-95"

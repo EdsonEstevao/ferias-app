@@ -17,25 +17,32 @@
                 <span class="text-sm sm:text-base">Filtros</span>
             </button>
 
+            <!-- Botão para ver períodos convertidos em abono -->
+            <a href="{{ route('ferias.periodos-abono') }}"
+                class="flex items-center px-3 py-2 text-white bg-yellow-600 rounded hover:bg-yellow-700 sm:px-4">
+                <span class="mr-1">💰</span>
+                <span class="text-sm sm:text-base">Abonos Pecuniários</span>
+            </a>
+
             <!-- Gerar PDF Mobile -->
             <form method="GET" action="{{ route('relatorio.ferias.ativas.pdf') }}" target="_blank"
                 class="flex flex-col w-full gap-2 mt-2 sm:flex-row sm:items-center sm:w-auto">
                 <select name="ano_exercicio" id="ano_exercicio"
-                    class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                    class="w-full px-2 py-2 mb-2 text-sm border rounded sm:w-auto">
                     <option value="">Todos os exercícios</option>
                     @for ($y = 2020; $y <= now()->year + 1; $y++)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endfor
                 </select>
 
-                <select name="ano" id="ano" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                <select name="ano" id="ano" class="w-full px-2 py-2 mb-2 text-sm border rounded sm:w-auto">
                     <option value="">Todos os anos</option>
                     @for ($y = 2020; $y <= now()->year + 1; $y++)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endfor
                 </select>
 
-                <select name="mes" id="mes" class="w-full px-2 py-1 text-sm border rounded sm:w-auto">
+                <select name="mes" id="mes" class="w-full px-2 py-2 mb-2 text-sm border rounded sm:w-auto">
                     <option value="">Todos os meses</option>
                     @foreach ($meses as $m => $mes)
                         <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>
@@ -45,7 +52,7 @@
                 </select>
 
                 <button type="button" @click="verificarRelatorio()"
-                    class="flex items-center justify-center px-3 py-2 text-sm text-white bg-indigo-600 rounded hover:bg-indigo-700 sm:px-3">
+                    class="flex items-center justify-center px-3 py-2 mb-2 text-sm text-white bg-indigo-600 rounded hover:bg-indigo-700 sm:px-3">
                     <span class="mr-1">🖨️</span>
                     PDF
                 </button>
@@ -57,10 +64,20 @@
             <div id="mensagem"
                 class="hidden px-3 py-2 mt-2 mb-2 text-sm font-semibold text-red-600 bg-red-200 rounded-lg">
             </div>
-            <div x-show="mensagemSucesso" x-text="mensagemSucesso"
-                class="p-3 mt-2 text-sm text-green-700 bg-green-100 rounded-lg" x-transition></div>
-            <div x-show="mensagemErro" x-text="mensagemErro" class="p-3 mt-2 text-sm text-red-700 bg-red-100 rounded-lg"
-                x-transition></div>
+            <div x-show="mensagemSucesso" x-text="mensagemSucesso" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-95"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform scale-100"
+                x-transition:leave-end="opacity-0 transform scale-95"
+                class="p-3 mt-2 text-sm text-green-700 bg-green-100 rounded-lg" style="display: none;"></div>
+            <div x-show="mensagemErro" x-text="mensagemErro" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-95"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform scale-100"
+                x-transition:leave-end="opacity-0 transform scale-95"
+                class="p-3 mt-2 text-sm text-red-700 bg-red-100 rounded-lg" style="display: none;"></div>
         </div>
 
         <!-- Filtros - Mobile Optimized -->
@@ -119,11 +136,11 @@
 
 
         <!-- Modal de Confirmação de Exclusão -->
-        <div x-show="modalConfirmacaoAberto"
+        <div x-show="modalConfirmacaoAberto" x-cloak="true"
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;">
             <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
                 <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,6 +190,10 @@
                                 ->where('ativo', true)
                                 ->sum('dias');
                             $diasPendentes = $totalDias - $diasUsufruidos;
+                            $diasAbono = $registro->periodos
+                                ->where('convertido_abono', true)
+                                ->where('ativo', true)
+                                ->sum('dias');
                         @endphp
 
                         <div class="flex flex-wrap gap-1 mt-2 text-xs">
@@ -182,6 +203,11 @@
                             <span class="px-2 py-1 font-semibold text-yellow-800 bg-yellow-200 rounded shadow-xl">
                                 ⏳ {{ $diasPendentes }}d pend.
                             </span>
+                            @if ($diasAbono > 0)
+                                <span class="px-2 py-1 font-semibold text-purple-800 bg-purple-200 rounded shadow-xl">
+                                    💰 {{ $diasAbono }}d abono
+                                </span>
+                            @endif
                             <span class="px-2 py-1 font-semibold text-blue-800 bg-blue-200 rounded shadow-xl">
                                 📊 {{ $totalDias }}d total
                             </span>
@@ -209,17 +235,32 @@
                         periodoInicioPai: '{{ date('Y-m-d', strtotime($periodo->inicio)) }}',
                         periodoFimPai: '{{ date('Y-m-d', strtotime($periodo->fim)) }}',
                         periodoIdPai: '{{ $periodo->id }}',
-                        interrupcaoAberta: false
-                    
+                        interrupcaoAberta: false,
+                        conversaoAbonoAberta: false,
+                        diasConverte: {{ $periodo->dias }},
+                        justificativa: '{{ $periodo->justificativa }}',
+
                     }">
 
                         <!-- Período original - Mobile Optimized -->
                         <div
-                            class="flex flex-col gap-2 p-3 rounded-md sm:flex-row sm:items-start {{ $periodo->tipo == 'Abono' ? 'bg-yellow-100 rounded-lg shadow-xl' : ($periodo->usufruido ? 'bg-green-100 border-l-4 border-green-500' : 'bg-blue-50') }}">
+                            class="flex flex-col gap-2 p-3 rounded-md sm:flex-row sm:items-start {{ $periodo->convertido_abono
+                                ? 'bg-purple-100 border-l-4 border-purple-500'
+                                : ($periodo->tipo == 'Abono'
+                                    ? 'bg-yellow-100 rounded-lg shadow-xl'
+                                    : ($periodo->usufruido
+                                        ? 'bg-green-100 border-l-4 border-green-500'
+                                        : 'bg-blue-50')) }}">
                             <div class="flex items-start gap-2">
-                                <div class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
-                                    {{ $periodo->usufruido ? '✅' : '📌' }}
-                                </div>
+
+                                @if ($periodo->convertido_abono)
+                                    <div class="text-xl text-purple-600">💰</div>
+                                @else
+                                    <div
+                                        class="text-xl {{ $periodo->usufruido ? 'text-green-600' : 'text-blue-600' }}">
+                                        {{ $periodo->usufruido ? '✅' : '📌' }}
+                                    </div>
+                                @endif
                                 <div class="flex-1">
                                     <p class="text-sm font-semibold text-gray-700 sm:text-base">
                                         @if ($periodo->tipo !== 'Abono')
@@ -230,6 +271,11 @@
                                             <span
                                                 class="px-1 py-0.5 ml-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
                                                 ✅ USUFRUÍDO
+                                            </span>
+                                        @elseif($periodo->convertido_abono)
+                                            <span
+                                                class="px-1 py-0.5 ml-1 text-xs font-semibold text-purple-800 bg-purple-200 rounded-full">
+                                                💰 CONVERTIDO
                                             </span>
                                         @else
                                             <span
@@ -260,6 +306,10 @@
                                         @if ($periodo->usufruido && $periodo->data_usufruto)
                                             • Usufruído em: {{ date('d/m/Y', strtotime($periodo->data_usufruto)) }}
                                         @endif
+                                        @if ($periodo->convertido_abono && $periodo->data_conversao_abono)
+                                            • Convertido em:
+                                            {{ date('d/m/Y', strtotime($periodo->data_conversao_abono)) }}
+                                        @endif
                                     </p>
 
                                     <div
@@ -269,8 +319,21 @@
                                                 class="w-full px-2 py-2 text-xs text-blue-600 bg-blue-200 rounded shadow-lg hover:bg-blue-500 hover:text-blue-100">
                                                 <span x-text="aberto ? 'Ocultar' : 'Detalhes'"></span>
                                             </button>
+                                            <!-- Botões condicionais para conversão/reversão de abono -->
+                                            @if ($periodo->convertido_abono)
+                                                <!-- Botão para reverter abono -->
+                                                <a href="{{ route('ferias.reverter-abono.view', $periodo->id) }}"
+                                                    class="w-full px-2 py-2 text-xs text-center text-orange-600 bg-orange-200 rounded shadow-lg hover:bg-orange-500 hover:text-orange-100 text-nowrap">
+                                                    ↩️ Reverter Abono
+                                                </a>
+                                            @elseif($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                                <!-- Botão para converter para abono -->
+                                                <a href="{{ route('ferias.converter-abono.view', $periodo->id) }}"
+                                                    class="w-full px-2 py-2 text-xs text-center text-purple-600 bg-purple-200 rounded shadow-lg hover:bg-purple-500 hover:text-purple-100 text-nowrap">
+                                                    💰 Converter Abono
+                                                </a>
 
-                                            @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                                {{-- @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido) --}}
                                                 <button
                                                     class="w-full px-2 py-2 text-xs text-green-600 bg-green-200 rounded shadow-lg hover:bg-green-500 hover:text-green-100 text-nowrap"
                                                     data-periodo-id="{{ $periodo->id }}"
@@ -305,7 +368,7 @@
                                                 </button>
                                             @endif
 
-                                            @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido)
+                                            @if ($periodo->ativo && $periodo->situacao === 'Planejado' && !$periodo->usufruido && !$periodo->convertido_abono)
                                                 <button
                                                     @click="abrirModalRemarcacao({{ $periodo->id }}, {{ json_encode($periodo) }})"
                                                     class="w-full px-2 py-2 text-xs text-indigo-600 bg-indigo-200 rounded shadow-lg hover:bg-indigo-500 hover:text-indigo-100 text-nowrap">
@@ -429,11 +492,11 @@
         {{ $ferias->withQueryString()->onEachSide(3)->links('pagination::tailwind') }}
 
         <!-- Modal Remarcar com Múltiplos Períodos - Mobile Optimized -->
-        <div x-show="modalAberto"
+        <div x-show="modalAberto" x-cloak="true"
             class="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;">
 
             <div class="w-full max-w-4xl p-4 bg-white rounded shadow-lg max-h-[95vh] overflow-y-auto sm:p-6"
                 @click.away="modalAberto = false">
@@ -575,11 +638,11 @@
         </div>
 
         <!-- Modal Editar Período Mobile -->
-        <div x-show="modalEditarAberto"
+        <div x-show="modalEditarAberto" x-cloak="true"
             class="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black bg-opacity-50"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;">
 
             <div class="w-full max-w-md p-4 bg-white rounded shadow-lg sm:p-6" @click.away="fecharModalEditar">
                 <h3 class="mb-4 text-lg font-bold">Editar Período</h3>
@@ -688,6 +751,68 @@
 
                     init() {
                         console.log('Ferias Manager inicializado');
+                    },
+                    // NOVO MÉTODO PARA CONVERSÃO DE ABONO
+                    async converterParaAbono(periodoId, justificativa, conversaoParcial = false,
+                        diasConverter = null) {
+                        try {
+                            const response = await fetch('{{ route('ferias.converter-abono') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    periodo_id: periodoId,
+                                    justificativa: justificativa,
+                                    conversao_parcial: conversaoParcial,
+                                    dias_converter: diasConverter
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.mostrarMensagemSucesso(data.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro(error.message);
+                            console.error('Erro:', error);
+                        }
+                    },
+
+                    // NOVO MÉTODO PARA REVERSÃO DE ABONO
+                    async reverterAbono(periodoId, justificativa) {
+                        try {
+                            const response = await fetch('{{ route('ferias.reverter-abono') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    periodo_id: periodoId,
+                                    justificativa: justificativa
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.mostrarMensagemSucesso(data.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        } catch (error) {
+                            this.mostrarMensagemErro(error.message);
+                            console.error('Erro:', error);
+                        }
                     },
 
                     // ADICIONE ESTE MÉTODO

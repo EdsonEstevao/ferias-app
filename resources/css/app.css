@@ -1,6 +1,9 @@
+/* Font Awesome */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* Custom pagination styles for Tailwind */
 .pagination {
